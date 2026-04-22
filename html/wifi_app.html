@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — wifi_app.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // WIFI CONNECT -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // WIFI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);--glow-gold:0 0 20px rgba(244,168,32,.4);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;letter-spacing:3px;}
+.content{padding:20px;max-width:1100px;margin:0 auto;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
+.pb{padding:14px 16px;}
+.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn:hover{background:var(--accent);color:var(--bg);box-shadow:var(--glow);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn.orange{border-color:var(--accent2);color:var(--accent2);}
+.btn.orange:hover{background:var(--accent2);color:var(--bg);}
+.btn.green{border-color:var(--accent3);color:var(--accent3);}
+.btn.green:hover{background:var(--accent3);color:var(--bg);}
+.btn.red{border-color:var(--accent4);color:var(--accent4);}
+.btn.red:hover{background:var(--accent4);color:var(--bg);}
+.btn.gold{border-color:var(--gold);color:var(--gold);}
+.btn.gold:hover{background:var(--gold);color:var(--bg);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;transition:border-color .2s;}
+.pm-input:focus{border-color:var(--accent);}
+.pm-input::placeholder{color:var(--text-dim);}
+.pm-select{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:6px 8px;outline:none;cursor:pointer;}
+.pm-select:focus{border-color:var(--accent);}
+.dt{width:100%;border-collapse:collapse;font-size:.7rem;}
+.dt th{text-align:left;padding:7px 10px;color:var(--text-dim);font-size:.58rem;letter-spacing:2px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;}
+.dt td{padding:7px 10px;border-bottom:1px solid rgba(26,58,80,.3);}
+.dt tr:hover td{background:rgba(0,212,255,.04);}
+.ts{max-height:380px;overflow-y:auto;}
+.badge{display:inline-block;padding:1px 6px;font-size:.57rem;border-radius:2px;}
+.bc{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid var(--accent);}
+.bo{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid var(--accent2);}
+.bg{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
+.br{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
+.bw{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
+.bgo{background:rgba(244,168,32,.1);color:var(--gold);border:1px solid var(--gold);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;}
+.sc{background:var(--panel);border:1px solid var(--panel-border);padding:13px;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.sc.o::before{background:var(--accent2);}.sc.g::before{background:var(--accent3);}.sc.r::before{background:var(--accent4);}.sc.w::before{background:var(--warn);}.sc.gold::before{background:var(--gold);}
+.slbl{font-size:.58rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;font-family:'Orbitron',monospace;}
+.sval{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--text-bright);font-weight:700;}
+.ssub{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+.net-item{background:var(--panel);border:1px solid var(--panel-border);padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:all .2s;}
+.net-item:hover{border-color:var(--accent);background:rgba(0,212,255,.03);}
+.net-item.connected{border-color:var(--accent3);border-left:3px solid var(--accent3);}
+.ssid{font-size:.82rem;color:var(--text-bright);font-weight:bold;}
+.bssid{font-size:.6rem;color:var(--text-dim);margin-top:2px;}
+.signal-bars{display:flex;align-items:flex-end;gap:2px;height:18px;}
+.bar{width:5px;background:var(--panel-border);border-radius:1px;}
+.bar.active{background:var(--accent3);}
+textarea.pm-input{resize:none;width:100%;}
+</style></head><body>
+<header>
+  <div class="logo" style="color:var(--accent)">PISCES MOON // <span style="color:var(--gold)">WIFI</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span id="connStatus" style="font-size:.65rem;color:var(--text-dim)">Scanning...</span>
+    <button class="btn sm" onclick="scan()">SCAN</button>
+  </div>
+</header>
+<div class="content">
+  <!-- Current connection -->
+  <div class="panel" id="currentPanel">
+    <div class="ph" style="color:var(--accent3)">CURRENT CONNECTION</div>
+    <div class="pb" id="currentConn">
+      <div style="color:var(--text-dim);font-size:.72rem">Checking...</div>
+    </div>
+  </div>
+  <!-- Filter -->
+  <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+    <input class="pm-input" id="filterNet" placeholder="Filter networks..." style="flex:1" oninput="renderNets()">
+    <select class="pm-select" id="sortNet" onchange="renderNets()">
+      <option value="signal">Sort: Signal</option>
+      <option value="ssid">Sort: Name</option>
+      <option value="security">Sort: Security</option>
+    </select>
+    <select class="pm-select" id="filterSec" onchange="renderNets()">
+      <option value="">All security</option>
+      <option value="WPA3">WPA3</option>
+      <option value="WPA2">WPA2</option>
+      <option value="OPEN">Open</option>
+    </select>
+  </div>
+  <div id="netList"></div>
+  <!-- Connect dialog -->
+  <div class="panel" id="connectPanel" style="display:none">
+    <div class="ph" style="color:var(--gold)">CONNECT TO NETWORK</div>
+    <div class="pb">
+      <div style="margin-bottom:12px">
+        <div style="font-size:.65rem;color:var(--text-dim);margin-bottom:4px">SSID</div>
+        <div style="font-family:'Orbitron',monospace;color:var(--accent)" id="connectSSID"></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:.65rem;color:var(--text-dim);margin-bottom:4px">PASSWORD</div>
+        <input class="pm-input" id="wifiPass" type="password" placeholder="Enter password..." style="width:100%;max-width:400px">
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn green" onclick="doConnect()">CONNECT</button>
+        <button class="btn red" onclick="document.getElementById('connectPanel').style.display='none'">CANCEL</button>
+      </div>
+    </div>
+  </div>
+  <!-- Note: In browser mode, actual connection requires Trojan Horse or system integration -->
+  <div style="font-size:.62rem;color:var(--text-dim);margin-top:12px;padding:8px;border:1px solid var(--panel-border)">
+    // In Trojan Horse mode, CONNECT will invoke nmcli to join the network. In browser mode, this is a UI preview.
+  </div>
+</div>
+<script>
+const isTH=typeof window.spadra!=='undefined';
+let networks=[],connectedSSID='';
+
+const DEMO_NETS=[
+  {ssid:'Pisces-Moon-5G',bssid:'F4:A8:20:11:22:33',signal:-42,security:'WPA3',channel:36,band:'5GHz',connected:true},
+  {ssid:'HOME-Network',bssid:'AC:84:C6:44:55:66',signal:-55,security:'WPA2',channel:6,band:'2.4GHz',connected:false},
+  {ssid:'ATT-Gateway',bssid:'B0:09:DA:77:88:99',signal:-62,security:'WPA2',channel:11,band:'2.4GHz',connected:false},
+  {ssid:'Xfinity_WiFi',bssid:'3C:5A:B4:AA:BB:CC',signal:-70,security:'OPEN',channel:1,band:'2.4GHz',connected:false},
+  {ssid:'DIRECT-5G-Printer',bssid:'00:1D:D2:DD:EE:FF',signal:-78,security:'WPA2',channel:40,band:'5GHz',connected:false},
+  {ssid:'',bssid:'EA:F2:1A:00:11:22',signal:-80,security:'WPA3',channel:6,band:'2.4GHz',connected:false},
+];
+
+async function scan(){
+  document.getElementById('connStatus').textContent='Scanning...';
+  if(isTH){
+    try{
+      const result=await window.spadra.system.exec('nmcli -t -f SSID,BSSID,SIGNAL,SECURITY,CHAN,FREQ device wifi list --rescan yes');
+      // parse nmcli output
+      networks=parseNMCLI(result);
+    }catch(e){networks=DEMO_NETS;}
+  }else{
+    await new Promise(r=>setTimeout(r,800));
+    networks=DEMO_NETS;
+  }
+  connectedSSID=networks.find(n=>n.connected)?.ssid||'';
+  renderCurrent();
+  renderNets();
+  document.getElementById('connStatus').textContent=networks.length+' networks';
+}
+
+function parseNMCLI(output){
+  // nmcli -t output: SSID:BSSID:SIGNAL:SECURITY:CHAN:FREQ
+  return output.split('\n').filter(Boolean).map(line=>{
+    const parts=line.split(':');
+    return {ssid:parts[0],bssid:parts[1],signal:-(100-parseInt(parts[2]||'50')),security:parts[3]||'WPA2',channel:parts[4],connected:false};
+  }).filter(n=>n.bssid);
+}
+
+function renderCurrent(){
+  const c=networks.find(n=>n.connected);
+  const el=document.getElementById('currentConn');
+  if(c){
+    el.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center">
+      <div><div style="font-family:'Orbitron',monospace;color:var(--accent3)">${c.ssid||'Hidden'}</div>
+        <div style="font-size:.62rem;color:var(--text-dim);margin-top:3px">${c.bssid} · Ch${c.channel} · ${c.security}</div></div>
+      <div style="text-align:right">
+        <div style="font-size:.82rem;color:var(--accent);font-family:'Orbitron',monospace">${c.signal} dBm</div>
+        <button class="btn sm red" style="margin-top:4px" onclick="disconnect()">DISCONNECT</button>
+      </div></div>`;
+  }else{
+    el.innerHTML='<div style="color:var(--text-dim);font-size:.72rem">Not connected</div>';
+  }
+}
+
+function sigBars(dbm){
+  const s=dbm>-55?4:dbm>-65?3:dbm>-75?2:1;
+  return Array.from({length:4},(_,i)=>`<div class="bar ${i<s?'active':''}" style="height:${(i+1)*4}px"></div>`).join('');
+}
+
+function secBadge(sec){
+  if(sec.includes('WPA3'))return'<span class="badge bg">WPA3</span>';
+  if(sec.includes('WPA2'))return'<span class="badge bc">WPA2</span>';
+  if(sec==='OPEN')return'<span class="badge br">OPEN</span>';
+  return'<span class="badge bw">'+sec+'</span>';
+}
+
+function renderNets(){
+  const filter=document.getElementById('filterNet').value.toLowerCase();
+  const sort=document.getElementById('sortNet').value;
+  const secF=document.getElementById('filterSec').value;
+  let nets=[...networks];
+  if(filter) nets=nets.filter(n=>(n.ssid||'').toLowerCase().includes(filter));
+  if(secF) nets=nets.filter(n=>n.security.includes(secF));
+  if(sort==='ssid') nets.sort((a,b)=>(a.ssid||'').localeCompare(b.ssid||''));
+  else if(sort==='security') nets.sort((a,b)=>a.security.localeCompare(b.security));
+  else nets.sort((a,b)=>b.signal-a.signal);
+
+  document.getElementById('netList').innerHTML=nets.map(n=>`
+    <div class="net-item ${n.connected?'connected':''}" onclick="selectNet('${(n.ssid||'').replace(/'/g,"\\'")}',${n.security!=='OPEN'})">
+      <div>
+        <div class="ssid">${n.ssid||'<span style="color:var(--text-dim)">[Hidden Network]</span>'}</div>
+        <div class="bssid">${n.bssid} · Ch${n.channel||'?'} · ${n.band||''}</div>
+        <div style="margin-top:4px">${secBadge(n.security)} ${n.connected?'<span class="badge bg">CONNECTED</span>':''}</div>
+      </div>
+      <div style="text-align:right">
+        <div class="signal-bars">${sigBars(n.signal)}</div>
+        <div style="font-size:.62rem;color:var(--text-dim);margin-top:3px">${n.signal} dBm</div>
+      </div>
+    </div>`).join('');
+}
+
+function selectNet(ssid,needsPass){
+  document.getElementById('connectSSID').textContent=ssid||'[Hidden]';
+  document.getElementById('wifiPass').value='';
+  document.getElementById('connectPanel').style.display=needsPass?'block':'none';
+  if(!needsPass){document.getElementById('connectSSID').textContent=ssid;doConnect();}
+}
+
+async function doConnect(){
+  const ssid=document.getElementById('connectSSID').textContent;
+  const pass=document.getElementById('wifiPass').value;
+  if(isTH){
+    try{
+      await window.spadra.system.exec(`nmcli device wifi connect "${ssid}" password "${pass}"`);
+    }catch(e){alert('Connection failed: '+e.message);return;}
+  }
+  document.getElementById('connectPanel').style.display='none';
+  await scan();
+}
+
+async function disconnect(){
+  if(isTH){try{await window.spadra.system.exec('nmcli device disconnect wlan0');}catch{}}
+  await scan();
+}
+
+scan();
+</script>
+</body></html>

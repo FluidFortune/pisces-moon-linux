@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — bt_radar.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // BT RADAR -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // BT RADAR</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;letter-spacing:3px;}
+.content{padding:20px;max-width:1100px;margin:0 auto;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
+.pb{padding:14px 16px;}
+.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn:hover{background:var(--accent);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn.gold{border-color:var(--gold);color:var(--gold);}.btn.gold:hover{background:var(--gold);color:var(--bg);}
+.btn.green{border-color:var(--accent3);color:var(--accent3);}.btn.green:hover{background:var(--accent3);color:var(--bg);}
+.btn.red{border-color:var(--accent4);color:var(--accent4);}.btn.red:hover{background:var(--accent4);color:var(--bg);}
+.btn.orange{border-color:var(--accent2);color:var(--accent2);}.btn.orange:hover{background:var(--accent2);color:var(--bg);}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;}
+.pm-input:focus{border-color:var(--accent);}
+.pm-input::placeholder{color:var(--text-dim);}
+.dt{width:100%;border-collapse:collapse;font-size:.7rem;}
+.dt th{text-align:left;padding:7px 10px;color:var(--text-dim);font-size:.58rem;letter-spacing:2px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;}
+.dt td{padding:7px 10px;border-bottom:1px solid rgba(26,58,80,.3);}
+.dt tr:hover td{background:rgba(0,212,255,.04);}
+.ts{max-height:380px;overflow-y:auto;}
+.badge{display:inline-block;padding:1px 6px;font-size:.57rem;border-radius:2px;}
+.bc{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid var(--accent);}
+.bo{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid var(--accent2);}
+.bg{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
+.br{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
+.bw{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
+.bgo{background:rgba(244,168,32,.1);color:var(--gold);border:1px solid var(--gold);}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+.radar-wrap{display:flex;gap:16px;flex-wrap:wrap;}
+.radar-canvas-wrap{position:relative;flex-shrink:0;}
+canvas{background:radial-gradient(circle,#0a1520 0%,#050a0e 100%);border:1px solid var(--panel-border);border-radius:50%;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:16px;}
+.sc{background:var(--panel);border:1px solid var(--panel-border);padding:12px;position:relative;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent2);}
+.slbl{font-size:.58rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;font-family:'Orbitron',monospace;}
+.sval{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--text-bright);font-weight:700;}
+.device-list{flex:1;min-width:300px;}
+.di{background:var(--panel);border:1px solid var(--panel-border);padding:10px 14px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;transition:all .2s;}
+.di:hover{border-color:var(--accent2);}
+.di.new{border-color:var(--warn);animation:flash .5s;}
+@keyframes flash{from{background:rgba(255,204,0,.15)}to{background:var(--panel)}}
+.di-name{font-size:.78rem;color:var(--text-bright);}
+.di-mac{font-size:.6rem;color:var(--text-dim);margin-top:2px;font-family:'Share Tech Mono',monospace;}
+.rssi-bar{display:flex;align-items:center;gap:6px;margin-top:4px;}
+.rb{height:6px;background:var(--bg3);flex:1;border:1px solid var(--panel-border);}
+.rbf{height:100%;transition:width .4s ease;}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;animation:pulse 2s infinite;}
+.dot.on{background:var(--accent3);}.dot.off{background:var(--text-dim);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+</style></head><body>
+<header>
+  <div class="logo" style="color:var(--accent2)">PISCES MOON // <span style="color:var(--gold)">BT RADAR</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="dot off" id="scanDot"></span>
+    <span id="scanStatus" style="font-size:.65rem;color:var(--text-dim)">IDLE</span>
+    <button class="btn sm orange" id="scanBtn" onclick="toggleScan()">START SCAN</button>
+    <button class="btn sm" onclick="exportBT()">EXPORT</button>
+  </div>
+</header>
+<div class="content">
+  <div class="stats-row">
+    <div class="sc"><div class="slbl">TOTAL SEEN</div><div class="sval" id="sTotal">0</div></div>
+    <div class="sc"><div class="slbl">IN RANGE</div><div class="sval" id="sRange">0</div></div>
+    <div class="sc"><div class="slbl">STRONGEST</div><div class="sval" id="sStrong" style="font-size:.9rem">—</div></div>
+    <div class="sc"><div class="slbl">RANDOM MAC</div><div class="sval" id="sRand">0</div></div>
+  </div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <div>
+      <canvas id="radarCanvas" width="280" height="280"></canvas>
+    </div>
+    <div style="flex:1;min-width:300px;">
+      <div class="panel">
+        <div class="ph" style="color:var(--accent2)">BLE DEVICES <span id="devCount" style="color:var(--text-dim)"></span>
+          <input class="pm-input" id="devFilter" placeholder="filter..." style="width:140px;font-size:.62rem;padding:3px 8px" oninput="renderDevices()">
+        </div>
+        <div class="pb ts" id="devList" style="padding:8px;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const isTH=typeof window.spadra!=='undefined';
+let scanning=false,devices={},ws=null,wsConn=false,scanInterval=null;
+const canvas=document.getElementById('radarCanvas');
+const ctx=canvas.getContext('2d');
+const CX=140,CY=140,R=130;
+let angle=0,radarInterval=null;
+
+const DEMO_DEVS=[
+  {mac:'DC:2B:2A:CA:13:C6',name:'AirPods Pro',rssi:-42,vendor:'Apple',rand:false},
+  {mac:'8C:F5:A3:37:5D:B6',name:'Galaxy Watch',rssi:-55,vendor:'Samsung',rand:false},
+  {mac:'D0:03:4B:ED:86:F1',name:'Tile Mate',rssi:-63,vendor:'Tile',rand:false},
+  {mac:'EA:F2:1A:4F:21:AF',name:'',rssi:-70,vendor:'Unknown',rand:true},
+  {mac:'CF:80:6F:62:E6:8C',name:'',rssi:-78,vendor:'Unknown',rand:true},
+  {mac:'DC:08:56:DC:F6:5C',name:'Garmin EDGE',rssi:-81,vendor:'Garmin',rand:false},
+  {mac:'6C:AB:31:C4:12:EF',name:'Fitbit Sense 2',rssi:-67,vendor:'Fitbit',rand:false},
+  {mac:'BC:83:85:2C:E9:72',name:'Dexcom G7',rssi:-50,vendor:'Dexcom',rand:false},
+];
+
+function connectBridge(){
+  try{
+    ws=new WebSocket('ws://localhost:5006');
+    ws.onopen=()=>{wsConn=true;};
+    ws.onclose=()=>{wsConn=false;ws=null;setTimeout(connectBridge,3000);};
+    ws.onerror=()=>{ws=null;};
+    ws.onmessage=(e)=>{
+      try{
+        const d=JSON.parse(e.data);
+        if(d.type==='ble'&&d.mac){
+          devices[d.mac]={mac:d.mac,name:d.name||'',rssi:d.rssi||-70,vendor:d.vendor||'Unknown',rand:(parseInt(d.mac.split(':')[0],16)&0x02)!==0,ts:Date.now()};
+          updateStats(); renderDevices();
+        }
+      }catch{}
+    };
+  }catch{}
+}
+
+function toggleScan(){
+  if(scanning){
+    scanning=false;
+    clearInterval(scanInterval);
+    clearInterval(radarInterval);
+    document.getElementById('scanBtn').textContent='START SCAN';
+    document.getElementById('scanDot').className='dot off';
+    document.getElementById('scanStatus').textContent='IDLE';
+  }else{
+    scanning=true;
+    document.getElementById('scanBtn').textContent='STOP';
+    document.getElementById('scanDot').className='dot on';
+    document.getElementById('scanStatus').textContent='SCANNING...';
+    if(!wsConn){
+      // Demo mode
+      DEMO_DEVS.forEach((d,i)=>setTimeout(()=>{
+        devices[d.mac]={...d,ts:Date.now()};
+        updateStats(); renderDevices();
+      },i*400));
+      scanInterval=setInterval(()=>{
+        // Simulate RSSI fluctuation
+        Object.values(devices).forEach(d=>{d.rssi+=Math.floor(Math.random()*4-2);if(d.rssi>-30)d.rssi=-30;if(d.rssi<-95)d.rssi=-95;});
+        updateStats(); renderDevices();
+      },2000);
+    }
+    radarInterval=setInterval(drawRadar,50);
+  }
+}
+
+function drawRadar(){
+  ctx.clearRect(0,0,280,280);
+  // Rings
+  [0.25,0.5,0.75,1].forEach(r=>{
+    ctx.beginPath();ctx.arc(CX,CY,R*r,0,Math.PI*2);
+    ctx.strokeStyle='rgba(0,212,255,0.1)';ctx.lineWidth=1;ctx.stroke();
+  });
+  // Cross-hairs
+  ctx.strokeStyle='rgba(0,212,255,0.08)';
+  ctx.beginPath();ctx.moveTo(CX-R,CY);ctx.lineTo(CX+R,CY);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(CX,CY-R);ctx.lineTo(CX,CY+R);ctx.stroke();
+  // Sweep
+  angle=(angle+2)%360;
+  const rad=angle*Math.PI/180;
+  const gradient=ctx.createConicalGradient?null:null;
+  ctx.beginPath();ctx.moveTo(CX,CY);
+  ctx.arc(CX,CY,R,rad-0.4,rad);
+  ctx.fillStyle='rgba(255,107,0,0.15)';ctx.fill();
+  ctx.beginPath();ctx.moveTo(CX,CY);ctx.lineTo(CX+Math.cos(rad)*R,CY+Math.sin(rad)*R);
+  ctx.strokeStyle='rgba(255,107,0,0.8)';ctx.lineWidth=2;ctx.stroke();
+  // Devices
+  Object.values(devices).forEach((d,i)=>{
+    const a2=(i/Object.keys(devices).length)*Math.PI*2;
+    const dist=(-d.rssi-30)/65; // normalize -95 to -30 → 1 to 0
+    const r2=Math.min(R*0.9,R*dist*0.9+8);
+    const dx=CX+Math.cos(a2)*r2,dy=CY+Math.sin(a2)*r2;
+    ctx.beginPath();ctx.arc(dx,dy,4,0,Math.PI*2);
+    ctx.fillStyle=d.rand?'var(--warn)':'var(--accent3)';
+    ctx.fill();
+    ctx.beginPath();ctx.arc(dx,dy,8,0,Math.PI*2);
+    ctx.strokeStyle=d.rand?'rgba(255,204,0,.3)':'rgba(0,255,136,.3)';
+    ctx.lineWidth=1;ctx.stroke();
+  });
+}
+
+function updateStats(){
+  const devs=Object.values(devices);
+  document.getElementById('sTotal').textContent=devs.length;
+  document.getElementById('sRange').textContent=devs.filter(d=>d.rssi>-70).length;
+  const strongest=devs.sort((a,b)=>b.rssi-a.rssi)[0];
+  document.getElementById('sStrong').textContent=strongest?strongest.name||strongest.mac.slice(-5):'—';
+  document.getElementById('sRand').textContent=devs.filter(d=>d.rand).length;
+}
+
+function rssiColor(r){return r>-55?'var(--accent3)':r>-75?'var(--warn)':'var(--text-dim)';}
+function rssiPct(r){return Math.max(5,Math.min(100,((r+95)/65)*100));}
+
+function renderDevices(){
+  const filter=document.getElementById('devFilter').value.toLowerCase();
+  let devs=Object.values(devices).sort((a,b)=>b.rssi-a.rssi);
+  if(filter) devs=devs.filter(d=>(d.name||d.mac||d.vendor||'').toLowerCase().includes(filter));
+  document.getElementById('devCount').textContent=devs.length+' devices';
+  document.getElementById('devList').innerHTML=devs.map(d=>`
+    <div class="di">
+      <div>
+        <div class="di-name">${d.name||'<span style="color:var(--text-dim)">[Unknown Device]</span>'}</div>
+        <div class="di-mac">${d.mac} · ${d.vendor}</div>
+        <div class="rssi-bar">
+          <div class="rb"><div class="rbf" style="width:${rssiPct(d.rssi)}%;background:${rssiColor(d.rssi)}"></div></div>
+          <span style="font-size:.62rem;color:${rssiColor(d.rssi)};width:40px;text-align:right">${d.rssi} dBm</span>
+        </div>
+      </div>
+      <div style="text-align:right">
+        ${d.rand?'<span class="badge bw">RAND MAC</span>':'<span class="badge bc">'+d.vendor.slice(0,8)+'</span>'}
+      </div>
+    </div>`).join('');
+}
+
+function exportBT(){
+  const rows=['MAC,Name,Vendor,RSSI,Random',...Object.values(devices).map(d=>`${d.mac},${d.name},${d.vendor},${d.rssi},${d.rand}`)].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([rows],{type:'text/csv'}));
+  a.download='bt_scan_'+Date.now()+'.csv';a.click();
+}
+
+connectBridge();
+drawRadar();
+</script>
+</body></html>

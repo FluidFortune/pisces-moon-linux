@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — beacon_spotter.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // BEACON SPOTTER -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // BEACON SPOTTER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent4);text-shadow:0 0 20px rgba(255,51,102,.3);letter-spacing:3px;}
+.logo span{color:var(--gold);}
+.content{padding:20px;max-width:1200px;margin:0 auto;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
+.pb{padding:14px 16px;}
+.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent4);color:var(--accent4);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn:hover{background:var(--accent4);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn.cyan{border-color:var(--accent);color:var(--accent);}.btn.cyan:hover{background:var(--accent);color:var(--bg);}
+.btn.green{border-color:var(--accent3);color:var(--accent3);}.btn.green:hover{background:var(--accent3);color:var(--bg);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-bottom:16px;}
+.sc{background:var(--panel);border:1px solid var(--panel-border);padding:13px;position:relative;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent4);}
+.sc.c::before{background:var(--accent);}.sc.g::before{background:var(--accent3);}.sc.w::before{background:var(--warn);}
+.slbl{font-size:.58rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;font-family:'Orbitron',monospace;}
+.sval{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--text-bright);font-weight:700;}
+.beacon-item{background:var(--bg2);border:1px solid var(--panel-border);padding:12px 16px;margin-bottom:6px;border-left:3px solid var(--panel-border);transition:all .2s;}
+.beacon-item:hover{border-color:var(--accent4);}
+.beacon-item.alert{border-left-color:var(--accent4);background:rgba(255,51,102,.04);}
+.beacon-item.tracker{border-left-color:var(--warn);background:rgba(255,204,0,.04);}
+.beacon-item.normal{border-left-color:var(--text-dim);}
+.b-head{display:flex;justify-content:space-between;align-items:center;}
+.b-name{font-size:.8rem;color:var(--text-bright);}
+.b-mac{font-size:.6rem;color:var(--text-dim);margin-top:2px;}
+.b-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:6px;margin-top:8px;font-size:.65rem;color:var(--text-dim);}
+.b-detail span{color:var(--text);}
+.badge{display:inline-block;padding:2px 7px;font-size:.57rem;border-radius:2px;}
+.br{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
+.bw{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
+.bc{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid var(--accent);}
+.bg{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
+.alert-box{background:rgba(255,51,102,.06);border:1px solid var(--accent4);padding:10px 14px;margin-bottom:8px;font-size:.7rem;}
+.alert-box strong{color:var(--accent4);}
+.rssi-bar{height:6px;background:var(--bg3);border:1px solid var(--panel-border);margin-top:4px;}
+.rssi-fill{height:100%;transition:width .4s;}
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px;}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.72rem;padding:7px 12px;outline:none;}
+.pm-input:focus{border-color:var(--accent4);}
+.pm-select{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:6px 8px;outline:none;cursor:pointer;}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;animation:pulse 2s infinite;}
+.dot.on{background:var(--accent4);}.dot.off{background:var(--text-dim);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo">BEACON <span>SPOTTER</span></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span class="dot off" id="scanDot"></span>
+    <span id="scanStatus" style="font-size:.65rem;color:var(--text-dim)">IDLE</span>
+    <button class="btn sm" id="scanBtn" onclick="toggleScan()">▶ SCAN</button>
+    <button class="btn sm cyan" onclick="exportCSV()">EXPORT</button>
+    <button class="btn sm green" onclick="clearAll()">CLEAR</button>
+  </div>
+</header>
+<div class="content">
+  <div class="stats-row">
+    <div class="sc r"><div class="slbl">ALERTS</div><div class="sval" id="sAlerts">0</div></div>
+    <div class="sc w"><div class="slbl">TRACKERS</div><div class="sval" id="sTrackers">0</div></div>
+    <div class="sc c"><div class="slbl">TOTAL BEACONS</div><div class="sval" id="sTotal">0</div></div>
+    <div class="sc g"><div class="slbl">UNIQUE SEEN</div><div class="sval" id="sUnique">0</div></div>
+  </div>
+
+  <div id="alertsPanel"></div>
+
+  <div class="filter-bar">
+    <input class="pm-input" id="filterText" placeholder="filter by name / MAC..." style="flex:1;min-width:160px" oninput="renderBeacons()">
+    <select class="pm-select" id="filterType" onchange="renderBeacons()">
+      <option value="">All types</option>
+      <option value="tracker">Trackers only</option>
+      <option value="alert">Alerts only</option>
+      <option value="normal">Normal</option>
+    </select>
+    <select class="pm-select" id="sortMode" onchange="renderBeacons()">
+      <option value="rssi">Sort: RSSI</option>
+      <option value="first">Sort: First seen</option>
+      <option value="sightings">Sort: Sightings</option>
+    </select>
+  </div>
+
+  <div id="beaconList"></div>
+</div>
+<script>
+const isTH = typeof window.spadra !== 'undefined';
+let scanning = false, beacons = {}, ws = null, scanInterval = null;
+let allSeen = new Set();
+
+// Known tracker prefixes / OUI
+const TRACKER_OUIS = {
+  'D0:03:4B':'Tile','04:52:C7':'Tile','DC:2B:2A':'Apple (AirTag)','3C:22:FB':'Apple',
+  'A4:C3:F0':'Apple','F0:D1:A9':'Apple','BC:83:85':'Dexcom','00:1D:C0':'Garmin',
+  'DC:08:56':'Garmin','8C:F5:A3':'Samsung','CC:2D:83':'Samsung','6C:AB:31':'Fitbit',
+  'C4:BE:84':'Fitbit','AC:9B:0A':'Sony','00:13:A9':'Sony',
+};
+const TRACKER_NAMES = ['AirTag','Tile Mate','Tile Slim','Tile Sticker','SmartTag','Galaxy Tag'];
+
+const DEMO = [
+  {mac:'DC:2B:2A:CA:13:C6',name:'AirTag',rssi:-38,sightings:12,locations:4},
+  {mac:'D0:03:4B:ED:86:F1',name:'Tile Mate',rssi:-52,sightings:7,locations:2},
+  {mac:'8C:F5:A3:37:5D:B6',name:'Galaxy SmartTag',rssi:-61,sightings:3,locations:1},
+  {mac:'EA:F2:1A:4F:21:AF',name:'',rssi:-70,sightings:1,locations:1},
+  {mac:'CF:80:6F:62:E6:8C',name:'',rssi:-78,sightings:1,locations:1},
+  {mac:'BC:83:85:2C:E9:72',name:'Dexcom G7',rssi:-55,sightings:5,locations:1},
+];
+
+function connectBridge() {
+  try {
+    ws = new WebSocket('ws://localhost:5006');
+    ws.onopen = () => {};
+    ws.onclose = () => { ws = null; setTimeout(connectBridge, 3000); };
+    ws.onerror = () => { ws = null; };
+    ws.onmessage = (e) => {
+      try {
+        const d = JSON.parse(e.data);
+        if (d.type === 'ble' && d.mac) ingestBeacon(d);
+      } catch {}
+    };
+  } catch {}
+}
+
+function ingestBeacon(d) {
+  const mac = d.mac;
+  allSeen.add(mac);
+  const oui = mac.substring(0,8).toUpperCase();
+  const isRand = (parseInt(mac.split(':')[0],16) & 0x02) !== 0;
+  const trackerOUI = TRACKER_OUIS[oui];
+  const trackerName = TRACKER_NAMES.some(n => (d.name||'').includes(n));
+  const isTracker = !!(trackerOUI || trackerName);
+  const type = isTracker ? 'tracker' : (d.rssi > -50 && isRand ? 'alert' : 'normal');
+
+  if (!beacons[mac]) {
+    beacons[mac] = { mac, name: d.name||'', rssi: d.rssi||-70, vendor: trackerOUI||'Unknown',
+      sightings: 0, locations: 0, type, firstSeen: Date.now(), lastSeen: Date.now() };
+  }
+  const b = beacons[mac];
+  b.rssi = d.rssi || b.rssi;
+  b.sightings++;
+  b.lastSeen = Date.now();
+  if (d.lat) b.locations++;
+  updateStats();
+  renderBeacons();
+  renderAlerts();
+}
+
+function toggleScan() {
+  if (scanning) {
+    scanning = false;
+    clearInterval(scanInterval);
+    document.getElementById('scanBtn').textContent = '▶ SCAN';
+    document.getElementById('scanDot').className = 'dot off';
+    document.getElementById('scanStatus').textContent = 'IDLE';
+  } else {
+    scanning = true;
+    document.getElementById('scanBtn').textContent = '■ STOP';
+    document.getElementById('scanDot').className = 'dot on';
+    document.getElementById('scanStatus').textContent = 'SCANNING BLE...';
+    // Demo mode if no bridge
+    DEMO.forEach((d, i) => setTimeout(() => ingestBeacon({
+      type:'ble', mac:d.mac, name:d.name, rssi:d.rssi, sightings:d.sightings, locations:d.locations
+    }), i * 300));
+    scanInterval = setInterval(() => {
+      Object.values(beacons).forEach(b => {
+        b.rssi = Math.max(-95, Math.min(-25, b.rssi + Math.floor(Math.random()*4-2)));
+        b.sightings++;
+      });
+      updateStats(); renderBeacons();
+    }, 3000);
+  }
+}
+
+function updateStats() {
+  const all = Object.values(beacons);
+  document.getElementById('sAlerts').textContent = all.filter(b => b.type==='alert').length;
+  document.getElementById('sTrackers').textContent = all.filter(b => b.type==='tracker').length;
+  document.getElementById('sTotal').textContent = all.length;
+  document.getElementById('sUnique').textContent = allSeen.size;
+}
+
+function renderAlerts() {
+  const alerts = Object.values(beacons).filter(b => b.type === 'tracker' && b.sightings > 3);
+  const el = document.getElementById('alertsPanel');
+  if (!alerts.length) { el.innerHTML = ''; return; }
+  el.innerHTML = alerts.map(b => `
+    <div class="alert-box">
+      <strong>⚠ TRACKER DETECTED</strong> — ${esc(b.name || b.mac)}
+      · Vendor: ${b.vendor} · Sightings: ${b.sightings} · RSSI: ${b.rssi} dBm
+      <div style="font-size:.62rem;color:var(--text-dim);margin-top:3px">
+        MAC: ${b.mac} · First seen: ${new Date(b.firstSeen).toLocaleTimeString()} · 
+        This device has been seen multiple times across locations.
+      </div>
+    </div>`).join('');
+}
+
+function rssiPct(r) { return Math.max(5, Math.min(100, ((r+95)/65)*100)); }
+function rssiColor(r) { return r>-55?'var(--accent3)':r>-75?'var(--warn)':'var(--text-dim)'; }
+
+function renderBeacons() {
+  const filter = document.getElementById('filterText').value.toLowerCase();
+  const typeF = document.getElementById('filterType').value;
+  const sort = document.getElementById('sortMode').value;
+  let all = Object.values(beacons);
+  if (filter) all = all.filter(b => (b.mac+b.name+b.vendor).toLowerCase().includes(filter));
+  if (typeF) all = all.filter(b => b.type === typeF);
+  if (sort === 'rssi') all.sort((a,b) => b.rssi - a.rssi);
+  else if (sort === 'sightings') all.sort((a,b) => b.sightings - a.sightings);
+  else all.sort((a,b) => a.firstSeen - b.firstSeen);
+
+  document.getElementById('beaconList').innerHTML = all.map(b => `
+    <div class="beacon-item ${b.type}">
+      <div class="b-head">
+        <div>
+          <div class="b-name">${b.name || '<span style="color:var(--text-dim)">[Unknown Device]</span>'}</div>
+          <div class="b-mac">${b.mac}</div>
+        </div>
+        <div style="text-align:right">
+          ${b.type==='tracker'?'<span class="badge bw">TRACKER</span>':b.type==='alert'?'<span class="badge br">ALERT</span>':'<span class="badge bc">NORMAL</span>'}
+          <div style="font-size:.7rem;color:${rssiColor(b.rssi)};margin-top:4px">${b.rssi} dBm</div>
+        </div>
+      </div>
+      <div class="rssi-bar"><div class="rssi-fill" style="width:${rssiPct(b.rssi)}%;background:${rssiColor(b.rssi)}"></div></div>
+      <div class="b-details">
+        <div>Vendor: <span>${b.vendor}</span></div>
+        <div>Sightings: <span>${b.sightings}</span></div>
+        <div>Locations: <span>${b.locations}</span></div>
+        <div>First seen: <span>${new Date(b.firstSeen).toLocaleTimeString()}</span></div>
+      </div>
+    </div>`).join('') || '<div style="color:var(--text-dim);padding:20px;text-align:center">No beacons detected. Start scanning.</div>';
+}
+
+function clearAll() { beacons = {}; allSeen.clear(); updateStats(); renderBeacons(); renderAlerts(); }
+function exportCSV() {
+  const rows = ['MAC,Name,Vendor,RSSI,Type,Sightings,Locations,FirstSeen',
+    ...Object.values(beacons).map(b => `${b.mac},${b.name},${b.vendor},${b.rssi},${b.type},${b.sightings},${b.locations},${new Date(b.firstSeen).toISOString()}`)].join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([rows],{type:'text/csv'}));
+  a.download = 'beacons_'+Date.now()+'.csv'; a.click();
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+connectBridge();
+</script></body></html>

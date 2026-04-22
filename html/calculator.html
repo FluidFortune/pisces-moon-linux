@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — calculator.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // CALCULATOR -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // CALCULATOR</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);--glow-gold:0 0 20px rgba(244,168,32,.4);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{width:100%;max-width:400px;text-align:center;margin-bottom:20px;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--accent);text-shadow:var(--glow);letter-spacing:3px;}
+.logo span{color:var(--gold);}
+.calc{background:var(--panel);border:1px solid var(--panel-border);width:100%;max-width:400px;border-top:3px solid var(--accent);}
+.display{background:var(--bg);padding:16px 20px;border-bottom:1px solid var(--panel-border);}
+.expr{font-size:.72rem;color:var(--text-dim);min-height:20px;text-align:right;margin-bottom:4px;word-break:break-all;}
+.result{font-family:'Orbitron',monospace;font-size:2rem;color:var(--text-bright);text-align:right;font-weight:700;word-break:break-all;min-height:52px;transition:color .2s;}
+.result.error{color:var(--accent4);font-size:1.1rem;}
+.modes{display:flex;border-bottom:1px solid var(--panel-border);}
+.mode{flex:1;padding:8px;text-align:center;font-size:.58rem;color:var(--text-dim);cursor:pointer;letter-spacing:2px;font-family:'Orbitron',monospace;transition:all .2s;}
+.mode:hover{color:var(--accent);}
+.mode.active{color:var(--accent);border-bottom:2px solid var(--accent);}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--panel-border);}
+.k{background:var(--panel);padding:16px 8px;text-align:center;cursor:pointer;font-size:.85rem;font-family:'Share Tech Mono',monospace;color:var(--text);transition:all .15s;user-select:none;border:none;}
+.k:hover{background:var(--bg3);color:var(--text-bright);}
+.k:active{background:var(--bg2);}
+.k.op{color:var(--accent2);font-size:1rem;}
+.k.op:hover{background:rgba(255,107,0,.1);color:var(--accent2);}
+.k.eq{background:rgba(0,212,255,.1);color:var(--accent);font-size:1.1rem;font-family:'Orbitron',monospace;}
+.k.eq:hover{background:rgba(0,212,255,.2);box-shadow:var(--glow);}
+.k.clr{color:var(--accent4);}
+.k.clr:hover{background:rgba(255,51,102,.1);}
+.k.fn{color:var(--accent3);font-size:.72rem;}
+.k.fn:hover{background:rgba(0,255,136,.08);}
+.k.span2{grid-column:span 2;}
+.history{background:var(--bg2);border-top:1px solid var(--panel-border);padding:10px 14px;max-height:150px;overflow-y:auto;}
+.hist-head{font-family:'Orbitron',monospace;font-size:.55rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px;}
+.hi{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(26,58,80,.3);font-size:.68rem;cursor:pointer;}
+.hi:hover .hiv{color:var(--accent);}
+.hie{color:var(--text-dim);}
+.hiv{color:var(--text-bright);}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header><div class="logo">PISCES MOON // <span>CALC</span></div></header>
+<div class="calc">
+  <div class="display">
+    <div class="expr" id="expr"></div>
+    <div class="result" id="result">0</div>
+  </div>
+  <div class="modes">
+    <div class="mode active" onclick="setMode('std')" id="m-std">STANDARD</div>
+    <div class="mode" onclick="setMode('sci')" id="m-sci">SCIENTIFIC</div>
+    <div class="mode" onclick="setMode('hex')" id="m-hex">HEX/BIN</div>
+  </div>
+  <div class="keys" id="keypad"></div>
+  <div class="history">
+    <div class="hist-head">HISTORY</div>
+    <div id="hist"></div>
+  </div>
+</div>
+<script>
+let cur='0', expr='', history=[], mode='std', shiftActive=false;
+
+const LAYOUTS={
+  std:[
+    ['AC','±','%','÷'],
+    ['7','8','9','×'],
+    ['4','5','6','−'],
+    ['1','2','3','+'],
+    ['0','0','.','='],
+  ],
+  sci:[
+    ['AC','(',')','÷'],
+    ['sin','cos','tan','×'],
+    ['ln','log','√','−'],
+    ['x²','x³','xⁿ','+'],
+    ['π','e','.',  '='],
+  ],
+  hex:[
+    ['AC','AND','OR','XOR'],
+    ['A','B','C','÷'],
+    ['D','E','F','×'],
+    ['7','8','9','−'],
+    ['4','5','6','+'],
+    ['1','2','3','='],
+    ['0','0','<<','>>'],
+  ],
+};
+
+function setMode(m){
+  mode=m;
+  document.querySelectorAll('.mode').forEach(el=>el.classList.remove('active'));
+  document.getElementById('m-'+m).classList.add('active');
+  buildKeys();
+}
+
+function buildKeys(){
+  const kp=document.getElementById('keypad');
+  const rows=LAYOUTS[mode];
+  let html='';
+  rows.forEach(row=>{
+    row.forEach((k,i)=>{
+      const cls=['k'];
+      const isLast=i===row.length-1;
+      const isFirst=i===0;
+      if(['÷','×','−','+','='].includes(k)) cls.push(isLast?'eq':'op');
+      if(['AC','C'].includes(k)) cls.push('clr');
+      if(['sin','cos','tan','ln','log','√','x²','x³','xⁿ','π','e','AND','OR','XOR','<<','>>'].includes(k)) cls.push('fn');
+      if(k==='0'&&i===0) cls.push('span2');
+      html+=`<button class="${cls.join(' ')}" onclick="press('${k}')">${k}</button>`;
+    });
+  });
+  kp.innerHTML=html;
+}
+
+function press(k){
+  try{
+    switch(k){
+      case 'AC': cur='0'; expr=''; setDisp(); break;
+      case '±': cur=String(-parseFloat(cur)||0); setDisp(); break;
+      case '%': cur=String(parseFloat(cur)/100); setDisp(); break;
+      case '=':
+        if(!expr&&cur==='0')break;
+        const full=(expr+cur)
+          .replace(/÷/g,'/')
+          .replace(/×/g,'*')
+          .replace(/−/g,'-')
+          .replace(/π/g,'Math.PI')
+          .replace(/e(?![0-9])/g,'Math.E')
+          .replace(/sin\(/g,'Math.sin(')
+          .replace(/cos\(/g,'Math.cos(')
+          .replace(/tan\(/g,'Math.tan(')
+          .replace(/ln\(/g,'Math.log(')
+          .replace(/log\(/g,'Math.log10(')
+          .replace(/√\(/g,'Math.sqrt(')
+          .replace(/(\d+(\.\d+)?)²/g,'($1**2)')
+          .replace(/(\d+(\.\d+)?)³/g,'($1**3)')
+          .replace(/(\d+(\.\d+)?)ⁿ/g,'($1**')
+          .replace(/<<(\d+)/g,'<<$1')
+          .replace(/>>(\d+)/g,'>>$1');
+        const res=Function('"use strict";return ('+full+')')();
+        const resStr=mode==='hex'?'0x'+Math.floor(res).toString(16).toUpperCase():
+                     Number.isInteger(res)?String(res):parseFloat(res.toFixed(10)).toString();
+        addHistory(expr+cur, resStr);
+        expr=''; cur=resStr;
+        document.getElementById('result').className='result';
+        setDisp(); break;
+      case '(':
+      case ')': expr+=cur==='0'?'':cur; expr+=k; cur='0'; setDisp(); break;
+      case '.': cur=cur.includes('.')?cur:cur+'.'; setDisp(); break;
+      case 'sin': case 'cos': case 'tan': case 'ln': case 'log': case '√':
+        expr+=k+'('; cur='0'; setDisp(); break;
+      case 'x²': cur=String(parseFloat(cur)**2); setDisp(); break;
+      case 'x³': cur=String(parseFloat(cur)**3); setDisp(); break;
+      case 'xⁿ': expr+=cur+'**'; cur='0'; setDisp(); break;
+      case 'π': cur=String(Math.PI); setDisp(); break;
+      case 'e': cur=String(Math.E); setDisp(); break;
+      case 'AND': case 'OR': case 'XOR': case '<<': case '>>':
+        expr+=cur+' '+k+' '; cur='0'; setDisp(); break;
+      case '÷': case '×': case '−': case '+':
+        expr+=cur+k; cur='0'; setDisp(); break;
+      default:
+        cur=cur==='0'?k:cur+k; setDisp();
+    }
+  }catch(e){
+    document.getElementById('result').textContent='ERROR';
+    document.getElementById('result').className='result error';
+    setTimeout(()=>{cur='0';expr='';setDisp();},1200);
+  }
+}
+
+function setDisp(){
+  document.getElementById('expr').textContent=expr;
+  document.getElementById('result').textContent=cur;
+  document.getElementById('result').className='result';
+}
+
+function addHistory(e,v){
+  history.unshift({e,v});if(history.length>30)history.pop();
+  renderHistory();
+}
+
+function renderHistory(){
+  document.getElementById('hist').innerHTML=history.slice(0,12).map(h=>`
+    <div class="hi" onclick="useHistory('${h.v}')">
+      <span class="hie">${esc(h.e)}</span><span class="hiv">${esc(h.v)}</span>
+    </div>`).join('');
+}
+
+function useHistory(v){cur=v;expr='';setDisp();}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+document.addEventListener('keydown',e=>{
+  const map={'0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9',
+    '+':'+','-':'−','*':'×','/':'÷','.':'.','Enter':'=','Backspace':'AC','Escape':'AC','%':'%'};
+  if(map[e.key]) press(map[e.key]);
+});
+
+buildKeys();
+renderHistory();
+</script>
+</body></html>

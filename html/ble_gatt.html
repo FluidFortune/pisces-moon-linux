@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — ble_gatt.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // BLE GATT EXPLORER -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // BLE GATT EXPLORER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent4);text-shadow:0 0 20px rgba(255,51,102,.3);letter-spacing:3px;}
+.logo span{color:var(--accent);}
+.hdr-right{display:flex;align-items:center;gap:16px;font-size:.65rem;color:var(--text-dim);}
+.status-pill{padding:3px 10px;border:1px solid var(--text-dim);border-radius:2px;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;}
+.status-pill.scanning{border-color:var(--warn);color:var(--warn);animation:blink .8s step-end infinite;}
+.status-pill.connected{border-color:var(--accent3);color:var(--accent3);}
+.status-pill.idle{border-color:var(--text-dim);color:var(--text-dim);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.content{display:grid;grid-template-columns:340px 1fr;gap:0;height:calc(100vh - 58px);}
+.left-panel{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;}
+.right-panel{display:flex;flex-direction:column;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.6rem;color:var(--accent2);letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
+.ph .count{color:var(--text-dim);font-size:.55rem;}
+.scan-bar{padding:12px 16px;border-bottom:1px solid var(--panel-border);display:flex;gap:8px;align-items:center;background:var(--bg2);}
+.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
+.btn:hover{background:var(--accent2);color:var(--bg);box-shadow:0 0 20px rgba(255,107,0,.3);}
+.btn.cyan{border-color:var(--accent);color:var(--accent);}
+.btn.cyan:hover{background:var(--accent);color:var(--bg);}
+.btn.green{border-color:var(--accent3);color:var(--accent3);}
+.btn.green:hover{background:var(--accent3);color:var(--bg);}
+.btn.red{border-color:var(--accent4);color:var(--accent4);}
+.btn.red:hover{background:var(--accent4);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.device-list{flex:1;overflow-y:auto;}
+.device-row{padding:10px 16px;border-bottom:1px solid rgba(26,58,80,.3);cursor:pointer;transition:background .15s;display:grid;grid-template-columns:1fr auto;gap:4px;}
+.device-row:hover{background:rgba(255,107,0,.04);}
+.device-row.active{background:rgba(255,107,0,.08);border-left:2px solid var(--accent2);}
+.dev-mac{font-size:.7rem;color:var(--accent);letter-spacing:1px;}
+.dev-name{font-size:.65rem;color:var(--text-bright);margin-top:2px;}
+.dev-vendor{font-size:.58rem;color:var(--text-dim);margin-top:1px;}
+.rssi-badge{font-family:'Orbitron',monospace;font-size:.6rem;padding:2px 6px;border-radius:2px;align-self:start;}
+.rssi-strong{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
+.rssi-mid{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
+.rssi-weak{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
+.gatt-panel{flex:1;overflow-y:auto;}
+.svc-block{border-bottom:1px solid rgba(26,58,80,.3);}
+.svc-header{padding:10px 16px;background:rgba(0,212,255,.04);display:flex;align-items:center;gap:10px;cursor:pointer;}
+.svc-header:hover{background:rgba(0,212,255,.07);}
+.svc-uuid{font-size:.65rem;color:var(--accent);font-family:'Share Tech Mono',monospace;}
+.svc-name{font-size:.6rem;color:var(--text-dim);margin-left:auto;}
+.char-row{padding:8px 16px 8px 32px;border-top:1px solid rgba(26,58,80,.15);background:rgba(0,0,0,.2);}
+.char-uuid{font-size:.62rem;color:var(--text);letter-spacing:.5px;}
+.char-props{display:flex;gap:4px;margin:4px 0;}
+.prop-tag{font-size:.52rem;padding:1px 5px;border-radius:2px;font-family:'Orbitron',monospace;letter-spacing:1px;}
+.prop-R{background:rgba(0,212,255,.15);color:var(--accent);border:1px solid rgba(0,212,255,.3);}
+.prop-W{background:rgba(255,107,0,.15);color:var(--accent2);border:1px solid rgba(255,107,0,.3);}
+.prop-N{background:rgba(0,255,136,.15);color:var(--accent3);border:1px solid rgba(0,255,136,.3);}
+.prop-I{background:rgba(255,204,0,.15);color:var(--warn);border:1px solid rgba(255,204,0,.3);}
+.char-value{font-size:.6rem;color:var(--warn);margin-top:4px;word-break:break-all;font-family:'Share Tech Mono',monospace;}
+.char-value.empty{color:var(--text-dim);}
+.char-actions{display:flex;gap:6px;margin-top:6px;}
+.console{padding:12px 16px;border-top:1px solid var(--panel-border);background:var(--bg);height:160px;overflow-y:auto;font-size:.66rem;line-height:1.8;flex-shrink:0;}
+.cl-info{color:var(--text-dim);}
+.cl-ok{color:var(--accent3);}
+.cl-warn{color:var(--warn);}
+.cl-err{color:var(--accent4);}
+.cl-data{color:var(--accent);}
+.cl-red{color:var(--accent4);}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-dim);}
+.empty-icon{font-family:'Orbitron',monospace;font-size:2rem;color:rgba(0,212,255,.15);letter-spacing:4px;}
+.empty-msg{font-size:.68rem;text-align:center;line-height:2;}
+.auth-warn{background:rgba(255,51,102,.06);border:1px solid rgba(255,51,102,.2);padding:8px 16px;font-size:.6rem;color:rgba(255,51,102,.7);display:flex;align-items:center;gap:8px;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--panel-border);}
+.stat{padding:8px 12px;border-right:1px solid var(--panel-border);position:relative;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent4);}
+.stat:last-child{border-right:none;}
+.slbl{font-size:.52rem;color:var(--text-dim);letter-spacing:2px;font-family:'Orbitron',monospace;}
+.sval{font-family:'Orbitron',monospace;font-size:.95rem;color:var(--text-bright);font-weight:700;margin-top:2px;}
+.connect-overlay{display:none;position:absolute;inset:0;background:rgba(5,10,14,.92);z-index:10;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.connect-overlay.show{display:flex;}
+.spinner{width:40px;height:40px;border:2px solid var(--text-dim);border-top-color:var(--accent4);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.connect-msg{font-family:'Orbitron',monospace;font-size:.7rem;color:var(--accent4);letter-spacing:3px;}
+.right-panel{position:relative;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo"><span>BLE</span> GATT EXPLORER</div>
+  <div class="hdr-right">
+    <span id="hdrInfo" style="font-size:.62rem;">Pisces Moon OS // CYBER Suite</span>
+    <span class="status-pill idle" id="statusPill">IDLE</span>
+  </div>
+</header>
+<div class="content">
+
+  <!-- LEFT: Device list -->
+  <div class="left-panel">
+    <div class="auth-warn">⚠ USE ONLY ON DEVICES YOU OWN OR ARE AUTHORIZED TO TEST</div>
+    <div class="scan-bar">
+      <button class="btn cyan" id="scanBtn" onclick="startScan()">▶ SCAN BLE</button>
+      <button class="btn sm" id="stopBtn" onclick="stopScan()" disabled>■ STOP</button>
+      <span style="font-size:.6rem;color:var(--text-dim);margin-left:auto" id="scanTimer"></span>
+    </div>
+    <div class="ph">NEARBY DEVICES <span class="count" id="devCount">0 found</span></div>
+    <div class="device-list" id="deviceList">
+      <div class="empty-state">
+        <div class="empty-icon">BLE</div>
+        <div class="empty-msg">No devices scanned yet.<br>Press SCAN BLE to discover nearby devices.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: GATT explorer + console -->
+  <div class="right-panel">
+    <div class="connect-overlay" id="connectOverlay">
+      <div class="spinner"></div>
+      <div class="connect-msg" id="connectMsg">CONNECTING...</div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat"><div class="slbl">DEVICES</div><div class="sval" id="statDevices">0</div></div>
+      <div class="stat"><div class="slbl">SERVICES</div><div class="sval" id="statSvcs">0</div></div>
+      <div class="stat"><div class="slbl">CHARS</div><div class="sval" id="statChars">0</div></div>
+      <div class="stat"><div class="slbl">READABLE</div><div class="sval" id="statRead">0</div></div>
+    </div>
+
+    <div class="ph">GATT PROFILE
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="targetLabel" style="color:var(--text-dim);font-size:.55rem;">No device selected</span>
+        <button class="btn red sm" id="disconnectBtn" onclick="disconnectDevice()" style="display:none">DISCONNECT</button>
+        <button class="btn green sm" id="exportBtn" onclick="exportLog()" style="display:none">EXPORT JSON</button>
+      </div>
+    </div>
+
+    <div class="gatt-panel" id="gattPanel">
+      <div class="empty-state">
+        <div class="empty-icon">GATT</div>
+        <div class="empty-msg">Select a device from the left panel<br>to enumerate its GATT profile.<br><br>Connects and reads all services,<br>characteristics, and values.</div>
+      </div>
+    </div>
+
+    <div class="console" id="console">
+      <span class="cl-info">// PISCES MOON BLE GATT EXPLORER</span><br>
+      <span class="cl-info">// Uses Web Bluetooth API (Chrome/Chromium required)</span><br>
+      <span class="cl-info">// Scans nearby devices — select one to connect and enumerate GATT profile</span><br>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────
+let devices = new Map();        // address → {device, name, rssi, adType}
+let activeDevice = null;
+let activeServer = null;
+let gattData = [];              // [{svcUUID, svcName, chars:[{uuid,name,props,value}]}]
+let scanning = false;
+let scanInterval = null;
+let scanSeconds = 0;
+
+// ── Well-known GATT UUIDs ──────────────────────────────────────────────
+const SVC_NAMES = {
+  '1800':'Generic Access','1801':'Generic Attribute','180a':'Device Information',
+  '180d':'Heart Rate','180f':'Battery','1810':'Blood Pressure',
+  '1812':'HID','1816':'Cycling Speed','181a':'Environmental Sensing',
+  'fe50':'Google','fe95':'Xiaomi Mi','fd81':'Apple Nearby'
+};
+const CHAR_NAMES = {
+  '2a00':'Device Name','2a01':'Appearance','2a04':'Connection Params',
+  '2a05':'Service Changed','2a19':'Battery Level','2a24':'Model Number',
+  '2a25':'Serial Number','2a26':'Firmware Rev','2a27':'Hardware Rev',
+  '2a28':'Software Rev','2a29':'Manufacturer Name','2a2b':'Current Time',
+  '2a37':'Heart Rate Measurement','2a38':'Body Sensor Location',
+  '2a39':'Heart Rate Control','2a4a':'HID Information','2a4b':'Report Map',
+  '2a4c':'HID Control Point','2a4d':'HID Report','2a50':'PnP ID',
+  '2a67':'Location & Speed','2a6e':'Temperature','2a6f':'Humidity'
+};
+
+function shortUUID(uuid) {
+  if (uuid.length === 36 && uuid.startsWith('0000')) return uuid.substring(4,8);
+  if (uuid.length === 4) return uuid;
+  return uuid;
+}
+function nameForSvc(uuid) { return SVC_NAMES[shortUUID(uuid).toLowerCase()] || ''; }
+function nameForChar(uuid) { return CHAR_NAMES[shortUUID(uuid).toLowerCase()] || ''; }
+
+// ── Logging ────────────────────────────────────────────────────────────
+function log(msg, cls='cl-info') {
+  const c = document.getElementById('console');
+  const t = document.createElement('span');
+  t.className = cls;
+  t.textContent = msg;
+  c.appendChild(t);
+  c.appendChild(document.createElement('br'));
+  c.scrollTop = c.scrollHeight;
+}
+
+// ── Status pill ────────────────────────────────────────────────────────
+function setStatus(state, label) {
+  const p = document.getElementById('statusPill');
+  p.className = 'status-pill ' + state;
+  p.textContent = label;
+}
+
+// ── RSSI helpers ───────────────────────────────────────────────────────
+function rssiClass(rssi) {
+  if (rssi > -60) return 'rssi-strong';
+  if (rssi > -80) return 'rssi-mid';
+  return 'rssi-weak';
+}
+
+// ── Render device list ─────────────────────────────────────────────────
+function renderDevices() {
+  const list = document.getElementById('deviceList');
+  const arr = [...devices.values()].sort((a,b)=>b.rssi-a.rssi);
+  document.getElementById('devCount').textContent = arr.length + ' found';
+  document.getElementById('statDevices').textContent = arr.length;
+
+  if (arr.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">BLE</div><div class="empty-msg">No devices found yet.<br>Scanning...</div></div>';
+    return;
+  }
+
+  list.innerHTML = arr.map(d => `
+    <div class="device-row ${activeDevice && activeDevice.id===d.id?'active':''}" onclick="connectDevice('${d.id}')">
+      <div>
+        <div class="dev-mac">${d.id}</div>
+        <div class="dev-name">${esc(d.name||'Unknown Device')}</div>
+        <div class="dev-vendor">${d.adType||''}</div>
+      </div>
+      <div>
+        <span class="rssi-badge ${rssiClass(d.rssi)}">${d.rssi} dBm</span>
+      </div>
+    </div>`).join('');
+}
+
+// ── Scan ───────────────────────────────────────────────────────────────
+async function startScan() {
+  if (!navigator.bluetooth) {
+    log('// Web Bluetooth API not available.','cl-err');
+    log('// Run in Chrome/Chromium with --enable-experimental-web-platform-features','cl-warn');
+    // Demo mode
+    startDemoMode();
+    return;
+  }
+
+  try {
+    setStatus('scanning','SCANNING');
+    document.getElementById('scanBtn').disabled = true;
+    document.getElementById('stopBtn').disabled = false;
+    scanning = true;
+    scanSeconds = 0;
+    log('// BLE scan started — requesting device...','cl-info');
+
+    // Web Bluetooth requires user gesture + filter or acceptAllDevices
+    const device = await navigator.bluetooth.requestDevice({
+      acceptAllDevices: true,
+      optionalServices: Object.keys(SVC_NAMES).map(u => parseInt(u,16))
+    });
+
+    const entry = {
+      id: device.id || device.name || Math.random().toString(36).substring(2),
+      name: device.name || null,
+      rssi: -65,
+      adType: 'BLE',
+      device: device
+    };
+    devices.set(entry.id, entry);
+    log(`// Device found: ${entry.name||'Unknown'} [${entry.id}]`,'cl-ok');
+    renderDevices();
+    setStatus('idle','IDLE');
+
+  } catch(e) {
+    if (e.name !== 'NotFoundError') log('// Scan error: ' + e.message,'cl-err');
+    setStatus('idle','IDLE');
+  }
+  document.getElementById('scanBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  scanning = false;
+}
+
+function stopScan() {
+  scanning = false;
+  setStatus('idle','IDLE');
+  document.getElementById('scanBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  log('// Scan stopped.','cl-warn');
+}
+
+// ── Connect & enumerate ────────────────────────────────────────────────
+async function connectDevice(id) {
+  const entry = devices.get(id);
+  if (!entry) return;
+
+  const overlay = document.getElementById('connectOverlay');
+  const msg = document.getElementById('connectMsg');
+  overlay.classList.add('show');
+  msg.textContent = 'CONNECTING...';
+
+  try {
+    if (activeServer) {
+      try { activeServer.disconnect(); } catch(e) {}
+      activeServer = null;
+    }
+
+    log(`// Connecting to ${entry.name||entry.id}...`,'cl-info');
+    activeDevice = entry.device;
+
+    msg.textContent = 'PAIRING...';
+    const server = await entry.device.gatt.connect();
+    activeServer = server;
+    log('// GATT connected','cl-ok');
+
+    msg.textContent = 'ENUMERATING SERVICES...';
+    document.getElementById('targetLabel').textContent = entry.name||entry.id;
+    document.getElementById('disconnectBtn').style.display = '';
+    document.getElementById('exportBtn').style.display = '';
+
+    const services = await server.getPrimaryServices();
+    log(`// Found ${services.length} services`,'cl-data');
+    gattData = [];
+
+    let totalChars = 0, readableChars = 0;
+
+    for (const svc of services) {
+      const svcUUID = svc.uuid;
+      const svcName = nameForSvc(svcUUID);
+      const svcEntry = {svcUUID, svcName, chars:[]};
+      gattData.push(svcEntry);
+
+      msg.textContent = `READING ${svcName||svcUUID.substring(0,8)}...`;
+
+      try {
+        const chars = await svc.getCharacteristics();
+        totalChars += chars.length;
+
+        for (const ch of chars) {
+          const props = ch.properties;
+          const propList = [];
+          if (props.read)     propList.push('R');
+          if (props.write || props.writeWithoutResponse) propList.push('W');
+          if (props.notify)   propList.push('N');
+          if (props.indicate) propList.push('I');
+
+          let value = null;
+          if (props.read) {
+            readableChars++;
+            try {
+              const dv = await ch.readValue();
+              value = formatValue(dv);
+            } catch(e) {
+              value = '(read error)';
+            }
+          }
+
+          svcEntry.chars.push({
+            uuid: ch.uuid,
+            name: nameForChar(ch.uuid),
+            props: propList,
+            value,
+            characteristic: ch
+          });
+        }
+      } catch(e) {
+        log(`// Service ${svcUUID.substring(0,8)}... chars error: ${e.message}`,'cl-warn');
+      }
+    }
+
+    document.getElementById('statSvcs').textContent = services.length;
+    document.getElementById('statChars').textContent = totalChars;
+    document.getElementById('statRead').textContent = readableChars;
+    log(`// Enumeration complete — ${services.length} svcs, ${totalChars} chars, ${readableChars} readable`,'cl-ok');
+
+    renderGATT();
+
+  } catch(e) {
+    log('// Connection failed: ' + e.message,'cl-err');
+    activeDevice = null;
+    activeServer = null;
+  }
+
+  overlay.classList.remove('show');
+  renderDevices();
+}
+
+function formatValue(dv) {
+  if (!dv || dv.byteLength === 0) return '(empty)';
+  const bytes = new Uint8Array(dv.buffer);
+  const hex = [...bytes].map(b=>b.toString(16).padStart(2,'0')).join(' ');
+  let ascii = '';
+  for (const b of bytes) ascii += (b >= 32 && b < 127) ? String.fromCharCode(b) : '.';
+  return hex.substring(0, 47) + (bytes.length>8?'..':'') + ' | ' + ascii.substring(0,8);
+}
+
+// ── Render GATT profile ────────────────────────────────────────────────
+function renderGATT() {
+  const panel = document.getElementById('gattPanel');
+  if (gattData.length === 0) {
+    panel.innerHTML = '<div class="empty-state"><div class="empty-msg">No services found.</div></div>';
+    return;
+  }
+
+  panel.innerHTML = gattData.map((svc, si) => `
+    <div class="svc-block">
+      <div class="svc-header" onclick="toggleSvc(${si})">
+        <span style="font-family:Orbitron,monospace;font-size:.55rem;color:var(--accent4)">SVC</span>
+        <span class="svc-uuid">${svc.svcUUID}</span>
+        <span class="svc-name">${svc.svcName}</span>
+        <span style="font-size:.55rem;color:var(--text-dim);margin-left:8px">${svc.chars.length} chars</span>
+        <span style="margin-left:auto;font-size:.6rem;color:var(--text-dim)" id="svcToggle${si}">▼</span>
+      </div>
+      <div id="svcChars${si}">
+        ${svc.chars.map((ch, ci) => `
+          <div class="char-row">
+            <div class="char-uuid">${ch.uuid} ${ch.name?`<span style="color:var(--text-dim)">// ${ch.name}</span>`:''}</div>
+            <div class="char-props">
+              ${ch.props.map(p=>`<span class="prop-tag prop-${p}">${propLabel(p)}</span>`).join('')}
+            </div>
+            ${ch.value !== null ? `<div class="char-value ${ch.value==='(empty)'||ch.value.includes('error')?'empty':''}">${esc(ch.value)}</div>` : ''}
+            <div class="char-actions">
+              ${ch.props.includes('R') ? `<button class="btn cyan sm" onclick="readChar(${si},${ci})">READ</button>` : ''}
+              ${ch.props.includes('N') ? `<button class="btn green sm" onclick="subscribeChar(${si},${ci})">NOTIFY</button>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+
+function propLabel(p) {
+  return {R:'READ',W:'WRITE',N:'NOTIFY',I:'INDICATE'}[p]||p;
+}
+
+function toggleSvc(si) {
+  const el = document.getElementById('svcChars'+si);
+  const tog = document.getElementById('svcToggle'+si);
+  const hidden = el.style.display==='none';
+  el.style.display = hidden ? '' : 'none';
+  tog.textContent = hidden ? '▼' : '▶';
+}
+
+async function readChar(si, ci) {
+  const ch = gattData[si]?.chars[ci];
+  if (!ch?.characteristic) return;
+  try {
+    const dv = await ch.characteristic.readValue();
+    const fmt = formatValue(dv);
+    ch.value = fmt;
+    log(`// READ ${ch.uuid.substring(0,8)}... → ${fmt}`,'cl-data');
+    renderGATT();
+  } catch(e) {
+    log('// Read error: ' + e.message,'cl-err');
+  }
+}
+
+async function subscribeChar(si, ci) {
+  const ch = gattData[si]?.chars[ci];
+  if (!ch?.characteristic) return;
+  try {
+    await ch.characteristic.startNotifications();
+    ch.characteristic.addEventListener('characteristicvaluechanged', (e) => {
+      const fmt = formatValue(e.target.value);
+      ch.value = fmt;
+      log(`// NOTIFY ${ch.uuid.substring(0,8)}... → ${fmt}`,'cl-data');
+      renderGATT();
+    });
+    log(`// Subscribed to ${ch.name||ch.uuid.substring(0,8)}...`,'cl-ok');
+  } catch(e) {
+    log('// Subscribe error: ' + e.message,'cl-err');
+  }
+}
+
+function disconnectDevice() {
+  if (activeServer) {
+    try { activeServer.disconnect(); } catch(e) {}
+    activeServer = null;
+  }
+  activeDevice = null;
+  gattData = [];
+  document.getElementById('targetLabel').textContent = 'No device selected';
+  document.getElementById('disconnectBtn').style.display = 'none';
+  document.getElementById('exportBtn').style.display = 'none';
+  document.getElementById('statSvcs').textContent = '0';
+  document.getElementById('statChars').textContent = '0';
+  document.getElementById('statRead').textContent = '0';
+  document.getElementById('gattPanel').innerHTML = '<div class="empty-state"><div class="empty-icon">GATT</div><div class="empty-msg">Disconnected.<br>Select a device to reconnect.</div></div>';
+  log('// Disconnected.','cl-warn');
+  renderDevices();
+}
+
+function exportLog() {
+  const out = {
+    timestamp: new Date().toISOString(),
+    device: activeDevice?.id || 'unknown',
+    services: gattData.map(s=>({
+      uuid: s.svcUUID, name: s.svcName,
+      characteristics: s.chars.map(c=>({uuid:c.uuid,name:c.name,props:c.props,value:c.value}))
+    }))
+  };
+  const blob = new Blob([JSON.stringify(out, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gatt_' + Date.now() + '.json';
+  a.click();
+  log('// GATT log exported to JSON','cl-ok');
+}
+
+// ── Demo mode (no Web Bluetooth) ───────────────────────────────────────
+function startDemoMode() {
+  log('// Running in DEMO MODE — Web Bluetooth not available','cl-warn');
+  log('// Populating simulated BLE devices','cl-info');
+  const demo = [
+    {id:'AA:BB:CC:DD:EE:01',name:'Mi Band 7',rssi:-52,adType:'BLE LE'},
+    {id:'AA:BB:CC:DD:EE:02',name:'AirPods Pro',rssi:-61,adType:'BLE Classic'},
+    {id:'AA:BB:CC:DD:EE:03',name:'PM-Keyboard',rssi:-44,adType:'BLE HID'},
+    {id:'AA:BB:CC:DD:EE:04',name:null,rssi:-78,adType:'BLE Unknown'},
+    {id:'AA:BB:CC:DD:EE:05',name:'Galaxy Watch5',rssi:-67,adType:'BLE LE'},
+  ];
+  demo.forEach(d => devices.set(d.id, {...d, device:null}));
+  renderDevices();
+  setStatus('idle','IDLE');
+  log('// Click a device to see demo GATT enumeration','cl-info');
+}
+
+// Override connectDevice for demo
+const _connectDevice = connectDevice;
+window.connectDevice = async function(id) {
+  const entry = devices.get(id);
+  if (!entry || entry.device !== null) { return _connectDevice(id); }
+
+  // Demo connect
+  document.getElementById('connectOverlay').classList.add('show');
+  document.getElementById('connectMsg').textContent = 'CONNECTING...';
+  log(`// [DEMO] Connecting to ${entry.name||entry.id}...`,'cl-info');
+  await new Promise(r=>setTimeout(r,800));
+  document.getElementById('connectMsg').textContent = 'ENUMERATING...';
+  await new Promise(r=>setTimeout(r,600));
+
+  document.getElementById('targetLabel').textContent = entry.name||entry.id;
+  document.getElementById('disconnectBtn').style.display = '';
+  document.getElementById('exportBtn').style.display = '';
+
+  gattData = getDemoGATT(entry.name);
+  let tc=0,rc=0;
+  gattData.forEach(s=>{tc+=s.chars.length;s.chars.forEach(c=>{if(c.props.includes('R'))rc++;});});
+  document.getElementById('statSvcs').textContent = gattData.length;
+  document.getElementById('statChars').textContent = tc;
+  document.getElementById('statRead').textContent = rc;
+  log(`// [DEMO] ${gattData.length} services, ${tc} chars enumerated`,'cl-ok');
+
+  document.getElementById('connectOverlay').classList.remove('show');
+  renderGATT();
+  renderDevices();
+};
+
+function getDemoGATT(name) {
+  const base = [
+    {svcUUID:'00001800-0000-1000-8000-00805f9b34fb',svcName:'Generic Access',chars:[
+      {uuid:'00002a00-0000-1000-8000-00805f9b34fb',name:'Device Name',props:['R'],value:`48 65 6C 6C 6F | ${name||'Device'}`,characteristic:null},
+      {uuid:'00002a01-0000-1000-8000-00805f9b34fb',name:'Appearance',props:['R'],value:'00 00 | ..',characteristic:null},
+    ]},
+    {svcUUID:'0000180a-0000-1000-8000-00805f9b34fb',svcName:'Device Information',chars:[
+      {uuid:'00002a29-0000-1000-8000-00805f9b34fb',name:'Manufacturer Name',props:['R'],value:'58 69 61 6F 6D 69 | Xiaomi',characteristic:null},
+      {uuid:'00002a26-0000-1000-8000-00805f9b34fb',name:'Firmware Rev',props:['R'],value:'31 2E 30 2E 30 | 1.0.0',characteristic:null},
+      {uuid:'00002a50-0000-1000-8000-00805f9b34fb',name:'PnP ID',props:['R'],value:'02 5E 04 00 08 00 01 | .......',characteristic:null},
+    ]},
+    {svcUUID:'0000180f-0000-1000-8000-00805f9b34fb',svcName:'Battery',chars:[
+      {uuid:'00002a19-0000-1000-8000-00805f9b34fb',name:'Battery Level',props:['R','N'],value:'5A | Z (90%)',characteristic:null},
+    ]},
+  ];
+  if (name==='PM-Keyboard') {
+    base.push({svcUUID:'00001812-0000-1000-8000-00805f9b34fb',svcName:'HID',chars:[
+      {uuid:'00002a4a-0000-1000-8000-00805f9b34fb',name:'HID Information',props:['R'],value:'11 01 00 02 | ....',characteristic:null},
+      {uuid:'00002a4b-0000-1000-8000-00805f9b34fb',name:'Report Map',props:['R'],value:'05 01 09 06 A1 01 ... | .......',characteristic:null},
+      {uuid:'00002a4d-0000-1000-8000-00805f9b34fb',name:'HID Report',props:['R','N'],value:'00 00 00 00 00 00 00 00 | ........',characteristic:null},
+      {uuid:'00002a4c-0000-1000-8000-00805f9b34fb',name:'HID Control Point',props:['W'],value:null,characteristic:null},
+    ]});
+  }
+  return base;
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Auto-start demo if no bluetooth
+window.addEventListener('load',()=>{
+  if (!navigator.bluetooth) {
+    log('// Web Bluetooth API unavailable — entering demo mode','cl-warn');
+    log('// For real scanning: chromium --enable-experimental-web-platform-features','cl-info');
+    setTimeout(startDemoMode, 500);
+  }
+});
+</script>
+</body></html>

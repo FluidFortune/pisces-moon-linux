@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — rf_spectrum.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // RF SPECTRUM ANALYZER -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // RF SPECTRUM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.1) 2px,rgba(0,0,0,.1) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--accent3);letter-spacing:3px;}
+.logo span{color:var(--accent);}
+.ctrl-bar{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:8px 16px;display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
+.btn{padding:6px 14px;background:transparent;border:1px solid var(--accent3);color:var(--accent3);font-family:'Share Tech Mono',monospace;font-size:.65rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
+.btn:hover{background:var(--accent3);color:var(--bg);}
+.btn.orange{border-color:var(--accent2);color:var(--accent2);}
+.btn.orange:hover{background:var(--accent2);color:var(--bg);}
+.btn.red{border-color:var(--accent4);color:var(--accent4);}
+.btn.red:hover{background:var(--accent4);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.ctrl-group{display:flex;align-items:center;gap:6px;font-size:.62rem;color:var(--text-dim);}
+.ctrl-group label{font-family:'Orbitron',monospace;font-size:.52rem;letter-spacing:2px;}
+.ctrl-group input[type=range]{width:90px;accent-color:var(--accent3);}
+.ctrl-group span{font-family:'Orbitron',monospace;color:var(--text-bright);min-width:50px;font-size:.65rem;}
+.freq-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:5px 8px;width:120px;outline:none;}
+.freq-input:focus{border-color:var(--accent3);}
+.band-btns{display:flex;gap:4px;}
+.band-btn{padding:3px 8px;font-size:.58rem;border:1px solid var(--text-dim);color:var(--text-dim);background:transparent;cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:1px;transition:all .15s;}
+.band-btn:hover,.band-btn.active{border-color:var(--accent3);color:var(--accent3);background:rgba(0,255,136,.08);}
+.viz-area{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
+.waterfall-wrap{flex:1;overflow:hidden;position:relative;}
+canvas#waterfall{display:block;width:100%;height:100%;}
+.bar-wrap{height:130px;flex-shrink:0;position:relative;}
+canvas#barChart{display:block;width:100%;height:100%;}
+.freq-axis{display:flex;justify-content:space-between;padding:2px 8px;font-size:.55rem;color:var(--text-dim);font-family:'Orbitron',monospace;background:var(--bg2);border-top:1px solid var(--panel-border);flex-shrink:0;}
+.info-bar{background:var(--bg2);border-top:1px solid var(--panel-border);padding:6px 16px;display:flex;gap:24px;align-items:center;font-size:.6rem;flex-shrink:0;}
+.info-item{display:flex;gap:6px;align-items:center;}
+.info-label{color:var(--text-dim);font-family:'Orbitron',monospace;font-size:.52rem;letter-spacing:1px;}
+.info-val{color:var(--text-bright);font-family:'Orbitron',monospace;}
+.peak-val{color:var(--accent4);}
+.cursor-line{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,204,0,.5);pointer-events:none;display:none;}
+.cursor-label{position:absolute;top:4px;background:rgba(5,10,14,.9);border:1px solid var(--warn);padding:2px 6px;font-size:.55rem;color:var(--warn);font-family:'Orbitron',monospace;white-space:nowrap;pointer-events:none;}
+.pill{padding:3px 10px;border:1px solid;border-radius:2px;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;}
+.pill.active{border-color:var(--accent3);color:var(--accent3);animation:blink .8s step-end infinite;}
+.pill.idle{border-color:var(--text-dim);color:var(--text-dim);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.colorscale{display:flex;align-items:center;gap:6px;font-size:.55rem;color:var(--text-dim);}
+.cs-bar{width:80px;height:8px;background:linear-gradient(to right,#0000ff,#00ffff,#00ff00,#ffff00,#ff0000);}
+</style></head><body>
+<header>
+  <div class="logo"><span>RF</span> SPECTRUM ANALYZER</div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:.6rem;color:var(--text-dim)">Pisces Moon OS // CYBER Suite</span>
+    <span class="pill idle" id="statusPill">IDLE</span>
+  </div>
+</header>
+
+<div class="ctrl-bar">
+  <button class="btn" id="startBtn" onclick="startSweep()">▶ SWEEP</button>
+  <button class="btn red sm" id="stopBtn" onclick="stopSweep()" disabled>■ STOP</button>
+  <button class="btn sm orange" onclick="clearPeaks()">CLEAR PEAKS</button>
+
+  <div class="ctrl-group">
+    <label>CENTER</label>
+    <input class="freq-input" id="centerFreq" value="915" placeholder="MHz" onchange="updateFreqRange()">
+    <span style="font-size:.6rem;color:var(--text-dim)">MHz</span>
+  </div>
+  <div class="ctrl-group">
+    <label>SPAN</label>
+    <input type="range" id="spanSlider" min="1" max="100" value="20" oninput="updateSpan()">
+    <span id="spanVal">20 MHz</span>
+  </div>
+  <div class="ctrl-group">
+    <label>DWELL</label>
+    <input type="range" id="dwellSlider" min="1" max="20" value="3" oninput="updateDwell()">
+    <span id="dwellVal">3ms</span>
+  </div>
+
+  <div class="band-btns">
+    <button class="band-btn" onclick="setBand(433,10)">433M</button>
+    <button class="band-btn" onclick="setBand(868,20)">868M</button>
+    <button class="band-btn active" onclick="setBand(915,20)">915M</button>
+    <button class="band-btn" onclick="setBand(2437,83.5)">2.4G</button>
+    <button class="band-btn" onclick="setBand(5500,500)">5G</button>
+  </div>
+
+  <div class="colorscale" style="margin-left:auto">
+    <span>Quiet</span><div class="cs-bar"></div><span>Strong</span>
+  </div>
+</div>
+
+<div class="viz-area" id="vizArea">
+  <div class="waterfall-wrap" id="waterfallWrap">
+    <canvas id="waterfall"></canvas>
+    <div class="cursor-line" id="cursorLine"></div>
+    <div class="cursor-label" id="cursorLabel"></div>
+  </div>
+  <div class="bar-wrap">
+    <canvas id="barChart"></canvas>
+  </div>
+</div>
+
+<div class="freq-axis" id="freqAxis"></div>
+
+<div class="info-bar">
+  <div class="info-item"><span class="info-label">CENTER</span><span class="info-val" id="infoCtr">915.0 MHz</span></div>
+  <div class="info-item"><span class="info-label">SPAN</span><span class="info-val" id="infoSpan">20.0 MHz</span></div>
+  <div class="info-item"><span class="info-label">START</span><span class="info-val" id="infoStart">905.0 MHz</span></div>
+  <div class="info-item"><span class="info-label">STOP</span><span class="info-val" id="infoStop">925.0 MHz</span></div>
+  <div class="info-item"><span class="info-label">PEAK</span><span class="info-val peak-val" id="infoPeak">— dBm</span></div>
+  <div class="info-item"><span class="info-label">CURSOR</span><span class="info-val" id="infoCursor">— MHz / — dBm</span></div>
+  <div class="info-item" style="margin-left:auto"><span class="info-label">SWEEPS</span><span class="info-val" id="infoSweeps">0</span></div>
+</div>
+
+<script>
+// ── Config ─────────────────────────────────────────────────────────────
+let centerMHz = 915;
+let spanMHz   = 20;
+let dwellMs   = 3;
+let steps     = 256;
+let running   = false;
+let sweepCount = 0;
+
+const RSSI_MIN = -120;
+const RSSI_MAX = -20;
+
+// ── Canvas setup ────────────────────────────────────────────────────────
+const wfCanvas  = document.getElementById('waterfall');
+const barCanvas = document.getElementById('barChart');
+let wfCtx, barCtx;
+let wfW, wfH, barW, barH;
+
+// Waterfall image data
+let wfImageData = null;
+let peakHold = null;   // per-pixel peak RSSI
+let lastSweep = null;  // last sweep RSSI values [steps]
+
+function resizeCanvases() {
+  const wrap = document.getElementById('waterfallWrap');
+  wfW = wrap.clientWidth; wfH = wrap.clientHeight;
+  wfCanvas.width = wfW; wfCanvas.height = wfH;
+  wfCtx = wfCanvas.getContext('2d');
+
+  const bw = document.getElementById('bar-wrap') || wrap;
+  barW = barCanvas.parentElement.clientWidth;
+  barH = barCanvas.parentElement.clientHeight;
+  barCanvas.width = barW; barCanvas.height = barH;
+  barCtx = barCanvas.getContext('2d');
+
+  peakHold = new Float32Array(wfW).fill(RSSI_MIN);
+  lastSweep = new Float32Array(wfW).fill(RSSI_MIN);
+  wfImageData = wfCtx.createImageData(wfW, wfH);
+  // Fill with black
+  for (let i=0;i<wfImageData.data.length;i+=4){
+    wfImageData.data[i]=0;wfImageData.data[i+1]=0;wfImageData.data[i+2]=5;wfImageData.data[i+3]=255;
+  }
+  updateFreqAxis();
+}
+
+// ── Color mapping ────────────────────────────────────────────────────────
+function rssiToColor(rssi) {
+  let norm = (rssi - RSSI_MIN) / (RSSI_MAX - RSSI_MIN);
+  norm = Math.max(0, Math.min(1, norm));
+  let r, g, b;
+  if (norm < 0.25)      { const t=norm/0.25;      r=0;             g=Math.floor(255*t); b=255; }
+  else if (norm < 0.5)  { const t=(norm-0.25)/0.25; r=0;           g=255; b=Math.floor(255*(1-t)); }
+  else if (norm < 0.75) { const t=(norm-0.5)/0.25;  r=Math.floor(255*t); g=255; b=0; }
+  else                  { const t=(norm-0.75)/0.25;  r=255; g=Math.floor(255*(1-t)); b=0; }
+  return [r, g, b];
+}
+
+function rssiToHex(rssi) {
+  const [r,g,b] = rssiToColor(rssi);
+  return `rgb(${r},${g},${b})`;
+}
+
+// ── Sweep simulation ─────────────────────────────────────────────────────
+// Simulates RF activity: noise floor + known signal sources
+const SIGNAL_SOURCES = [
+  {freq:915.0, bw:0.5,  power:-45, name:'LoRa 915'},
+  {freq:916.8, bw:0.2,  power:-62, name:''},
+  {freq:908.4, bw:0.2,  power:-55, name:'Z-Wave'},
+  {freq:433.9, bw:0.3,  power:-58, name:'ISM 433'},
+  {freq:868.3, bw:0.2,  power:-70, name:'LoRa EU'},
+  {freq:2437,  bw:22,   power:-40, name:'WiFi CH6'},
+  {freq:2412,  bw:22,   power:-55, name:'WiFi CH1'},
+  {freq:5500,  bw:80,   power:-48, name:'WiFi 5G'},
+];
+
+function generateSweep() {
+  const startF = centerMHz - spanMHz/2;
+  const sweep  = new Float32Array(steps);
+  const stepSz = spanMHz / steps;
+
+  for (let i=0; i<steps; i++) {
+    const freq = startF + i*stepSz;
+    // Noise floor with gaussian noise
+    let rssi = -100 + (Math.random()-0.5)*8;
+
+    // Add signal sources
+    for (const src of SIGNAL_SOURCES) {
+      const dist = Math.abs(freq - src.freq);
+      if (dist < src.bw*2) {
+        const gain = src.power * Math.exp(-dist*dist/(2*src.bw*src.bw*0.2));
+        const sig = gain + (Math.random()-0.5)*4;
+        if (sig > rssi) rssi = sig;
+      }
+    }
+
+    sweep[i] = Math.max(RSSI_MIN, Math.min(RSSI_MAX, rssi));
+  }
+  return sweep;
+}
+
+let sweepTimer = null;
+
+function startSweep() {
+  running = true;
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('stopBtn').disabled = false;
+  document.getElementById('statusPill').className = 'pill active';
+  document.getElementById('statusPill').textContent = 'SWEEPING';
+  sweepLoop();
+}
+
+function stopSweep() {
+  running = false;
+  clearTimeout(sweepTimer);
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  document.getElementById('statusPill').className = 'pill idle';
+  document.getElementById('statusPill').textContent = 'IDLE';
+}
+
+function sweepLoop() {
+  if (!running) return;
+  const sweep = generateSweep();
+  lastSweep = sweep;
+
+  // Map steps → pixels
+  const pixelRSSI = new Float32Array(wfW);
+  for (let px=0; px<wfW; px++) {
+    const si = Math.floor(px * steps / wfW);
+    pixelRSSI[px] = sweep[Math.min(si, steps-1)];
+    if (pixelRSSI[px] > peakHold[px]) peakHold[px] = pixelRSSI[px];
+  }
+
+  addWaterfallRow(pixelRSSI);
+  drawBars(pixelRSSI);
+  sweepCount++;
+  document.getElementById('infoSweeps').textContent = sweepCount;
+
+  // Peak RSSI this sweep
+  const peak = Math.max(...sweep);
+  document.getElementById('infoPeak').textContent = peak.toFixed(1) + ' dBm';
+
+  // Decay peaks
+  for (let i=0; i<wfW; i++) peakHold[i] = Math.max(RSSI_MIN, peakHold[i]-0.5);
+
+  sweepTimer = setTimeout(sweepLoop, dwellMs * steps);
+}
+
+// ── Waterfall ────────────────────────────────────────────────────────────
+function addWaterfallRow(pixelRSSI) {
+  if (!wfImageData) return;
+  const data = wfImageData.data;
+  // Scroll up: copy rows [1..H-1] → [0..H-2]
+  const rowBytes = wfW * 4;
+  data.copyWithin(0, rowBytes);
+  // Write new row at bottom
+  const base = (wfH-1) * rowBytes;
+  for (let px=0; px<wfW; px++) {
+    const [r,g,b] = rssiToColor(pixelRSSI[px]);
+    data[base + px*4]   = r;
+    data[base + px*4+1] = g;
+    data[base + px*4+2] = b;
+    data[base + px*4+3] = 255;
+  }
+  wfCtx.putImageData(wfImageData, 0, 0);
+}
+
+// ── Bar chart ─────────────────────────────────────────────────────────────
+function drawBars(pixelRSSI) {
+  if (!barCtx) return;
+  barCtx.fillStyle = '#050a0e';
+  barCtx.fillRect(0, 0, barW, barH);
+
+  // Grid lines
+  barCtx.strokeStyle = 'rgba(26,58,80,.4)';
+  barCtx.lineWidth = 1;
+  for (let db = -120; db <= -20; db += 20) {
+    const y = barH - (db - RSSI_MIN) / (RSSI_MAX - RSSI_MIN) * barH;
+    barCtx.beginPath(); barCtx.moveTo(0, y); barCtx.lineTo(barW, y); barCtx.stroke();
+    barCtx.fillStyle = 'rgba(42,88,112,.6)';
+    barCtx.font = '9px Share Tech Mono';
+    barCtx.fillText(db + 'dBm', 2, y - 2);
+  }
+
+  // Bars
+  for (let px=0; px<wfW && px<pixelRSSI.length; px++) {
+    const rssi = pixelRSSI[px];
+    const norm = (rssi - RSSI_MIN) / (RSSI_MAX - RSSI_MIN);
+    const barH2 = Math.max(1, norm * barH);
+    const [r,g,b] = rssiToColor(rssi);
+    barCtx.fillStyle = `rgb(${r},${g},${b})`;
+    barCtx.fillRect(px, barH - barH2, 1, barH2);
+
+    // Peak hold dot
+    const pnorm = (peakHold[px] - RSSI_MIN) / (RSSI_MAX - RSSI_MIN);
+    const py = barH - pnorm * barH;
+    barCtx.fillStyle = 'rgba(255,255,255,.7)';
+    barCtx.fillRect(px, Math.max(0, py-1), 1, 2);
+  }
+}
+
+// ── Controls ──────────────────────────────────────────────────────────────
+function updateFreqRange() {
+  centerMHz = parseFloat(document.getElementById('centerFreq').value) || 915;
+  updateInfoBar();
+  updateFreqAxis();
+}
+function updateSpan() {
+  spanMHz = parseFloat(document.getElementById('spanSlider').value);
+  document.getElementById('spanVal').textContent = spanMHz + ' MHz';
+  updateInfoBar();
+  updateFreqAxis();
+}
+function updateDwell() {
+  dwellMs = parseInt(document.getElementById('dwellSlider').value);
+  document.getElementById('dwellVal').textContent = dwellMs + 'ms';
+}
+function setBand(ctr, span) {
+  centerMHz = ctr;
+  spanMHz   = span;
+  document.getElementById('centerFreq').value = ctr;
+  document.getElementById('spanSlider').value = Math.min(100, span);
+  document.getElementById('spanVal').textContent = spanMHz + ' MHz';
+  document.querySelectorAll('.band-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  updateInfoBar(); updateFreqAxis();
+  clearPeaks();
+}
+function clearPeaks() {
+  if (peakHold) peakHold.fill(RSSI_MIN);
+}
+function updateInfoBar() {
+  const start = centerMHz - spanMHz/2;
+  const stop  = centerMHz + spanMHz/2;
+  document.getElementById('infoCtr').textContent   = centerMHz.toFixed(1) + ' MHz';
+  document.getElementById('infoSpan').textContent  = spanMHz.toFixed(1) + ' MHz';
+  document.getElementById('infoStart').textContent = start.toFixed(1) + ' MHz';
+  document.getElementById('infoStop').textContent  = stop.toFixed(1) + ' MHz';
+}
+function updateFreqAxis() {
+  const start = centerMHz - spanMHz/2;
+  const stop  = centerMHz + spanMHz/2;
+  const axis  = document.getElementById('freqAxis');
+  const ticks = 9;
+  const labels = [];
+  for (let i=0; i<ticks; i++) {
+    const f = start + (stop-start)*i/(ticks-1);
+    labels.push(`<span>${f.toFixed(1)}M</span>`);
+  }
+  axis.innerHTML = labels.join('');
+}
+
+// ── Cursor ───────────────────────────────────────────────────────────────
+document.getElementById('waterfall').addEventListener('mousemove', e => {
+  const rect = wfCanvas.getBoundingClientRect();
+  const px   = Math.floor((e.clientX - rect.left) * wfW / rect.width);
+  const start = centerMHz - spanMHz/2;
+  const freq  = start + (px/wfW)*spanMHz;
+  const rssi  = lastSweep ? lastSweep[Math.floor(px*steps/wfW)] : null;
+
+  const line = document.getElementById('cursorLine');
+  const lbl  = document.getElementById('cursorLabel');
+  const pct  = (e.clientX - rect.left) / rect.width * 100;
+  line.style.left = pct + '%';
+  line.style.display = 'block';
+
+  const lblText = `${freq.toFixed(2)} MHz ${rssi!==null ? '/ '+rssi.toFixed(1)+' dBm' : ''}`;
+  lbl.textContent = lblText;
+  lbl.style.left  = Math.min(pct, 80) + '%';
+  lbl.style.display = 'block';
+
+  document.getElementById('infoCursor').textContent =
+    `${freq.toFixed(2)} MHz / ${rssi!==null?rssi.toFixed(1)+' dBm':'—'}`;
+});
+document.getElementById('waterfall').addEventListener('mouseleave', () => {
+  document.getElementById('cursorLine').style.display='none';
+  document.getElementById('cursorLabel').style.display='none';
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────
+window.addEventListener('resize', resizeCanvases);
+window.addEventListener('load', () => {
+  resizeCanvases();
+  updateInfoBar();
+  updateFreqAxis();
+  // Auto-start demo sweep
+  startSweep();
+});
+</script>
+</body></html>

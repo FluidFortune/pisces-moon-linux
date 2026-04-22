@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — survival_ref.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // SURVIVAL REFERENCE -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // SURVIVAL REF</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent2);letter-spacing:3px;}
+.content{padding:20px;max-width:1100px;margin:0 auto;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;color:var(--accent2);letter-spacing:3px;}
+.pb{padding:14px 16px;}
+.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn:hover{background:var(--accent2);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;border-color:var(--accent);color:var(--accent);}
+.btn.sm:hover{background:var(--accent);color:var(--bg);}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;width:100%;}
+.pm-input:focus{border-color:var(--accent2);}
+.pm-input::placeholder{color:var(--text-dim);}
+.tabs{display:flex;border-bottom:1px solid var(--panel-border);flex-wrap:wrap;}
+.tab{padding:9px 14px;font-size:.58rem;color:var(--text-dim);cursor:pointer;letter-spacing:2px;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:'Orbitron',monospace;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
+.tc{display:none;padding:16px;}.tc.active{display:block;}
+.surv-card{background:var(--bg2);border:1px solid var(--panel-border);padding:12px;margin-bottom:8px;border-left:3px solid var(--accent2);}
+.surv-card h3{font-family:'Orbitron',monospace;font-size:.65rem;color:var(--accent2);letter-spacing:2px;margin-bottom:6px;}
+.surv-card p{font-size:.7rem;color:var(--text);line-height:1.65;}
+.ai-answer{background:rgba(255,107,0,.04);border:1px solid rgba(255,107,0,.15);padding:14px;font-size:.73rem;line-height:1.75;white-space:pre-wrap;}
+.thinking{display:flex;gap:5px;padding:10px 0;}
+.thinking span{width:7px;height:7px;background:var(--accent2);border-radius:50%;animation:th 1.2s infinite;}
+.thinking span:nth-child(2){animation-delay:.2s;}.thinking span:nth-child(3){animation-delay:.4s;}
+@keyframes th{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+.p1{color:var(--accent4)}.p2{color:var(--warn)}.p3{color:var(--accent3)}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo">PISCES MOON // <span style="color:var(--gold)">SURVIVAL REF</span></div>
+  <div style="font-size:.62rem;color:var(--text-dim)">Offline-capable field reference</div>
+</header>
+<div class="content">
+  <div class="panel">
+    <div class="ph">AI FIELD CONSULTANT — Powered by Gemini</div>
+    <div class="pb">
+      <input class="pm-input" id="survQ" placeholder="Ask: how to start fire, find water in desert, build shelter...">
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn sm" onclick="q('Water purification in wilderness')">WATER</button>
+        <button class="btn sm" onclick="q('Emergency shelter building techniques')">SHELTER</button>
+        <button class="btn sm" onclick="q('Fire starting without matches')">FIRE</button>
+        <button class="btn sm" onclick="q('Navigation without GPS compass')">NAVIGATE</button>
+        <button class="btn sm" onclick="q('Edible plants North America')">FOOD</button>
+        <button class="btn sm" onclick="q('Rescue signaling techniques')">SIGNAL</button>
+      </div>
+      <button class="btn" style="margin-top:8px" onclick="askSurv()">ASK GEMINI ↵</button>
+      <div id="survResult" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="st(0)">RULE OF 3s</div>
+    <div class="tab" onclick="st(1)">FIRE</div>
+    <div class="tab" onclick="st(2)">WATER</div>
+    <div class="tab" onclick="st(3)">SHELTER</div>
+    <div class="tab" onclick="st(4)">SIGNALS</div>
+    <div class="tab" onclick="st(5)">NAVIGATION</div>
+    <div class="tab" onclick="st(6)">KNOTS</div>
+  </div>
+
+  <div class="tc active" id="tc0">
+    <div class="surv-card"><h3 class="p1">3 MINUTES — AIR / BLEEDING</h3><p>Without oxygen, brain damage begins in 3-5 minutes. Uncontrolled arterial bleeding kills in minutes. Secure airway. Apply tourniquet for limb bleeding.</p></div>
+    <div class="surv-card"><h3 class="p1">3 HOURS — CORE TEMPERATURE</h3><p>Hypothermia kills in 3 hours in harsh conditions. Get out of wind/rain/cold. Small shelter retains body heat. Ground insulation critical — ground steals heat 25x faster than air.</p></div>
+    <div class="surv-card"><h3 class="p2">3 DAYS — WATER</h3><p>Dehydration rapidly impairs judgment. Find/purify water within 3 days. Drink before thirsty. 1L/day minimum survival, 3L+ normal activity, 6L in heat/exertion.</p></div>
+    <div class="surv-card"><h3 class="p3">3 WEEKS — FOOD</h3><p>Body survives weeks without food (with water). Food is lowest survival priority. Focus on shelter, water, signaling first. Foraging or trapping for calories.</p></div>
+    <div class="surv-card"><h3>PRIORITIES IN ORDER</h3><p>1. Stay calm — panic kills. 2. Stop/stabilize injuries. 3. Signal for rescue (start early). 4. Find/build shelter. 5. Find water. 6. Find food. Most rescues happen within 72 hours — stay put if possible.</p></div>
+  </div>
+
+  <div class="tc" id="tc1">
+    <div class="surv-card"><h3>FIRE TRIANGLE</h3><p>Fuel + Heat + Oxygen. Remove any element to extinguish. Build wind-protected structure. Start small, grow the fire. Have tinder, kindling, and fuel ready before lighting.</p></div>
+    <div class="surv-card"><h3>TINDER MATERIALS</h3><p>Best: birch bark, dry grass, cattail fluff, pine resin, fatwood shavings, cedar bark shredded fine, dry fungi. Must be bone dry. Prepare more than you think you need.</p></div>
+    <div class="surv-card"><h3>FIRE STARTING — PRIORITY ORDER</h3><p>1. Lighter or waterproof matches (always carry both)<br>2. Ferro rod — works when wet, lasts 12,000+ strikes<br>3. Magnifying lens (sun only)<br>4. Friction: bow drill (willow/cedar board, willow spindle)<br>5. Battery + steel wool</p></div>
+    <div class="surv-card"><h3>BOW DRILL TECHNIQUE</h3><p>Board: dry softwood. Spindle: same wood. Cut notch to edge of burn circle. Tinder bundle under notch. Consistent downward pressure + speed. Coal forms in 30-60 seconds of sustained effort. Transfer to bundle gently, blow softly from below.</p></div>
+  </div>
+
+  <div class="tc" id="tc2">
+    <div class="surv-card"><h3>WATER SOURCE PRIORITY</h3><p>Running water > spring > still water > ground seepage > dew/rain collection > transpiration bags. Avoid stagnant pools. Higher elevation = cleaner. Moving water = safer.</p></div>
+    <div class="surv-card"><h3>PURIFICATION METHODS</h3><p>Boiling: rolling boil 1 min (3 min at altitude). Chemical: 8 drops unscented bleach/gallon or iodine tablets. UV: clear container in direct sunlight 6+ hours. Filter: improvised charcoal-sand-gravel layers (sediment only, still purify).</p></div>
+    <div class="surv-card"><h3>FINDING WATER</h3><p>Follow drainages downhill. Look for animal trails converging. Birds fly toward water at dawn/dusk. Vegetation: willows, cottonwoods, cattails = water nearby. Dig in dry stream bed at outside of bend.</p></div>
+    <div class="surv-card"><h3>DEHYDRATION SIGNS</h3><p>Dark urine, dry mouth, fatigue (early) → headache, dizziness, rapid pulse (moderate) → confusion, no urination, rapid breathing (severe — emergency). Drink before you're thirsty in hot conditions.</p></div>
+  </div>
+
+  <div class="tc" id="tc3">
+    <div class="surv-card"><h3>SHELTER PRIORITIES</h3><p>1. Wind protection. 2. Waterproofing. 3. Ground insulation (CRITICAL). 4. Size: small retains body heat better. Location: avoid drainages (flash floods), widow-makers, hilltops (lightning). Slope for drainage.</p></div>
+    <div class="surv-card"><h3>LEAN-TO</h3><p>Simplest. Ridge pole between two trees. Branches/debris at 45° angle. Layer leaves/bark 12"+ thick. Reflective fire in front multiplies heat. Open side faces fire, away from wind.</p></div>
+    <div class="surv-card"><h3>DEBRIS HUT</h3><p>Best all-weather shelter. 8-9ft ridgepole, ribbing at 45°, pile debris 3-4ft thick all sides. Crawl-in size only. Fill inside with dry debris bedding. One person generates enough heat to survive near-freezing with no fire.</p></div>
+    <div class="surv-card"><h3>GROUND INSULATION</h3><p>Minimum 4-6 inches dry debris under body. More in cold. Pine boughs, dry leaves, dry grass. A sleeping bag or space blanket loses 80% insulation when compressed against cold ground without padding.</p></div>
+  </div>
+
+  <div class="tc" id="tc4">
+    <div class="surv-card"><h3>UNIVERSAL DISTRESS: GROUPS OF 3</h3><p>3 fires, 3 whistle blasts, 3 gunshots, 3 flashes. Repeat after pause. Internationally recognized. Ground-to-air: X = need medical. V = need help. Arrow = traveling direction. Use rocks, logs, trampled vegetation visible from air.</p></div>
+    <div class="surv-card"><h3>SIGNAL MIRROR</h3><p>Most effective daytime signal — visible 10+ miles. Aim: hold mirror near eye, see reflection dot on target. Angle to catch sun. Flash slowly. Works on cloudy days with diffuse light.</p></div>
+    <div class="surv-card"><h3>FIRE SIGNALS</h3><p>3 fires in triangle 60ft apart = distress. Day: add green vegetation for white smoke. Night: maintain bright flame. Clear debris in 20-30ft diameter opening for visibility. Mark with reflective material.</p></div>
+    <div class="surv-card"><h3>STAY PUT vs MOVE</h3><p>Stay put if: someone knows your plan, you have shelter/water, injured/weak. Move if: certain rescue isn't coming, know route to safety, no water at current location. Leave trail markers if moving.</p></div>
+  </div>
+
+  <div class="tc" id="tc5">
+    <div class="surv-card"><h3>NATURAL COMPASS</h3><p>Sun: rises E, sets W, due south at noon (N hemisphere). Shadows point N at noon. North Star (Polaris): find Big Dipper, follow the pointer stars 5x their distance = Polaris = true north. Moss: heaviest growth on north side.</p></div>
+    <div class="surv-card"><h3>STICK SHADOW METHOD</h3><p>Place vertical stick. Mark shadow tip (A). Wait 15 minutes, mark new tip (B). Line A to B = east-west (A=west, B=east). Perpendicular = north-south. Works anywhere with sun.</p></div>
+    <div class="surv-card"><h3>TERRAIN READING</h3><p>Water flows to valleys/rivers, rivers to civilization. Ridgelines lead to passes. Powerlines and cut lines lead to roads. Follow streams — they merge and grow. Avoid crossing ridgelines unnecessarily — exhausting.</p></div>
+    <div class="surv-card"><h3>MAINTAIN DIRECTION</h3><p>Pick distant landmark, walk to it, pick next. Look back frequently to check your back trail stays straight. Leave trail markers: cairns, broken branches, scratched arrows on trees. Without landmarks: count steps, maintain compass bearing.</p></div>
+  </div>
+
+  <div class="tc" id="tc6">
+    <div class="surv-card"><h3>SQUARE KNOT (Joining Two Ropes)</h3><p>Right over left, then left over right. Flat and symmetric. Good for bandages. Slips under load — not for critical loads. "Square" shape = correct. "Granny" shape = wrong (asymmetric).</p></div>
+    <div class="surv-card"><h3>BOWLINE (Fixed Loop)</h3><p>"Rabbit comes up out of hole, around the tree, back in hole." Makes non-slipping loop. Used for rescue, tying to anchor. Pull knot tight after forming. Cannot be untied under load.</p></div>
+    <div class="surv-card"><h3>CLOVE HITCH (Fastening to Post)</h3><p>Two half hitches around a pole. Quick to tie/untie. Use as start for lashing. Add extra half hitch for security. Good for temporary anchors. Slips under constant lateral load.</p></div>
+    <div class="surv-card"><h3>PRUSIK (Ascending a Rope)</h3><p>Loop around main rope 3x, pass through itself. Grips under load, slides when unweighted. Useful for ascending rope, foot loops. Must be smaller diameter than main rope.</p></div>
+  </div>
+</div>
+<script>
+function st(i){document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));document.querySelectorAll('.tc').forEach((t,j)=>t.classList.toggle('active',i===j));}
+function q(question){document.getElementById('survQ').value=question;}
+async function askSurv(){
+  const query=document.getElementById('survQ').value.trim();if(!query)return;
+  const el=document.getElementById('survResult');
+  el.innerHTML='<div class="thinking"><span></span><span></span><span></span></div>';
+  const key=localStorage.getItem('pm_gemini_key')||'';
+  if(!key){el.innerHTML='<div class="ai-answer" style="color:var(--accent4)">No API key. Set one in Gemini Terminal.</div>';return;}
+  try{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{role:'user',parts:[{text:'You are a wilderness survival expert. Give direct, practical, actionable advice. Question: '+query}]}],generationConfig:{maxOutputTokens:700}})
+    });
+    const data=await r.json();
+    el.innerHTML='<div class="ai-answer">'+esc(data.candidates?.[0]?.content?.parts?.[0]?.text||'No response')+'</div>';
+  }catch(e){el.innerHTML='<div class="ai-answer" style="color:var(--accent4)">'+e.message+'</div>';}
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script></body></html>

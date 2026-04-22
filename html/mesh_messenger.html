@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — mesh_messenger.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // MESH MESSENGER -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // MESH MSG</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--accent3);letter-spacing:3px;}
+.logo span{color:var(--gold);}
+.layout{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--panel-border);display:flex;flex-direction:column;flex-shrink:0;}
+.sh{padding:8px 12px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.55rem;color:var(--accent3);letter-spacing:2px;}
+.node-list{flex:1;overflow-y:auto;}
+.ni{padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(26,58,80,.3);font-size:.68rem;display:flex;align-items:center;justify-content:space-between;}
+.ni:hover{background:rgba(0,255,136,.05);}
+.ni.active{background:rgba(0,255,136,.08);border-left:2px solid var(--accent3);}
+.ni-name{color:var(--text-bright);}
+.ni-meta{font-size:.58rem;color:var(--text-dim);margin-top:1px;}
+.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;}
+.dot.on{background:var(--accent3);animation:pulse 2s infinite;}
+.dot.off{background:var(--text-dim);}
+.dot.relay{background:var(--warn);}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.ch-header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
+.ch-name{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--accent3);letter-spacing:2px;}
+.ch-meta{font-size:.62rem;color:var(--text-dim);}
+.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.msg{max-width:80%;}
+.msg.me{align-self:flex-end;}
+.msg.them{align-self:flex-start;}
+.msg.system{align-self:center;max-width:60%;}
+.mr{font-size:.57rem;letter-spacing:2px;margin-bottom:2px;font-family:'Orbitron',monospace;}
+.msg.me .mr{color:var(--gold);text-align:right;}
+.msg.them .mr{color:var(--accent3);}
+.msg.system .mr{color:var(--text-dim);text-align:center;}
+.mb{padding:8px 12px;font-size:.73rem;line-height:1.6;}
+.msg.me .mb{background:rgba(244,168,32,.07);border:1px solid rgba(244,168,32,.2);color:var(--text-bright);}
+.msg.them .mb{background:var(--panel);border:1px solid var(--panel-border);color:var(--text-bright);}
+.msg.system .mb{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.15);color:var(--text-dim);font-size:.62rem;text-align:center;}
+.mt{font-size:.55rem;color:var(--text-dim);margin-top:2px;}
+.msg.me .mt{text-align:right;}
+.msg.relayed .mb{border-style:dashed;}
+.hop-badge{font-size:.55rem;color:var(--warn);margin-top:2px;}
+.ibar{background:var(--bg2);border-top:1px solid var(--panel-border);padding:10px 14px;flex-shrink:0;}
+.irow{display:flex;gap:8px;}
+textarea.ci{flex:1;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;resize:none;min-height:40px;max-height:100px;outline:none;line-height:1.5;}
+textarea.ci:focus{border-color:var(--accent3);}
+.sbtn{background:var(--accent3);border:none;color:var(--bg);font-family:'Orbitron',monospace;font-size:.62rem;padding:0 16px;cursor:pointer;height:40px;transition:all .2s;}
+.sbtn:hover{background:var(--text-bright);}
+.status-panel{padding:6px 14px;border-top:1px solid var(--panel-border);display:flex;gap:16px;font-size:.6rem;color:var(--text-dim);}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo">PISCES MOON // <span>MESH MSG</span></div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="dot on"></span>
+    <span id="nodeStatus" style="font-size:.65rem;color:var(--text-dim)">NODE: pisces-moon-1</span>
+    <span id="bridgeStatus" style="font-size:.62rem;color:var(--text-dim)">Bridge: offline</span>
+  </div>
+</header>
+<div class="layout">
+  <div class="sidebar">
+    <div class="sh">MESH NODES</div>
+    <div class="node-list" id="nodeList"></div>
+    <div style="padding:8px;border-top:1px solid var(--panel-border)">
+      <div style="font-size:.58rem;color:var(--text-dim);margin-bottom:6px">MY NODE ID</div>
+      <div style="font-size:.65rem;color:var(--accent3)" id="myNodeId">pisces-1</div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="ch-header">
+      <div>
+        <div class="ch-name" id="chName">BROADCAST</div>
+        <div class="ch-meta" id="chMeta">All nodes on mesh</div>
+      </div>
+      <div id="chStats" style="font-size:.62rem;color:var(--text-dim)"></div>
+    </div>
+    <div class="msgs" id="msgs"></div>
+    <div class="ibar">
+      <div class="irow">
+        <textarea class="ci" id="ci" placeholder="Send mesh message... (T-Deck LoRa bridge required for real transmission)" rows="1" onkeydown="onKey(event)" oninput="resize(this)"></textarea>
+        <button class="sbtn" onclick="send()">SEND ↵</button>
+      </div>
+    </div>
+    <div class="status-panel">
+      <span>Channel: <span style="color:var(--accent3)">PM-DEFAULT</span></span>
+      <span>Encryption: <span style="color:var(--accent3)">AES-256</span></span>
+      <span>Hops: <span style="color:var(--text-bright)" id="hopCount">0</span></span>
+      <span>Messages: <span style="color:var(--text-bright)" id="msgCount">0</span></span>
+    </div>
+  </div>
+</div>
+<script>
+const MY_NODE = 'pisces-1';
+let ws = null, wsConn = false, messages = [], activeChannel = 'broadcast';
+let nodes = [
+  {id:'pisces-1', name:'pisces-moon-1 (YOU)', status:'online', rssi:-42, hops:0, last:'now'},
+  {id:'tdeck-1', name:'T-Deck Alpha', status:'relay', rssi:-67, hops:1, last:'2m ago'},
+  {id:'pi-1', name:'Pi 400 Node', status:'offline', rssi:null, hops:2, last:'15m ago'},
+];
+
+function connectBridge() {
+  try {
+    ws = new WebSocket('ws://localhost:5006');
+    ws.onopen = ()=>{ wsConn=true; document.getElementById('bridgeStatus').textContent='Bridge: CONNECTED'; document.getElementById('bridgeStatus').style.color='var(--accent3)'; };
+    ws.onclose = ()=>{ wsConn=false; ws=null; document.getElementById('bridgeStatus').textContent='Bridge: offline'; setTimeout(connectBridge,3000); };
+    ws.onerror = ()=>{ ws=null; };
+    ws.onmessage = (e)=>{
+      try {
+        const d=JSON.parse(e.data);
+        if(d.type==='lora_msg'){
+          ingestMsg({from:d.from||'unknown',text:d.text||d.msg,ts:Date.now(),hops:d.hops||1,rssi:d.rssi||null,encrypted:true});
+        }
+      } catch {}
+    };
+  } catch {}
+}
+
+function ingestMsg(msg) {
+  messages.push(msg);
+  document.getElementById('msgCount').textContent=messages.length;
+  render();
+}
+
+function send() {
+  const text = document.getElementById('ci').value.trim(); if(!text)return;
+  document.getElementById('ci').value='';
+  document.getElementById('ci').style.height='auto';
+  const msg = {from:MY_NODE,text,ts:Date.now(),hops:0,rssi:null,encrypted:true,me:true};
+  messages.push(msg);
+  // Send via bridge if connected
+  if(wsConn&&ws) ws.send(JSON.stringify({type:'lora_send',channel:activeChannel,text,from:MY_NODE}));
+  render();
+}
+
+function render() {
+  document.getElementById('msgs').innerHTML = messages.map(m=>`
+    <div class="msg ${m.me?'me':'them'} ${m.hops>0?'relayed':''}">
+      <div class="mr">${m.me?'// YOU':'// '+esc(m.from)}</div>
+      <div class="mb">${esc(m.text)}</div>
+      ${m.hops>0?`<div class="hop-badge">⟲ ${m.hops} hop${m.hops>1?'s':''} relay${m.rssi?` · ${m.rssi} dBm`:''}</div>`:''}
+      <div class="mt">${new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+    </div>`).join('');
+  document.getElementById('msgs').scrollTop = 9999;
+  renderNodes();
+}
+
+function renderNodes() {
+  document.getElementById('nodeList').innerHTML = nodes.map(n=>`
+    <div class="ni ${n.id===MY_NODE?'active':''}">
+      <div>
+        <div class="ni-name"><span class="dot ${n.status==='online'?'on':n.status==='relay'?'relay':'off'}"></span>${n.name}</div>
+        <div class="ni-meta">${n.rssi?n.rssi+' dBm · ':''} Hops: ${n.hops} · ${n.last}</div>
+      </div>
+    </div>`).join('');
+}
+
+function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function resize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// System message
+ingestMsg({from:'system',text:'Mesh network initialized. LoRa bridge required for T-Deck communication. Connect edge bridge at ws://localhost:5006.',ts:Date.now(),hops:0,system:true});
+renderNodes();
+connectBridge();
+</script></body></html>

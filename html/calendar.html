@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — calendar.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // CALENDAR -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // CALENDAR</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--gold);text-shadow:0 0 20px rgba(244,168,32,.4);letter-spacing:3px;}
+.content{padding:20px;max-width:1000px;margin:0 auto;}
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.cal-title{font-family:'Orbitron',monospace;font-size:1.2rem;color:var(--gold);letter-spacing:3px;}
+.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn:hover{background:var(--gold);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn.cyan{border-color:var(--accent);color:var(--accent);}.btn.cyan:hover{background:var(--accent);color:var(--bg);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--panel-border);border:1px solid var(--panel-border);}
+.cal-dow{background:var(--bg2);padding:8px;text-align:center;font-family:'Orbitron',monospace;font-size:.6rem;color:var(--text-dim);letter-spacing:2px;}
+.cal-day{background:var(--panel);padding:8px;min-height:90px;cursor:pointer;transition:background .15s;position:relative;}
+.cal-day:hover{background:var(--bg3);}
+.cal-day.today{background:rgba(244,168,32,.08);border-top:2px solid var(--gold);}
+.cal-day.other-month .day-num{color:var(--text-dim);}
+.cal-day.selected{background:rgba(0,212,255,.08);border-top:2px solid var(--accent);}
+.day-num{font-family:'Orbitron',monospace;font-size:.75rem;color:var(--text-bright);margin-bottom:4px;}
+.cal-day.today .day-num{color:var(--gold);}
+.event-dot{display:block;font-size:.62rem;color:var(--text-bright);background:var(--accent);padding:1px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-radius:2px;}
+.event-dot.orange{background:var(--accent2);}
+.event-dot.green{background:var(--accent3);color:var(--bg);}
+.event-dot.red{background:var(--accent4);}
+.event-dot.gold{background:var(--gold);color:var(--bg);}
+.layout{display:flex;gap:16px;}
+.cal-wrap{flex:1;}
+.sidebar{width:260px;flex-shrink:0;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:14px;}
+.ph{padding:10px 14px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.6rem;color:var(--gold);letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
+.pb{padding:12px 14px;}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.72rem;padding:7px 10px;outline:none;width:100%;}
+.pm-input:focus{border-color:var(--gold);}
+.pm-select{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:6px 8px;outline:none;cursor:pointer;width:100%;}
+.ev-item{padding:8px 0;border-bottom:1px solid rgba(26,58,80,.3);display:flex;justify-content:space-between;align-items:center;}
+.ev-item:last-child{border:none;}
+.ev-title{font-size:.72rem;color:var(--text-bright);}
+.ev-time{font-size:.6rem;color:var(--text-dim);}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo">PISCES MOON // CALENDAR</div>
+  <div style="display:flex;gap:8px">
+    <button class="btn sm cyan" onclick="goToday()">TODAY</button>
+    <button class="btn sm" onclick="addEvent()">+ EVENT</button>
+  </div>
+</header>
+<div class="content">
+  <div class="layout">
+    <div class="cal-wrap">
+      <div class="cal-nav">
+        <button class="btn sm" onclick="prevMonth()">◀ PREV</button>
+        <div class="cal-title" id="calTitle"></div>
+        <button class="btn sm" onclick="nextMonth()">NEXT ▶</button>
+      </div>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+    <div class="sidebar">
+      <div class="panel">
+        <div class="ph" id="selectedDateLabel">SELECT A DAY</div>
+        <div class="pb" id="dayEvents"><div style="color:var(--text-dim);font-size:.7rem">Click a date to see events.</div></div>
+      </div>
+      <div class="panel">
+        <div class="ph">UPCOMING</div>
+        <div class="pb" id="upcoming"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const SK = 'pm_calendar';
+let events = {}, viewYear, viewMonth, selectedDate;
+const today = new Date();
+
+function init() {
+  try { events = JSON.parse(localStorage.getItem(SK)||'{}'); } catch { events = {}; }
+  viewYear = today.getFullYear();
+  viewMonth = today.getMonth();
+  render();
+}
+
+function save() { localStorage.setItem(SK, JSON.stringify(events)); }
+
+const MONTHS = ['JANUARY','FEBRUARY','MARCH','APRIL','MAY','JUNE','JULY','AUGUST','SEPTEMBER','OCTOBER','NOVEMBER','DECEMBER'];
+const DAYS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
+const COLORS = ['cyan','orange','green','red','gold'];
+
+function render() {
+  document.getElementById('calTitle').textContent = MONTHS[viewMonth] + ' ' + viewYear;
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth+1, 0).getDate();
+  const daysInPrev = new Date(viewYear, viewMonth, 0).getDate();
+  let html = DAYS.map(d=>`<div class="cal-dow">${d}</div>`).join('');
+  const cells = [];
+  for (let i=0; i<firstDay; i++) cells.push({day:daysInPrev-firstDay+1+i,cur:false});
+  for (let i=1; i<=daysInMonth; i++) cells.push({day:i,cur:true});
+  let next=1; while(cells.length%7!==0) { cells.push({day:next++,cur:false}); }
+  cells.forEach(c => {
+    const dateStr = c.cur ? `${viewYear}-${String(viewMonth+1).padStart(2,'0')}-${String(c.day).padStart(2,'0')}` : '';
+    const evs = dateStr ? (events[dateStr]||[]) : [];
+    const isToday = c.cur && viewYear===today.getFullYear() && viewMonth===today.getMonth() && c.day===today.getDate();
+    const isSel = dateStr === selectedDate;
+    html += `<div class="cal-day${!c.cur?' other-month':''}${isToday?' today':''}${isSel?' selected':''}" ${dateStr?`onclick="selectDate('${dateStr}')"`:''}><div class="day-num">${c.day}</div>${evs.slice(0,3).map(e=>`<span class="event-dot ${e.color||''}">${esc(e.title)}</span>`).join('')}${evs.length>3?`<span style="font-size:.55rem;color:var(--text-dim)">+${evs.length-3} more</span>`:''}</div>`;
+  });
+  document.getElementById('calGrid').innerHTML = html;
+  renderUpcoming();
+  if (selectedDate) renderDayEvents(selectedDate);
+}
+
+function selectDate(d) {
+  selectedDate = d; render();
+}
+
+function renderDayEvents(d) {
+  const date = new Date(d+'T12:00:00');
+  const label = DAYS[date.getDay()]+', '+MONTHS[date.getMonth()]+' '+date.getDate();
+  document.getElementById('selectedDateLabel').textContent = label;
+  const evs = events[d]||[];
+  document.getElementById('dayEvents').innerHTML = evs.length ?
+    evs.map((e,i)=>`<div class="ev-item">
+      <div><div class="ev-title">${esc(e.title)}</div><div class="ev-time">${esc(e.time||'All day')} · ${esc(e.notes||'')}</div></div>
+      <button class="btn sm" style="border-color:var(--accent4);color:var(--accent4)" onclick="deleteEvent('${d}',${i})">✕</button>
+    </div>`).join('') :
+    `<div style="color:var(--text-dim);font-size:.7rem">No events. <span style="color:var(--accent);cursor:pointer" onclick="addEvent('${d}')">Add one?</span></div>`;
+}
+
+function renderUpcoming() {
+  const now = new Date();
+  const upcoming = [];
+  for (let i=0; i<30; i++) {
+    const d = new Date(now); d.setDate(d.getDate()+i);
+    const ds = d.toISOString().slice(0,10);
+    (events[ds]||[]).forEach(e => upcoming.push({...e, date:ds, d}));
+  }
+  document.getElementById('upcoming').innerHTML = upcoming.slice(0,6).map(e=>`
+    <div class="ev-item">
+      <div><div class="ev-title">${esc(e.title)}</div>
+      <div class="ev-time">${e.d.toLocaleDateString(undefined,{month:'short',day:'numeric'})} ${esc(e.time||'')}</div></div>
+    </div>`).join('') || '<div style="color:var(--text-dim);font-size:.7rem">No upcoming events.</div>';
+}
+
+function addEvent(dateStr) {
+  const d = dateStr || selectedDate || today.toISOString().slice(0,10);
+  const title = prompt('Event title:'); if (!title) return;
+  const time = prompt('Time (e.g. 2:00 PM) or blank for all day:','');
+  const notes = prompt('Notes (optional):','');
+  const colorIdx = Math.floor(Math.random()*COLORS.length);
+  if (!events[d]) events[d] = [];
+  events[d].push({title, time, notes, color:COLORS[colorIdx]});
+  save(); render();
+}
+
+function deleteEvent(d, i) {
+  if (!confirm('Delete this event?')) return;
+  events[d].splice(i,1); if (!events[d].length) delete events[d];
+  save(); render();
+}
+
+function prevMonth() { viewMonth--; if(viewMonth<0){viewMonth=11;viewYear--;} render(); }
+function nextMonth() { viewMonth++; if(viewMonth>11){viewMonth=0;viewYear++;} render(); }
+function goToday() { viewYear=today.getFullYear(); viewMonth=today.getMonth(); render(); }
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+init();
+</script></body></html>

@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — system_info.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // SYSTEM INFO -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // SYSTEM INFO</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent);text-shadow:var(--glow);letter-spacing:3px;}
+.logo span{color:var(--gold);}
+.content{padding:20px;max-width:1100px;margin:0 auto;}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
+.sc{background:var(--panel);border:1px solid var(--panel-border);padding:14px;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.sc.ora::before{background:var(--accent2);} .sc.grn::before{background:var(--accent3);} .sc.red::before{background:var(--accent4);}
+.slbl{font-size:.6rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px;font-family:'Orbitron',monospace;}
+.sval{font-family:'Orbitron',monospace;font-size:1.4rem;color:var(--text-bright);font-weight:700;}
+.ssub{font-size:.6rem;color:var(--text-dim);margin-top:2px;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;color:var(--accent);letter-spacing:3px;}
+.pb{padding:14px 16px;}
+.row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(26,58,80,.3);font-size:.72rem;}
+.row:last-child{border:none;}
+.rk{color:var(--text-dim);}
+.rv{color:var(--text-bright);}
+.bar-track{flex:1;height:8px;background:var(--bg3);border:1px solid var(--panel-border);margin:0 12px;}
+.bar-fill{height:100%;transition:width .6s ease;background:linear-gradient(90deg,var(--accent),rgba(0,212,255,.3));}
+.bar-fill.ora{background:linear-gradient(90deg,var(--accent2),rgba(255,107,0,.3));}
+.bar-fill.red{background:linear-gradient(90deg,var(--accent4),rgba(255,51,102,.3));}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+@media(max-width:700px){.grid2{grid-template-columns:1fr;}}
+.badge{display:inline-block;padding:1px 7px;font-size:.58rem;border-radius:2px;}
+.bg-grn{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
+.bg-ora{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid var(--accent2);}
+.bg-red{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
+.upd{font-size:.58rem;color:var(--text-dim);text-align:right;padding:6px 0;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo">PISCES MOON // <span>SYSTEM</span></div>
+  <div style="font-size:.65rem;color:var(--text-dim)"><span id="clock"></span></div>
+</header>
+<div class="content">
+  <div class="stats-row" id="statsRow"></div>
+  <div class="grid2">
+    <div>
+      <div class="panel">
+        <div class="ph">CPU &amp; MEMORY</div>
+        <div class="pb" id="cpuPanel"></div>
+      </div>
+      <div class="panel">
+        <div class="ph">STORAGE</div>
+        <div class="pb" id="diskPanel"></div>
+      </div>
+    </div>
+    <div>
+      <div class="panel">
+        <div class="ph">NETWORK</div>
+        <div class="pb" id="netPanel"></div>
+      </div>
+      <div class="panel">
+        <div class="ph">PISCES MOON SERVICES</div>
+        <div class="pb" id="svcPanel"></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph">EDGE BRIDGE — T-DECK STATUS</div>
+    <div class="pb" id="bridgePanel"></div>
+  </div>
+  <div class="upd" id="upd">Refreshing...</div>
+</div>
+<script>
+const isTH=typeof window.spadra!=='undefined';
+let ws=null,wsConn=false,bridgeData={};
+let cpuHist=[],netHist=[];
+
+function connectBridge(){
+  try{
+    ws=new WebSocket('ws://localhost:5006');
+    ws.onopen=()=>{wsConn=true;};
+    ws.onclose=()=>{wsConn=false;ws=null;setTimeout(connectBridge,3000);};
+    ws.onmessage=(e)=>{try{bridgeData=JSON.parse(e.data);renderBridge();}catch{}};
+    ws.onerror=()=>{ws=null;};
+  }catch{}
+}
+
+async function fetchSysInfo(){
+  if(isTH){
+    try{
+      const info=await window.spadra.system.sysinfo();
+      return info;
+    }catch{}
+  }
+  // Simulate / fetch from edge bridge API if available
+  return simulateSysInfo();
+}
+
+function simulateSysInfo(){
+  // In browser mode, show placeholder with instruction
+  return {
+    hostname:'piscesmoon',
+    os:'Debian GNU/Linux 13 (Trixie)',
+    kernel:'6.1.0',
+    arch:'x86_64',
+    uptime: Math.floor(Date.now()/1000) % 86400,
+    cpu_pct: Math.random()*30+5,
+    cpu_cores:4,
+    cpu_model:'Intel Atom x5-Z8550',
+    mem_total:4096,
+    mem_used:Math.floor(Math.random()*1500+800),
+    mem_pct:0,
+    disk_total:64,
+    disk_used:Math.floor(Math.random()*20+8),
+    disk_pct:0,
+    net_iface:'wlan0',
+    net_ip:'192.168.1.47',
+    net_rx_mb:Math.random()*500,
+    net_tx_mb:Math.random()*200,
+    battery_pct:Math.floor(Math.random()*60+30),
+    battery_charging:Math.random()>0.5,
+    temp_c: Math.floor(Math.random()*25+35),
+  };
+}
+
+function fmt(n,u){return n.toFixed(1)+' '+u;}
+function fmtUp(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return `${h}h ${m}m`;}
+function barColor(p){return p>85?'red':p>65?'ora':'';}
+
+async function refresh(){
+  const si=await fetchSysInfo();
+  si.mem_pct=Math.round(si.mem_used/si.mem_total*100);
+  si.disk_pct=Math.round(si.disk_used/si.disk_total*100);
+  cpuHist.push(si.cpu_pct); if(cpuHist.length>20)cpuHist.shift();
+
+  // Stats row
+  document.getElementById('statsRow').innerHTML=`
+    <div class="sc"><div class="slbl">CPU</div><div class="sval">${si.cpu_pct.toFixed(0)}%</div><div class="ssub">${si.cpu_model||'N/A'}</div></div>
+    <div class="sc grn"><div class="slbl">MEMORY</div><div class="sval">${si.mem_pct}%</div><div class="ssub">${si.mem_used} / ${si.mem_total} MB</div></div>
+    <div class="sc ora"><div class="slbl">DISK</div><div class="sval">${si.disk_pct}%</div><div class="ssub">${si.disk_used} / ${si.disk_total} GB</div></div>
+    <div class="sc"><div class="slbl">UPTIME</div><div class="sval" style="font-size:1rem">${fmtUp(si.uptime)}</div><div class="ssub">${si.hostname}</div></div>
+    ${si.battery_pct!==undefined?`<div class="sc ${si.battery_pct<20?'red':si.battery_charging?'grn':''}"><div class="slbl">BATTERY</div><div class="sval">${si.battery_pct}%</div><div class="ssub">${si.battery_charging?'Charging':'On battery'}</div></div>`:''}
+    ${si.temp_c!==undefined?`<div class="sc ${si.temp_c>75?'red':si.temp_c>60?'ora':''}"><div class="slbl">TEMP</div><div class="sval">${si.temp_c}°C</div><div class="ssub">CPU thermal</div></div>`:''}
+  `;
+
+  // CPU panel
+  const cpuW=pct=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+    <span style="width:60px;font-size:.62rem;color:var(--text-dim)">${pct.toFixed(0)}%</span>
+    <div class="bar-track" style="margin:0"><div class="bar-fill ${barColor(pct)}" style="width:${pct}%"></div></div></div>`;
+  document.getElementById('cpuPanel').innerHTML=`
+    <div class="row"><span class="rk">Model</span><span class="rv">${si.cpu_model||'Unknown'}</span></div>
+    <div class="row"><span class="rk">Cores</span><span class="rv">${si.cpu_cores||'?'}</span></div>
+    <div class="row"><span class="rk">Usage</span><span class="rv" style="flex:1;text-align:right">${si.cpu_pct.toFixed(1)}%</span></div>
+    <div style="margin:8px 0">${cpuW(si.cpu_pct)}</div>
+    <div class="row"><span class="rk">RAM</span><span style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end">
+      <span class="rv">${si.mem_used} / ${si.mem_total} MB</span>
+      <div class="bar-track" style="width:80px;margin:0"><div class="bar-fill ${barColor(si.mem_pct)}" style="width:${si.mem_pct}%"></div></div>
+    </span></div>
+    <div class="row"><span class="rk">OS</span><span class="rv">${si.os||'Debian'}</span></div>
+    <div class="row"><span class="rk">Kernel</span><span class="rv">${si.kernel||'?'}</span></div>
+    <div class="row"><span class="rk">Arch</span><span class="rv">${si.arch||'x86_64'}</span></div>
+  `;
+
+  // Disk
+  document.getElementById('diskPanel').innerHTML=`
+    <div class="row"><span class="rk">Total</span><span class="rv">${si.disk_total} GB</span></div>
+    <div class="row"><span class="rk">Used</span><span class="rv">${si.disk_used} GB (${si.disk_pct}%)</span></div>
+    <div style="margin:8px 0"><div class="bar-track" style="margin:0"><div class="bar-fill ${barColor(si.disk_pct)}" style="width:${si.disk_pct}%"></div></div></div>
+    <div class="row"><span class="rk">Free</span><span class="rv">${(si.disk_total-si.disk_used).toFixed(1)} GB</span></div>
+    <div class="row"><span class="rk">~/.pisces-moon</span><span class="rv">JSON NoSQL</span></div>
+  `;
+
+  // Network
+  document.getElementById('netPanel').innerHTML=`
+    <div class="row"><span class="rk">Interface</span><span class="rv">${si.net_iface||'wlan0'}</span></div>
+    <div class="row"><span class="rk">IP Address</span><span class="rv" style="color:var(--accent)">${si.net_ip||'—'}</span></div>
+    <div class="row"><span class="rk">RX</span><span class="rv">${si.net_rx_mb?.toFixed(1)||'—'} MB</span></div>
+    <div class="row"><span class="rk">TX</span><span class="rv">${si.net_tx_mb?.toFixed(1)||'—'} MB</span></div>
+    <div class="row"><span class="rk">Bridge WS</span><span class="rv"><span class="badge ${wsConn?'bg-grn':'bg-red'}">${wsConn?'CONNECTED':'OFFLINE'}</span></span></div>
+  `;
+
+  // Services
+  document.getElementById('svcPanel').innerHTML=`
+    <div class="row"><span class="rk">Edge Bridge</span><span class="rv"><span class="badge ${wsConn?'bg-grn':'bg-red'}">${wsConn?'RUNNING':'STOPPED'}</span></span></div>
+    <div class="row"><span class="rk">Gemini API</span><span class="rv"><span class="badge ${localStorage.getItem('pm_gemini_key')?'bg-grn':'bg-ora'}">${localStorage.getItem('pm_gemini_key')?'KEY SET':'NO KEY'}</span></span></div>
+    <div class="row"><span class="rk">Ghost Partition</span><span class="rv"><span class="badge bg-ora">NOT MOUNTED</span></span></div>
+    <div class="row"><span class="rk">PM Mode</span><span class="rv"><span class="badge bg-grn">NORMAL</span></span></div>
+    <div class="row"><span class="rk">Apps</span><span class="rv">37 installed</span></div>
+  `;
+
+  document.getElementById('upd').textContent='Last updated: '+new Date().toLocaleTimeString();
+}
+
+function renderBridge(){
+  const d=bridgeData;
+  document.getElementById('bridgePanel').innerHTML=`
+    <div class="row"><span class="rk">T-Deck</span><span class="rv"><span class="badge ${d.device?'bg-grn':'bg-red'}">${d.device||'NOT CONNECTED'}</span></span></div>
+    ${d.gps?`<div class="row"><span class="rk">GPS</span><span class="rv" style="color:var(--accent)">${d.gps.lat?.toFixed(5)}, ${d.gps.lon?.toFixed(5)}</span></div>`:''}
+    ${d.wifi_count!==undefined?`<div class="row"><span class="rk">WiFi seen</span><span class="rv">${d.wifi_count} networks</span></div>`:''}
+    ${d.ble_count!==undefined?`<div class="row"><span class="rk">BLE seen</span><span class="rv">${d.ble_count} devices</span></div>`:''}
+    ${!d.device?`<div style="color:var(--text-dim);font-size:.68rem;padding:8px 0">Connect T-Deck via USB to see live data.</div>`:''}
+  `;
+}
+
+function tickClock(){document.getElementById('clock').textContent=new Date().toLocaleString();}
+
+connectBridge();
+refresh();
+renderBridge();
+setInterval(refresh,5000);
+setInterval(tickClock,1000);
+tickClock();
+</script>
+</body></html>

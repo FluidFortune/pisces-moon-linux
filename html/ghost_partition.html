@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — ghost_partition.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // GHOST PARTITION -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // GHOST PARTITION</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--text-dim);text-shadow:0 0 20px rgba(42,88,112,.5);letter-spacing:3px;}
+.logo span{color:var(--gold);}
+.content{padding:20px;max-width:900px;margin:0 auto;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
+.pb{padding:16px;}
+.btn{display:inline-block;padding:8px 18px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn:hover{background:var(--accent);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn.red{border-color:var(--accent4);color:var(--accent4);}.btn.red:hover{background:var(--accent4);color:var(--bg);}
+.btn.gold{border-color:var(--gold);color:var(--gold);}.btn.gold:hover{background:var(--gold);color:var(--bg);}
+.btn.warn{border-color:var(--warn);color:var(--warn);}.btn.warn:hover{background:var(--warn);color:var(--bg);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;width:100%;}
+.pm-input:focus{border-color:var(--accent);}
+.pm-input::placeholder{color:var(--text-dim);}
+.status-card{background:var(--bg2);border:1px solid var(--panel-border);padding:16px;margin-bottom:12px;text-align:center;}
+.sc-icon{font-size:3rem;margin-bottom:8px;}
+.sc-title{font-family:'Orbitron',monospace;font-size:1rem;letter-spacing:3px;margin-bottom:8px;}
+.sc-desc{font-size:.72rem;color:var(--text-dim);line-height:1.7;}
+.step{background:var(--bg2);border:1px solid var(--panel-border);padding:12px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;}
+.step-num{font-family:'Orbitron',monospace;font-size:1rem;color:var(--accent);width:24px;flex-shrink:0;text-align:center;}
+.step-body{flex:1;}
+.step-title{font-size:.75rem;color:var(--text-bright);margin-bottom:4px;}
+.step-desc{font-size:.68rem;color:var(--text-dim);line-height:1.6;}
+.step-code{background:var(--bg3);border:1px solid var(--panel-border);padding:8px 12px;font-size:.68rem;color:var(--accent3);margin-top:6px;font-family:'Share Tech Mono',monospace;}
+.warning-box{background:rgba(255,51,102,.05);border:1px solid rgba(255,51,102,.3);padding:12px 14px;font-size:.7rem;line-height:1.65;margin-bottom:12px;}
+.warning-box strong{color:var(--accent4);}
+.info-box{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.2);padding:12px 14px;font-size:.7rem;line-height:1.65;margin-bottom:12px;}
+.info-box strong{color:var(--accent);}
+.partition-vis{display:flex;height:40px;background:var(--bg3);border:1px solid var(--panel-border);margin:12px 0;overflow:hidden;}
+.pv-seg{display:flex;align-items:center;justify-content:center;font-size:.6rem;font-family:'Orbitron',monospace;letter-spacing:1px;}
+.encrypt-indicator{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.68rem;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo">GHOST <span>PARTITION</span></div>
+  <div style="font-size:.65rem;color:var(--text-dim)">Encrypted hidden storage — LUKS / VeraCrypt</div>
+</header>
+<div class="content">
+  <div class="warning-box">
+    <strong>⚠ OPERATIONAL SECURITY TOOL</strong> — Ghost Partition creates an encrypted hidden partition that appears as free disk space or an innocuous file to an observer. This is a configuration assistant. Actual partition creation requires running the commands as root in a terminal.
+  </div>
+
+  <div class="panel">
+    <div class="ph" style="color:var(--accent)">PARTITION STATUS</div>
+    <div class="pb">
+      <div class="status-card">
+        <div class="sc-icon">👻</div>
+        <div class="sc-title" style="color:var(--text-dim)" id="ghostStatus">NOT MOUNTED</div>
+        <div class="sc-desc" id="ghostDesc">No ghost partition detected at configured mount point.<br>Follow the setup wizard to create and configure one.</div>
+      </div>
+      <div class="partition-vis">
+        <div class="pv-seg" style="width:40%;background:rgba(0,212,255,.15);color:var(--accent)">OS (Debian)</div>
+        <div class="pv-seg" style="width:30%;background:rgba(0,255,136,.15);color:var(--accent3)">Data</div>
+        <div class="pv-seg" style="width:20%;background:rgba(42,88,112,.3);color:var(--text-dim)">GHOST?</div>
+        <div class="pv-seg" style="width:10%;background:rgba(26,58,80,.2);color:var(--text-dim)">Free</div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <button class="btn gold" onclick="mountGhost()">🔓 MOUNT</button>
+        <button class="btn sm warn" onclick="unmountGhost()">🔒 UNMOUNT</button>
+        <button class="btn sm" onclick="checkStatus()">↻ CHECK</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph" style="color:var(--gold)">MOUNT / UNLOCK</div>
+    <div class="pb">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div>
+          <div style="font-size:.62rem;color:var(--text-dim);margin-bottom:4px">CONTAINER PATH</div>
+          <input class="pm-input" id="containerPath" placeholder="/dev/sda4 or /home/pisces/.ghost.bin" value="/home/pisces/.ghost.bin">
+        </div>
+        <div>
+          <div style="font-size:.62rem;color:var(--text-dim);margin-bottom:4px">MOUNT POINT</div>
+          <input class="pm-input" id="mountPoint" placeholder="/mnt/ghost" value="/mnt/ghost">
+        </div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:.62rem;color:var(--text-dim);margin-bottom:4px">PASSPHRASE</div>
+        <input class="pm-input" id="passphrase" type="password" placeholder="Enter passphrase...">
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn gold" onclick="genMountCmd()">GENERATE MOUNT CMD</button>
+        <button class="btn sm red" onclick="genUnmountCmd()">GENERATE UNMOUNT</button>
+      </div>
+      <div id="cmdOutput" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ph" style="color:var(--gold)">SETUP WIZARD — Create New Ghost Partition</div>
+    <div class="pb">
+      <div class="info-box"><strong>// SETUP OVERVIEW:</strong> Creates an encrypted container file that mounts as a filesystem. Uses LUKS (Linux Unified Key Setup) for maximum security. Container appears as a random binary file to casual inspection.</div>
+
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">ALLOCATE CONTAINER SIZE</div>
+          <div class="step-desc">Choose a size for the hidden container. Appears as a file on your system.</div>
+          <select style="background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:6px 8px;outline:none;margin-top:8px" id="containerSize">
+            <option value="256">256 MB</option><option value="512">512 MB</option>
+            <option value="1024" selected>1 GB</option><option value="2048">2 GB</option>
+            <option value="5120">5 GB</option><option value="10240">10 GB</option>
+          </select>
+          <div class="step-code" id="step1code">dd if=/dev/urandom of=/home/pisces/.ghost.bin bs=1M count=1024 status=progress</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">FORMAT WITH LUKS</div>
+          <div class="step-desc">Initialize the LUKS encrypted container. You will be prompted for a passphrase.</div>
+          <div class="step-code">sudo cryptsetup luksFormat /home/pisces/.ghost.bin</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">OPEN AND FORMAT</div>
+          <div class="step-desc">Open the container, create a filesystem, then close it.</div>
+          <div class="step-code">sudo cryptsetup open /home/pisces/.ghost.bin ghost_vol
+sudo mkfs.ext4 /dev/mapper/ghost_vol
+sudo cryptsetup close ghost_vol</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">ADD AUTOSTART (OPTIONAL)</div>
+          <div class="step-desc">Add Pisces Moon edge bridge integration so the partition auto-prompts on boot with PIN screen.</div>
+          <div class="step-code">echo "GHOST_CONTAINER=/home/pisces/.ghost.bin" >> ~/.pisces-moon/config</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <button class="btn gold" onclick="copySetupScript()">📋 COPY FULL SETUP SCRIPT</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const isTH = typeof window.spadra !== 'undefined';
+let mounted = false;
+
+function genMountCmd() {
+  const container = document.getElementById('containerPath').value;
+  const mp = document.getElementById('mountPoint').value;
+  const cmd = `# Open LUKS container
+sudo cryptsetup open ${container} ghost_vol
+
+# Mount filesystem
+sudo mkdir -p ${mp}
+sudo mount /dev/mapper/ghost_vol ${mp}
+
+# Set permissions
+sudo chown $USER:$USER ${mp}
+echo "Ghost partition mounted at ${mp}"`;
+  document.getElementById('cmdOutput').innerHTML = `<div style="background:var(--bg3);border:1px solid var(--panel-border);padding:10px;font-size:.7rem;color:var(--accent3);white-space:pre;font-family:'Share Tech Mono',monospace">${esc(cmd)}</div>
+    <button onclick="copyText(this.previousSibling.textContent)" style="margin-top:6px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;padding:3px 8px;cursor:pointer">COPY</button>`;
+}
+
+function genUnmountCmd() {
+  const mp = document.getElementById('mountPoint').value;
+  const cmd = `sudo umount ${mp}
+sudo cryptsetup close ghost_vol
+echo "Ghost partition unmounted"`;
+  document.getElementById('cmdOutput').innerHTML = `<div style="background:var(--bg3);border:1px solid var(--panel-border);padding:10px;font-size:.7rem;color:var(--accent4);white-space:pre;font-family:'Share Tech Mono',monospace">${esc(cmd)}</div>`;
+}
+
+function mountGhost() {
+  if (isTH) {
+    const mp = document.getElementById('mountPoint').value;
+    const container = document.getElementById('containerPath').value;
+    const pass = document.getElementById('passphrase').value;
+    window.spadra.system.exec(`echo "${pass}" | sudo cryptsetup open ${container} ghost_vol -d -`).then(()=>{
+      window.spadra.system.exec(`sudo mount /dev/mapper/ghost_vol ${mp}`).then(()=>{
+        mounted=true; updateStatus(true);
+      });
+    }).catch(e=>alert('Mount failed: '+e.message));
+  } else {
+    alert('In browser mode, use the generated command in a terminal.\nTrojan Horse mode required for direct mount.');
+  }
+}
+
+function unmountGhost() {
+  if (isTH) {
+    const mp = document.getElementById('mountPoint').value;
+    window.spadra.system.exec(`sudo umount ${mp} && sudo cryptsetup close ghost_vol`).then(()=>{
+      mounted=false; updateStatus(false);
+    });
+  }
+}
+
+function checkStatus() {
+  if (isTH) {
+    window.spadra.system.exec('lsblk | grep ghost').then(out=>{
+      mounted=out.includes('ghost'); updateStatus(mounted);
+    }).catch(()=>{mounted=false;updateStatus(false);});
+  }
+}
+
+function updateStatus(m) {
+  document.getElementById('ghostStatus').textContent = m ? 'MOUNTED' : 'NOT MOUNTED';
+  document.getElementById('ghostStatus').style.color = m ? 'var(--accent3)' : 'var(--text-dim)';
+  document.getElementById('ghostDesc').textContent = m ? 'Ghost partition is mounted and accessible.' : 'Ghost partition not mounted.';
+}
+
+function copySetupScript() {
+  const size = document.getElementById('containerSize').value;
+  const script = `#!/bin/bash
+# Pisces Moon Ghost Partition Setup
+set -e
+CONTAINER="$HOME/.ghost.bin"
+MOUNT="/mnt/ghost"
+echo "Creating ${size}MB container..."
+dd if=/dev/urandom of="$CONTAINER" bs=1M count=${size} status=progress
+echo "Formatting with LUKS..."
+sudo cryptsetup luksFormat "$CONTAINER"
+echo "Opening container..."
+sudo cryptsetup open "$CONTAINER" ghost_vol
+echo "Creating ext4 filesystem..."
+sudo mkfs.ext4 /dev/mapper/ghost_vol
+sudo mkdir -p "$MOUNT"
+sudo cryptsetup close ghost_vol
+echo "Ghost partition setup complete: $CONTAINER"`;
+  navigator.clipboard.writeText(script).then(()=>alert('Setup script copied to clipboard!'));
+}
+
+function copyText(text) { navigator.clipboard.writeText(text.trim()); }
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Update step 1 code when size changes
+document.getElementById('containerSize').onchange = () => {
+  const size = document.getElementById('containerSize').value;
+  document.getElementById('step1code').textContent = `dd if=/dev/urandom of=/home/pisces/.ghost.bin bs=1M count=${size} status=progress`;
+};
+</script></body></html>

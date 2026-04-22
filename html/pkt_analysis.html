@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — pkt_analysis.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // OFFLINE PACKET ANALYSIS -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // OFFLINE PKT ANALYSIS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent);letter-spacing:3px;}
+.logo span{color:var(--accent3);}
+.main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
+.file-panel{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.analysis-panel{display:flex;flex-direction:column;overflow:hidden;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.6rem;color:var(--accent);letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--bg2);}
+.ph .sub{color:var(--text-dim);font-size:.55rem;}
+.drop-zone{border:1px dashed var(--panel-border);margin:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;color:var(--text-dim);font-size:.65rem;line-height:2;}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.04);}
+.drop-zone input{display:none;}
+.file-list{flex:1;overflow-y:auto;}
+.file-row{padding:10px 16px;border-bottom:1px solid rgba(26,58,80,.3);cursor:pointer;transition:background .15s;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;}
+.file-row:hover{background:rgba(0,212,255,.03);}
+.file-row.selected{background:rgba(0,212,255,.07);border-left:2px solid var(--accent);}
+.file-name{font-size:.65rem;color:var(--text-bright);}
+.file-meta{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
+.file-type{font-family:'Orbitron',monospace;font-size:.52rem;padding:2px 6px;border-radius:2px;}
+.ft-json{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.3);}
+.ft-csv{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid rgba(0,255,136,.3);}
+.ft-pcap{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid rgba(255,107,0,.3);}
+.btn{padding:7px 16px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
+.btn:hover{background:var(--accent);color:var(--bg);}
+.btn.green{border-color:var(--accent3);color:var(--accent3);}
+.btn.green:hover{background:var(--accent3);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.ctrl-bar{padding:10px 16px;border-bottom:1px solid var(--panel-border);display:flex;gap:8px;align-items:center;background:var(--bg2);flex-shrink:0;}
+.progress-wrap{padding:20px 24px;display:none;}
+.progress-wrap.show{display:block;}
+.prog-label{font-size:.65rem;color:var(--text-dim);margin-bottom:8px;}
+.prog-bar{height:6px;background:var(--bg3);border-radius:2px;}
+.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
+/* Findings */
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--panel-border);flex-shrink:0;}
+.sum-cell{padding:10px 16px;border-right:1px solid var(--panel-border);text-align:center;}
+.sum-cell:last-child{border-right:none;}
+.sum-num{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:700;}
+.sum-lbl{font-size:.52rem;letter-spacing:2px;color:var(--text-dim);font-family:'Orbitron',monospace;margin-top:2px;}
+.findings-list{flex:1;overflow-y:auto;}
+.finding-row{padding:10px 16px;border-bottom:1px solid rgba(26,58,80,.3);display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:start;}
+.sev-badge{font-family:'Orbitron',monospace;font-size:.55rem;padding:3px 8px;border-radius:2px;white-space:nowrap;align-self:start;margin-top:1px;}
+.sev-crit{background:rgba(255,51,102,.15);color:var(--accent4);border:1px solid rgba(255,51,102,.4);}
+.sev-warn{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid rgba(255,204,0,.3);}
+.sev-info{background:rgba(0,212,255,.08);color:var(--accent);border:1px solid rgba(0,212,255,.2);}
+.rule-tag{font-family:'Orbitron',monospace;font-size:.52rem;color:var(--text-dim);white-space:nowrap;padding-top:3px;}
+.find-msg{font-size:.63rem;color:var(--text);line-height:1.5;}
+.find-msg .detail{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-dim);}
+.empty-icon{font-family:'Orbitron',monospace;font-size:2rem;color:rgba(0,212,255,.12);letter-spacing:4px;}
+.empty-msg{font-size:.65rem;text-align:center;line-height:2;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo"><span>OFFLINE</span> PKT ANALYSIS</div>
+  <span style="font-size:.62rem;color:var(--text-dim)">Pisces Moon OS // CYBER Suite</span>
+</header>
+
+<div class="main">
+  <!-- File panel -->
+  <div class="file-panel">
+    <div class="ph">SESSION LOGS <span class="sub" id="fileCount">0 files</span></div>
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
+      ondragover="event.preventDefault();this.classList.add('drag')"
+      ondragleave="this.classList.remove('drag')"
+      ondrop="handleDrop(event)">
+      <input type="file" id="fileInput" multiple accept=".json,.csv,.pcap,.cap" onchange="handleFiles(this.files)">
+      ⬆ DROP FILES HERE<br>
+      <span style="font-size:.58rem">beacon_*.json · pkt_*.csv · probe_*.json · *.pcap</span><br>
+      <span style="font-size:.58rem;color:rgba(0,212,255,.4)">or click to browse</span>
+    </div>
+    <div class="file-list" id="fileList">
+      <div style="padding:12px 16px;font-size:.6rem;color:var(--text-dim)">No files loaded.<br>Drop logs from ~/.pisces-moon/cyber_logs/</div>
+    </div>
+    <div style="padding:10px 16px;border-top:1px solid var(--panel-border);display:flex;gap:6px">
+      <button class="btn sm green" onclick="loadDemo()">LOAD DEMO</button>
+      <button class="btn sm" onclick="clearFiles()">CLEAR</button>
+    </div>
+  </div>
+
+  <!-- Analysis panel -->
+  <div class="analysis-panel">
+    <div class="ctrl-bar">
+      <button class="btn" id="analyzeBtn" onclick="analyzeSelected()" disabled>▶ ANALYZE</button>
+      <button class="btn sm" onclick="exportReport()" id="exportBtn" disabled style="border-color:var(--accent3);color:var(--accent3)">EXPORT REPORT</button>
+      <span style="font-size:.6rem;color:var(--text-dim);margin-left:auto" id="analyzeStatus">Select a file to analyze</span>
+    </div>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="prog-label" id="progLabel">Parsing session data...</div>
+      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    </div>
+
+    <div id="resultsArea" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
+      <div class="empty-state">
+        <div class="empty-icon">ANALYSIS</div>
+        <div class="empty-msg">Drop session log files on the left<br>then select one and press ANALYZE.<br><br>Detects: Evil Twin · Deauth Flood<br>Enc Downgrade · Hidden Beacon<br>Channel Anomaly · Probe Pattern</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────
+let loadedFiles = [];
+let selectedFileIdx = null;
+let findings = [];
+
+const SEV_CRIT = 2, SEV_WARN = 1, SEV_INFO = 0;
+
+const SENSITIVE = ['corp','vpn','internal','employee','staff','office','admin','secure','private','iot','camera','mgmt','infrastructure','prod','dev','enterprise','cisco'];
+function isSensitive(s){ const l=s.toLowerCase(); return SENSITIVE.some(k=>l.includes(k)); }
+function isStdChannel(ch){ return [1,6,11,13,36,40,44,48].includes(ch); }
+
+// ── File handling ────────────────────────────────────────────────────────
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  handleFiles(e.dataTransfer.files);
+}
+
+function handleFiles(fileList) {
+  for (const f of fileList) {
+    if (!loadedFiles.find(x=>x.name===f.name)) {
+      loadedFiles.push({name:f.name, file:f, size:f.size, type:detectType(f.name)});
+    }
+  }
+  renderFileList();
+}
+
+function detectType(name) {
+  if (name.endsWith('.json')) return 'json';
+  if (name.endsWith('.csv'))  return 'csv';
+  if (name.endsWith('.pcap') || name.endsWith('.cap')) return 'pcap';
+  return 'json';
+}
+
+function renderFileList() {
+  document.getElementById('fileCount').textContent = loadedFiles.length + ' files';
+  const list = document.getElementById('fileList');
+  if (loadedFiles.length === 0) {
+    list.innerHTML = '<div style="padding:12px 16px;font-size:.6rem;color:var(--text-dim)">No files loaded.</div>';
+    return;
+  }
+  list.innerHTML = loadedFiles.map((f,i) => `
+    <div class="file-row ${selectedFileIdx===i?'selected':''}" onclick="selectFile(${i})">
+      <div>
+        <div class="file-name">${esc(f.name)}</div>
+        <div class="file-meta">${formatSize(f.size)}</div>
+      </div>
+      <span class="file-type ft-${f.type}">${f.type.toUpperCase()}</span>
+    </div>`).join('');
+}
+
+function selectFile(i) {
+  selectedFileIdx = i;
+  renderFileList();
+  document.getElementById('analyzeBtn').disabled = false;
+  document.getElementById('analyzeStatus').textContent = 'Ready: ' + loadedFiles[i].name;
+}
+
+function clearFiles() {
+  loadedFiles = []; selectedFileIdx = null; findings = [];
+  renderFileList();
+  document.getElementById('analyzeBtn').disabled = true;
+  document.getElementById('exportBtn').disabled = true;
+  document.getElementById('analyzeStatus').textContent = 'Select a file to analyze';
+  document.getElementById('resultsArea').innerHTML = '<div class="empty-state"><div class="empty-icon">ANALYSIS</div><div class="empty-msg">Drop files and analyze.</div></div>';
+}
+
+function formatSize(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+// ── Analysis engine ───────────────────────────────────────────────────────
+async function analyzeSelected() {
+  if (selectedFileIdx === null) return;
+  const f = loadedFiles[selectedFileIdx];
+  findings = [];
+
+  showProgress('Reading file...', 10);
+  const text = await readFile(f.file);
+  showProgress('Parsing data...', 30);
+  await sleep(200);
+
+  if (f.type === 'json') await analyzeJSON(text, f.name);
+  else if (f.type === 'csv') analyzeCSV(text, f.name);
+  else if (f.type === 'pcap') findings.push({sev:SEV_INFO, rule:'PCAP', msg:'PCAP binary analysis requires tshark backend. Use: tshark -r file.pcap -T json | pipe to JSON analysis.', detail:''});
+
+  showProgress('Complete.', 100);
+  await sleep(300);
+  hideProgress();
+  renderResults(f.name);
+  document.getElementById('exportBtn').disabled = false;
+}
+
+async function analyzeJSON(text, fname) {
+  let data;
+  try { data = JSON.parse(text); } catch(e) {
+    findings.push({sev:SEV_WARN, rule:'PARSE', msg:'JSON parse error: '+e.message, detail:''});
+    return;
+  }
+
+  showProgress('Checking for Evil Twin...', 40);
+  await sleep(150);
+
+  // ── APs ──────────────────────────────────────────────────────────────
+  const aps = data.aps || data.networks || [];
+  const apMap = {}; // ssid → [{bssid,channel,enc}]
+
+  for (const ap of aps) {
+    const ssid    = ap.ssid || ap.SSID || '';
+    const bssid   = ap.bssid || ap.BSSID || '';
+    const channel = ap.channel || ap.Channel || 0;
+    const enc     = ap.enc !== undefined ? ap.enc : (ap.encryption !== 'OPEN');
+    const hidden  = ap.hidden || false;
+    const beacons = ap.beacons || 0;
+
+    if (!apMap[ssid]) apMap[ssid] = [];
+    apMap[ssid].push({bssid, channel, enc});
+
+    if (hidden && beacons > 500)
+      findings.push({sev:SEV_WARN, rule:'HIDDEN AP', msg:`Hidden AP ${bssid} — ${beacons} beacons (high rate)`, detail:'High beacon rate on hidden SSID may indicate spoofing.'});
+
+    if (channel > 0 && !isStdChannel(channel))
+      findings.push({sev:SEV_INFO, rule:'CH ANOMALY', msg:`AP ${bssid} on non-standard CH${channel}`, detail:`SSID: ${ssid}`});
+  }
+
+  showProgress('Checking for Evil Twin / Enc Downgrade...', 60);
+  await sleep(150);
+
+  for (const ssid of Object.keys(apMap)) {
+    if (!ssid) continue;
+    const entries = apMap[ssid];
+    for (let i=0; i<entries.length; i++) {
+      for (let j=i+1; j<entries.length; j++) {
+        if (entries[i].bssid === entries[j].bssid) continue;
+        if (Math.abs(entries[i].channel - entries[j].channel) > 2)
+          findings.push({sev:SEV_CRIT, rule:'EVIL TWIN', msg:`"${ssid}" seen on CH${entries[i].channel}+CH${entries[j].channel} with different BSSIDs`, detail:`${entries[i].bssid} vs ${entries[j].bssid}`});
+        if (entries[i].enc !== entries[j].enc)
+          findings.push({sev:SEV_CRIT, rule:'ENC DNGRD', msg:`"${ssid}" seen as both ENCRYPTED and OPEN`, detail:'Possible encryption stripping attack.'});
+      }
+    }
+  }
+
+  showProgress('Checking deauth frames...', 75);
+  await sleep(150);
+
+  // ── Deauths ───────────────────────────────────────────────────────────
+  const deauths = data.deauths || [];
+  for (const d of deauths) {
+    const count = d.count || 0; const src = d.src || d.source || '??';
+    if (count > 10)
+      findings.push({sev: count>50?SEV_CRIT:SEV_WARN, rule:'DEAUTH FLD', msg:`${src} sent ${count} deauth/disassoc frames`, detail: count>50?'CRITICAL: Active deauth attack likely.':'Elevated deauth count — may be normal or targeted.'});
+  }
+
+  // ── Probes ────────────────────────────────────────────────────────────
+  const probes = data.probes || data.devices || [];
+  for (const p of probes) {
+    const pssids = p.ssids || (p.ssid ? [p.ssid] : []);
+    for (const s of pssids) {
+      if (isSensitive(s))
+        findings.push({sev:SEV_WARN, rule:'PROBE PTTRN', msg:`Sensitive probe: "${s}"`, detail:`Source: ${p.src||p.mac||'unknown'}`});
+    }
+  }
+
+  if (findings.length === 0)
+    findings.push({sev:SEV_INFO, rule:'CLEAN', msg:'No anomalies detected in this session.', detail:''});
+}
+
+function analyzeCSV(text, fname) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) { findings.push({sev:SEV_WARN, rule:'EMPTY', msg:'CSV file has no data rows.', detail:''}); return; }
+
+  const deauthSrcs = {};
+  let totalFrames=0, deauthTotal=0, dataTotal=0;
+
+  for (let i=1; i<lines.length; i++) {
+    const cols = lines[i].split(',');
+    if (cols.length < 3) continue;
+    totalFrames++;
+    const type = (cols[1]||'').trim().toUpperCase();
+    const src  = (cols[2]||'').trim();
+
+    if (type==='DEAUTH'||type==='DISASSOC') {
+      deauthTotal++;
+      deauthSrcs[src] = (deauthSrcs[src]||0)+1;
+    }
+    if (type.startsWith('DATA')||type.startsWith('QOS')) dataTotal++;
+  }
+
+  findings.push({sev:SEV_INFO, rule:'SUMMARY', msg:`${totalFrames} frames — Deauth: ${deauthTotal} — Data: ${dataTotal}`, detail:''});
+
+  for (const [mac, count] of Object.entries(deauthSrcs)) {
+    if (count > 10)
+      findings.push({sev:count>50?SEV_CRIT:SEV_WARN, rule:'DEAUTH FLD', msg:`${mac} sent ${count} deauth frames`, detail:''});
+  }
+
+  const ratio = totalFrames>0 ? deauthTotal/totalFrames : 0;
+  if (ratio > 0.05)
+    findings.push({sev:SEV_WARN, rule:'HIGH DEAUTH', msg:`${(ratio*100).toFixed(1)}% of frames are deauth/disassoc (>5% is suspicious)`, detail:''});
+
+  if (findings.length <= 1)
+    findings.push({sev:SEV_INFO, rule:'CLEAN', msg:'No anomalies detected in CSV session.', detail:''});
+}
+
+// ── Render results ────────────────────────────────────────────────────────
+function renderResults(fname) {
+  const area = document.getElementById('resultsArea');
+  const crit = findings.filter(f=>f.sev===SEV_CRIT).length;
+  const warn = findings.filter(f=>f.sev===SEV_WARN).length;
+  const info = findings.filter(f=>f.sev===SEV_INFO).length;
+
+  document.getElementById('analyzeStatus').textContent = `${findings.length} findings — ${crit} CRITICAL`;
+
+  area.innerHTML = `
+    <div class="summary-row">
+      <div class="sum-cell"><div class="sum-num" style="color:var(--accent4)">${crit}</div><div class="sum-lbl">CRITICAL</div></div>
+      <div class="sum-cell"><div class="sum-num" style="color:var(--warn)">${warn}</div><div class="sum-lbl">WARNING</div></div>
+      <div class="sum-cell"><div class="sum-num" style="color:var(--accent)">${info}</div><div class="sum-lbl">INFO</div></div>
+      <div class="sum-cell"><div class="sum-num" style="color:var(--text-bright)">${findings.length}</div><div class="sum-lbl">TOTAL</div></div>
+    </div>
+    <div class="findings-list">
+      ${findings.map(f=>`
+        <div class="finding-row">
+          <span class="sev-badge ${f.sev===SEV_CRIT?'sev-crit':f.sev===SEV_WARN?'sev-warn':'sev-info'}">${f.sev===SEV_CRIT?'CRIT':f.sev===SEV_WARN?'WARN':'INFO'}</span>
+          <span class="rule-tag">${esc(f.rule)}</span>
+          <div class="find-msg">${esc(f.msg)}${f.detail?`<div class="detail">${esc(f.detail)}</div>`:''}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ── Progress ──────────────────────────────────────────────────────────────
+function showProgress(label, pct) {
+  document.getElementById('progressWrap').classList.add('show');
+  document.getElementById('progLabel').textContent = label;
+  document.getElementById('progFill').style.width = pct+'%';
+}
+function hideProgress() { document.getElementById('progressWrap').classList.remove('show'); }
+
+// ── Demo ──────────────────────────────────────────────────────────────────
+function loadDemo() {
+  const demoJSON = JSON.stringify({
+    aps: [
+      {ssid:'HomeNet',bssid:'AA:BB:CC:11:22:33',channel:6,enc:true,hidden:false,beacons:120},
+      {ssid:'HomeNet',bssid:'DD:EE:FF:44:55:66',channel:1,enc:true,hidden:false,beacons:340},
+      {ssid:'CafeWifi',bssid:'11:22:33:AA:BB:CC',channel:11,enc:false,hidden:false,beacons:80},
+      {ssid:'CafeWifi',bssid:'44:55:66:DD:EE:FF',channel:11,enc:true,hidden:false,beacons:90},
+      {ssid:'HiddenNet',bssid:'77:88:99:00:AA:BB',channel:3,enc:true,hidden:true,beacons:1200},
+      {ssid:'CorpVPN',bssid:'CC:DD:EE:11:22:33',channel:14,enc:true,hidden:false,beacons:60},
+    ],
+    deauths:[
+      {src:'DE:AD:BE:EF:00:01',count:87},
+      {src:'DE:AD:BE:EF:00:02',count:5},
+    ],
+    probes:[
+      {mac:'A4:C3:F0:11:22:33',ssids:['CorpVPN','AdminNet','HomeNet']},
+      {mac:'E8:9F:80:44:55:66',ssids:['xfinitywifi','Starbucks']},
+    ]
+  });
+  const blob = new Blob([demoJSON],{type:'application/json'});
+  const file = new File([blob], 'beacon_demo_session.json', {type:'application/json'});
+  loadedFiles.push({name:file.name, file, size:file.size, type:'json'});
+  renderFileList();
+  selectFile(loadedFiles.length-1);
+}
+
+// ── Export ────────────────────────────────────────────────────────────────
+function exportReport() {
+  const fname = selectedFileIdx!==null ? loadedFiles[selectedFileIdx].name : 'session';
+  const lines = [
+    'PISCES MOON OS — OFFLINE PACKET ANALYSIS REPORT',
+    `Source: ${fname}`,
+    `Date: ${new Date().toISOString()}`,
+    `Findings: ${findings.length}`,
+    '',
+    ...findings.map(f=>`[${f.sev===SEV_CRIT?'CRIT':f.sev===SEV_WARN?'WARN':'INFO'}] ${f.rule.padEnd(14)} ${f.msg}${f.detail?' | '+f.detail:''}`)
+  ];
+  const blob = new Blob([lines.join('\n')],{type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `analysis_${Date.now()}.txt`;
+  a.click();
+}
+
+// ── Utils ─────────────────────────────────────────────────────────────────
+function readFile(f) { return new Promise(r=>{ const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsText(f); }); }
+function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body></html>

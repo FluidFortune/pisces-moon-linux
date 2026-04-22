@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — net_scanner.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // NET SCANNER -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // NET SCANNER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent2);text-shadow:0 0 20px rgba(255,107,0,.3);letter-spacing:3px;}
+.logo span{color:var(--accent);}
+.content{padding:20px;max-width:1200px;margin:0 auto;}
+.scan-bar{background:var(--panel);border:1px solid var(--panel-border);padding:16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;transition:border-color .2s;}
+.pm-input:focus{border-color:var(--accent);}
+.pm-select{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:7px 8px;outline:none;cursor:pointer;}
+.pm-select:focus{border-color:var(--accent);}
+.btn{display:inline-block;padding:8px 18px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);font-family:'Share Tech Mono',monospace;font-size:.7rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
+.btn:hover{background:var(--accent2);color:var(--bg);box-shadow:0 0 20px rgba(255,107,0,.3);}
+.btn.red{border-color:var(--accent4);color:var(--accent4);}
+.btn.red:hover{background:var(--accent4);color:var(--bg);}
+.btn.sm{padding:5px 12px;font-size:.62rem;}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;color:var(--accent2);letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
+.pb{padding:0;}
+.dt{width:100%;border-collapse:collapse;font-size:.7rem;}
+.dt th{text-align:left;padding:7px 12px;color:var(--text-dim);font-size:.58rem;letter-spacing:2px;border-bottom:1px solid var(--panel-border);cursor:pointer;font-family:'Orbitron',monospace;}
+.dt th:hover{color:var(--accent2);}
+.dt td{padding:7px 12px;border-bottom:1px solid rgba(26,58,80,.3);font-size:.69rem;}
+.dt tr:hover td{background:rgba(255,107,0,.04);}
+.ts{max-height:420px;overflow-y:auto;}
+.badge{display:inline-block;padding:1px 6px;font-size:.57rem;border-radius:2px;}
+.bo{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid var(--accent2);}
+.bc{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid var(--accent);}
+.bg{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
+.br{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
+.bw{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
+.scan-profiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:16px;}
+.prof{background:var(--panel);border:1px solid var(--panel-border);padding:12px;cursor:pointer;transition:all .2s;}
+.prof:hover{border-color:var(--accent2);background:rgba(255,107,0,.04);}
+.prof.active{border-color:var(--accent2);background:rgba(255,107,0,.08);}
+.prof-name{font-family:'Orbitron',monospace;font-size:.62rem;color:var(--accent2);letter-spacing:2px;margin-bottom:4px;}
+.prof-desc{font-size:.6rem;color:var(--text-dim);line-height:1.5;}
+.console{background:var(--bg);border:1px solid var(--panel-border);padding:12px;font-size:.68rem;max-height:200px;overflow-y:auto;font-family:'Share Tech Mono',monospace;line-height:1.8;}
+.cl-info{color:var(--text-dim);}
+.cl-ok{color:var(--accent3);}
+.cl-warn{color:var(--warn);}
+.cl-err{color:var(--accent4);}
+.cl-data{color:var(--accent);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;}
+.sc{background:var(--panel);border:1px solid var(--panel-border);padding:12px;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent2);}
+.slbl{font-size:.58rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;font-family:'Orbitron',monospace;}
+.sval{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--text-bright);font-weight:700;}
+.pgbar{height:4px;background:var(--bg3);margin-top:6px;}
+.pgfill{height:100%;background:var(--accent2);transition:width .3s;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo"><span>NET</span> SCANNER</div>
+  <div style="font-size:.65rem;color:var(--text-dim)" id="hdrInfo">Pisces Moon OS // CYBER Suite</div>
+</header>
+<div class="content">
+
+  <!-- Scan profiles -->
+  <div class="scan-profiles" id="profiles"></div>
+
+  <!-- Scan config bar -->
+  <div class="scan-bar">
+    <input class="pm-input" id="target" placeholder="Target: 192.168.1.0/24 or host" style="flex:1;min-width:200px">
+    <select class="pm-select" id="profSel">
+      <option value="ping">Ping sweep</option>
+      <option value="quick">Quick scan (-F)</option>
+      <option value="services">Service detection (-sV)</option>
+      <option value="os">OS fingerprint (-O)</option>
+      <option value="vuln">Vuln scan (--script=vuln)</option>
+      <option value="full">Full scan (-A)</option>
+    </select>
+    <button class="btn" id="scanBtn" onclick="startScan()">▶ SCAN</button>
+    <button class="btn red sm" onclick="clearResults()">CLEAR</button>
+    <button class="btn sm" style="border-color:var(--accent3);color:var(--accent3)" onclick="exportResults()">EXPORT</button>
+  </div>
+
+  <!-- Progress -->
+  <div class="pgbar" id="pgbar"><div class="pgfill" id="pgfill" style="width:0%"></div></div>
+
+  <!-- Stats -->
+  <div class="stats-row" id="statsRow">
+    <div class="sc"><div class="slbl">HOSTS UP</div><div class="sval" id="sHosts">0</div></div>
+    <div class="sc"><div class="slbl">OPEN PORTS</div><div class="sval" id="sPorts">0</div></div>
+    <div class="sc"><div class="slbl">SERVICES</div><div class="sval" id="sSvcs">0</div></div>
+    <div class="sc"><div class="slbl">SCAN TIME</div><div class="sval" id="sTime">—</div></div>
+  </div>
+
+  <!-- Console output -->
+  <div class="panel">
+    <div class="ph">SCAN CONSOLE <span id="scanStatus" style="color:var(--text-dim);font-size:.6rem">IDLE</span></div>
+    <div class="pb"><div class="console" id="console"><span class="cl-info">// PISCES MOON NET SCANNER — nmap frontend</span><br><span class="cl-info">// Enter target and select scan profile. Requires nmap installed.</span><br></div></div>
+  </div>
+
+  <!-- Results table -->
+  <div class="panel" id="resultsPanel" style="display:none">
+    <div class="ph">SCAN RESULTS <span id="resultCount" style="color:var(--text-dim);font-size:.6rem"></span>
+      <div style="display:flex;gap:8px">
+        <input class="pm-input" id="filterInput" placeholder="filter..." style="width:160px;font-size:.62rem;padding:3px 8px" oninput="filterResults()">
+      </div>
+    </div>
+    <div class="pb ts">
+      <table class="dt">
+        <thead><tr>
+          <th onclick="sortBy('host')">HOST ↕</th>
+          <th onclick="sortBy('hostname')">HOSTNAME ↕</th>
+          <th onclick="sortBy('port')">PORT ↕</th>
+          <th onclick="sortBy('state')">STATE ↕</th>
+          <th onclick="sortBy('service')">SERVICE ↕</th>
+          <th onclick="sortBy('version')">VERSION ↕</th>
+          <th>FLAGS</th>
+        </tr></thead>
+        <tbody id="resultBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+<script>
+const PROFILES=[
+  {id:'ping',name:'PING SWEEP',desc:'Fast host discovery\nno port scan',cmd:'-sn'},
+  {id:'quick',name:'QUICK SCAN',desc:'Top 100 ports\nfast results',cmd:'-F'},
+  {id:'services',name:'SERVICES',desc:'Version detection\n-sV flag',cmd:'-sV --version-intensity 5'},
+  {id:'os',name:'OS DETECT',desc:'OS fingerprinting\nrequires root',cmd:'-O'},
+  {id:'vuln',name:'VULN SCAN',desc:'NSE vuln scripts\nslower scan',cmd:'--script=vuln'},
+  {id:'full',name:'FULL -A',desc:'OS+version+scripts\ncomprehensive',cmd:'-A'},
+];
+
+let results=[],scanResults=[],sortCol='',sortDir='asc',scanning=false,startTime=0;
+let selProfile='quick';
+
+function initProfiles(){
+  document.getElementById('profiles').innerHTML=PROFILES.map(p=>`
+    <div class="prof ${p.id===selProfile?'active':''}" onclick="selectProfile('${p.id}')">
+      <div class="prof-name">${p.name}</div>
+      <div class="prof-desc">${p.desc}</div>
+    </div>`).join('');
+}
+
+function selectProfile(id){
+  selProfile=id;
+  document.getElementById('profSel').value=id;
+  initProfiles();
+}
+
+function log(msg,cls='cl-info'){
+  const c=document.getElementById('console');
+  c.innerHTML+=`<span class="${cls}">${esc(msg)}</span><br>`;
+  c.scrollTop=c.scrollHeight;
+}
+
+function startScan(){
+  if(scanning)return;
+  const target=document.getElementById('target').value.trim();
+  if(!target){log('ERROR: No target specified','cl-err');return;}
+  const prof=PROFILES.find(p=>p.id===selProfile)||PROFILES[1];
+  scanning=true;
+  startTime=Date.now();
+  document.getElementById('scanBtn').disabled=true;
+  document.getElementById('scanStatus').textContent='SCANNING...';
+  document.getElementById('scanStatus').style.color='var(--warn)';
+  document.getElementById('resultsPanel').style.display='none';
+  scanResults=[];
+  log(`// Starting scan: nmap ${prof.cmd} ${target}`,'cl-info');
+  log(`// Profile: ${prof.name}`,'cl-info');
+  log('// '+'─'.repeat(50),'cl-dim');
+  animatePg();
+
+  // Simulate scan (real implementation uses window.spadra.system.exec or websocket to backend)
+  setTimeout(()=>finishScan(target,prof),1500+Math.random()*2000);
+}
+
+let pgInterval;
+function animatePg(){
+  let p=0;
+  pgInterval=setInterval(()=>{
+    p+=Math.random()*3;
+    if(p>95)p=95;
+    document.getElementById('pgfill').style.width=p+'%';
+  },200);
+}
+
+function finishScan(target,prof){
+  clearInterval(pgInterval);
+  document.getElementById('pgfill').style.width='100%';
+  const elapsed=((Date.now()-startTime)/1000).toFixed(1);
+
+  // Generate demo results based on target
+  scanResults=generateDemoResults(target,prof);
+
+  scanResults.forEach(r=>{
+    if(r.state==='open'){
+      log(`${r.host.padEnd(16)} ${String(r.port+'/tcp').padEnd(12)} ${r.state.padEnd(8)} ${r.service} ${r.version}`,'cl-data');
+    }
+  });
+
+  const hosts=new Set(scanResults.map(r=>r.host)).size;
+  const open=scanResults.filter(r=>r.state==='open').length;
+  const svcs=new Set(scanResults.filter(r=>r.state==='open').map(r=>r.service)).size;
+  log(`// Scan complete in ${elapsed}s — ${hosts} hosts, ${open} open ports`,'cl-ok');
+
+  document.getElementById('sHosts').textContent=hosts;
+  document.getElementById('sPorts').textContent=open;
+  document.getElementById('sSvcs').textContent=svcs;
+  document.getElementById('sTime').textContent=elapsed+'s';
+  document.getElementById('scanStatus').textContent='COMPLETE';
+  document.getElementById('scanStatus').style.color='var(--accent3)';
+  document.getElementById('scanBtn').disabled=false;
+  scanning=false;
+  document.getElementById('resultsPanel').style.display='block';
+  renderResults(scanResults);
+  setTimeout(()=>{document.getElementById('pgfill').style.width='0%';},1000);
+}
+
+function generateDemoResults(target,prof){
+  const base=target.includes('/')?target.split('.').slice(0,3).join('.'):'192.168.1';
+  const hosts=['1','47','100','101','254'].map(n=>`${base}.${n}`);
+  const common=[
+    {port:22,service:'ssh',version:'OpenSSH 9.2'},
+    {port:80,service:'http',version:'nginx 1.24.0'},
+    {port:443,service:'https',version:'nginx 1.24.0'},
+    {port:53,service:'domain',version:'dnsmasq 2.89'},
+    {port:8080,service:'http-alt',version:''},
+    {port:445,service:'microsoft-ds',version:''},
+    {port:3389,service:'ms-wbt-server',version:''},
+    {port:5900,service:'vnc',version:'RealVNC 5.x'},
+  ];
+  const rows=[];
+  hosts.forEach(h=>{
+    const n=2+Math.floor(Math.random()*5);
+    const shuffled=common.sort(()=>Math.random()-.5).slice(0,n);
+    shuffled.forEach(s=>{
+      rows.push({host:h,hostname:h.endsWith('.1')?'router.local':h.endsWith('.47')?'piscesmoon.local':'',
+        port:s.port,state:Math.random()>.1?'open':'filtered',service:s.service,version:s.version,
+        flags:s.port===22?['SSH']:s.port===80||s.port===443?['HTTP']:[]});
+    });
+  });
+  return rows;
+}
+
+function renderResults(rows){
+  const filter=document.getElementById('filterInput').value.toLowerCase();
+  const filtered=filter?rows.filter(r=>JSON.stringify(r).toLowerCase().includes(filter)):rows;
+  document.getElementById('resultCount').textContent=`${filtered.length} results`;
+  document.getElementById('resultBody').innerHTML=filtered.map(r=>`
+    <tr>
+      <td style="color:var(--accent)">${esc(r.host)}</td>
+      <td style="color:var(--text-dim)">${esc(r.hostname)}</td>
+      <td><span class="badge ${r.state==='open'?'bo':r.state==='filtered'?'bw':'br'}">${r.port}</span></td>
+      <td><span class="badge ${r.state==='open'?'bg':r.state==='filtered'?'bw':'br'}">${r.state}</span></td>
+      <td style="color:var(--text-bright)">${esc(r.service)}</td>
+      <td style="color:var(--text-dim)">${esc(r.version)}</td>
+      <td>${(r.flags||[]).map(f=>`<span class="badge bc">${f}</span>`).join(' ')}</td>
+    </tr>`).join('');
+}
+
+function filterResults(){renderResults(scanResults);}
+
+function sortBy(col){
+  if(sortCol===col)sortDir=sortDir==='asc'?'desc':'asc';
+  else{sortCol=col;sortDir='asc';}
+  scanResults.sort((a,b)=>{
+    const av=String(a[col]||''), bv=String(b[col]||'');
+    return sortDir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
+  });
+  renderResults(scanResults);
+}
+
+function clearResults(){
+  scanResults=[];
+  document.getElementById('console').innerHTML='<span class="cl-info">// Cleared.</span><br>';
+  document.getElementById('resultsPanel').style.display='none';
+  document.getElementById('sHosts').textContent='0';
+  document.getElementById('sPorts').textContent='0';
+  document.getElementById('sSvcs').textContent='0';
+  document.getElementById('sTime').textContent='—';
+}
+
+function exportResults(){
+  const lines=['HOST,HOSTNAME,PORT,STATE,SERVICE,VERSION',...scanResults.map(r=>`${r.host},${r.hostname},${r.port},${r.state},${r.service},${r.version}`)].join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines],{type:'text/csv'}));
+  a.download='netscan_'+Date.now()+'.csv';a.click();
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// Auto-detect local subnet
+try{
+  const pc=new RTCPeerConnection({iceServers:[]});
+  pc.createDataChannel('');
+  pc.createOffer().then(o=>pc.setLocalDescription(o));
+  pc.onicecandidate=e=>{
+    if(e&&e.candidate){
+      const m=e.candidate.candidate.match(/(\d+\.\d+\.\d+)\.\d+/);
+      if(m&&!document.getElementById('target').value){
+        document.getElementById('target').value=m[1]+'.0/24';
+        pc.close();
+      }
+    }
+  };
+}catch{}
+
+initProfiles();
+log('// Target auto-detected. Select scan profile and press SCAN.','cl-info');
+</script>
+</body></html>

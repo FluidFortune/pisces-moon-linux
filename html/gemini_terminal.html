@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — gemini_terminal.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // GEMINI TERMINAL -->
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PISCES MOON // GEMINI</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;600&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--gold:#f4a820;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,0.3);--glow2:0 0 20px rgba(244,168,32,0.3)}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;display:flex;flex-direction:column}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.15) 2px,rgba(0,0,0,0.15) 4px);pointer-events:none;z-index:1000}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.2rem;color:var(--gold);text-shadow:var(--glow2);letter-spacing:3px}
+.logo span{color:var(--accent);text-shadow:var(--glow)}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--text-dim);margin-right:6px;animation:pulse 2s infinite}
+.dot.live{background:var(--accent3)}.dot.think{background:var(--warn);animation:pulse 0.4s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.controls{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:6px 18px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.model-btn{padding:4px 12px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.6rem;cursor:pointer;letter-spacing:1px;transition:all 0.2s}
+.model-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.06)}
+.model-btn:hover{border-color:var(--text);color:var(--text)}
+.sep{width:1px;height:18px;background:var(--panel-border)}
+.cbtn{padding:4px 11px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.58rem;cursor:pointer;letter-spacing:1px;transition:all 0.2s;text-transform:uppercase}
+.cbtn:hover{border-color:var(--accent);color:var(--accent)}
+.cbtn.red:hover{border-color:var(--accent4);color:var(--accent4)}
+.token-ct{font-size:0.58rem;color:var(--text-dim);margin-left:auto}
+.token-ct span{color:var(--text-bright)}
+.chat-area{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;min-height:0}
+.msg{display:flex;flex-direction:column;max-width:88%}
+.msg.user{align-self:flex-end;align-items:flex-end}
+.msg.assistant,.msg.model{align-self:flex-start;align-items:flex-start}
+.msg.system{align-self:center;align-items:center;max-width:100%}
+.msg-role{font-size:0.54rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:3px;font-family:'Rajdhani',sans-serif;font-weight:600}
+.msg.user .msg-role{color:#3a6840}
+.msg-bubble{padding:10px 14px;line-height:1.75;font-size:0.75rem;white-space:pre-wrap;word-break:break-word}
+.msg.user .msg-bubble{background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.2);color:var(--text-bright)}
+.msg.assistant .msg-bubble,.msg.model .msg-bubble{background:var(--panel);border:1px solid var(--panel-border);color:var(--text)}
+.msg.system .msg-bubble{background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.12);color:var(--text-dim);font-size:0.65rem;text-align:center}
+.msg.error .msg-bubble{background:rgba(255,51,102,0.07);border:1px solid rgba(255,51,102,0.25);color:var(--accent4)}
+.msg-time{font-size:0.54rem;color:var(--text-dim);margin-top:3px}
+.msg-bubble code{background:var(--bg3);border:1px solid var(--panel-border);padding:1px 5px;font-size:0.7rem;color:var(--accent)}
+.msg-bubble pre{background:var(--bg3);border:1px solid var(--panel-border);padding:10px;margin:8px 0;overflow-x:auto;border-left:2px solid var(--accent3)}
+.msg-bubble pre code{background:none;border:none;padding:0;color:var(--accent3);display:block}
+.thinking{display:flex;gap:6px;align-items:center;padding:10px 14px;background:var(--panel);border:1px solid var(--panel-border);font-size:0.65rem;color:var(--text-dim);align-self:flex-start}
+.tdots span{font-size:1rem;animation:blink 1.4s infinite}
+.tdots span:nth-child(2){animation-delay:0.2s}.tdots span:nth-child(3){animation-delay:0.4s}
+@keyframes blink{0%,60%,100%{opacity:1}30%{opacity:0.1}}
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:20px;padding:40px;text-align:center}
+.wlogo{font-family:'Orbitron',monospace;font-size:2.2rem;font-weight:900;color:var(--gold);text-shadow:var(--glow2);letter-spacing:6px}
+.wsub{font-size:0.7rem;color:var(--text-dim);line-height:1.8;max-width:480px}
+.nokey{background:rgba(255,51,102,0.06);border:1px solid rgba(255,51,102,0.2);padding:12px 18px;font-size:0.65rem;color:var(--text-dim);line-height:1.7;max-width:460px}
+.nokey strong{color:var(--accent4)}
+.suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:600px}
+.sug{padding:7px 13px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.62rem;cursor:pointer;transition:all 0.2s;text-align:left}
+.sug:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.04)}
+.input-area{flex-shrink:0;background:var(--bg2);border-top:1px solid var(--panel-border);padding:12px 18px;display:flex;gap:10px;align-items:flex-end}
+textarea{flex:1;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:0.75rem;padding:9px 12px;resize:none;outline:none;min-height:42px;max-height:150px;line-height:1.6}
+textarea:focus{border-color:var(--accent)}
+textarea::placeholder{color:var(--text-dim)}
+.send-btn{padding:9px 20px;background:var(--accent);border:none;color:var(--bg);font-family:'Share Tech Mono',monospace;font-size:0.7rem;cursor:pointer;letter-spacing:2px;font-weight:bold;height:42px;flex-shrink:0;transition:all 0.2s}
+.send-btn:hover{background:var(--text-bright);box-shadow:var(--glow)}
+.send-btn:disabled{background:var(--text-dim);cursor:not-allowed}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.ovp{background:var(--bg2);border:1px solid var(--panel-border);width:min(580px,92vw);max-height:80vh;display:flex;flex-direction:column}
+.ovhdr{padding:12px 18px;border-bottom:1px solid var(--panel-border);display:flex;align-items:center;justify-content:space-between}
+.ovtitle{font-family:'Orbitron',monospace;font-size:0.68rem;color:var(--accent);letter-spacing:3px}
+.ovbody{overflow-y:auto;flex:1;padding:12px}
+.si{padding:10px 14px;border:1px solid var(--panel-border);margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start}
+.si:hover{border-color:var(--accent);background:rgba(0,212,255,0.03);cursor:pointer}
+.st{font-size:0.7rem;color:var(--text-bright);margin-bottom:3px}
+.sm{font-size:0.58rem;color:var(--text-dim)}
+.sdel{padding:3px 8px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.56rem;cursor:pointer;flex-shrink:0;margin-left:8px}
+.sdel:hover{border-color:var(--accent4);color:var(--accent4)}
+.kpanel{background:var(--bg2);border:1px solid var(--panel-border);width:min(500px,92vw);padding:24px}
+.kinput{width:100%;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:0.72rem;padding:9px 12px;outline:none;margin:10px 0}
+.kinput:focus{border-color:var(--accent)}
+.fr{display:flex;gap:8px;margin-top:6px}
+.fb{padding:7px 16px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.62rem;cursor:pointer;letter-spacing:1px;transition:all 0.2s}
+.fb:hover{border-color:var(--accent);color:var(--accent)}
+.fb.p{border-color:var(--accent);color:var(--accent)}
+.fb.d:hover{border-color:var(--accent4);color:var(--accent4)}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-track{background:var(--bg3)}::-webkit-scrollbar-thumb{background:var(--panel-border)}
+footer{text-align:center;padding:6px;font-size:0.56rem;color:var(--text-dim);border-top:1px solid var(--panel-border);flex-shrink:0;letter-spacing:2px}
+</style>
+</head>
+<body>
+<header>
+  <div><div class="logo">PISCES <span>MOON</span> // GEMINI</div><div style="font-size:0.52rem;color:var(--text-dim);letter-spacing:2px;margin-top:2px">AI TERMINAL // GOOGLE GEMINI API</div></div>
+  <div style="font-size:0.65rem;color:var(--text-dim)"><span class="dot" id="dot"></span><span id="st">READY</span></div>
+</header>
+<div class="controls">
+  <button class="model-btn active" data-model="gemini-2.0-flash" onclick="setModel(this)">FLASH 2.0</button>
+  <button class="model-btn" data-model="gemini-2.5-flash-preview-04-17" onclick="setModel(this)">FLASH 2.5</button>
+  <button class="model-btn" data-model="gemini-1.5-pro" onclick="setModel(this)">PRO 1.5</button>
+  <div class="sep"></div>
+  <button class="cbtn" onclick="newSess()">+ NEW</button>
+  <button class="cbtn" onclick="openSessions()">SESSIONS</button>
+  <button class="cbtn" onclick="saveSess()">SAVE</button>
+  <button class="cbtn" onclick="exportSess()">EXPORT</button>
+  <button class="cbtn red" onclick="clearSess()">CLEAR</button>
+  <div class="sep"></div>
+  <button class="cbtn" onclick="openKey()">API KEY</button>
+  <div class="token-ct">Turns:<span id="tc">0</span> Tokens≈<span id="tk">0</span></div>
+</div>
+<div class="chat-area" id="chat">
+  <div class="welcome" id="welcome">
+    <div class="wlogo">☽ GEMINI</div>
+    <div class="wsub">AI Terminal · Google Gemini API<br>Sessions saved locally · Full conversation history</div>
+    <div class="nokey" id="nkw" style="display:none"><strong>No API key set.</strong><br>Get a free key at <strong style="color:var(--accent)">aistudio.google.com/app/apikey</strong><br>then click <strong style="color:var(--accent)">API KEY</strong> above.</div>
+    <div class="suggestions">
+      <button class="sug" onclick="sug(this)">Explain quantum entanglement simply</button>
+      <button class="sug" onclick="sug(this)">Write a Python TCP port scanner</button>
+      <button class="sug" onclick="sug(this)">What are common WiFi attack vectors?</button>
+      <button class="sug" onclick="sug(this)">Summarize the OSI model layers</button>
+      <button class="sug" onclick="sug(this)">Best practices for wardriving OPSEC</button>
+      <button class="sug" onclick="sug(this)">Explain MAC address randomization</button>
+    </div>
+  </div>
+</div>
+<div class="input-area">
+  <textarea id="inp" placeholder="Ask Gemini anything… Enter to send, Shift+Enter for newline" rows="1" oninput="ar(this)" onkeydown="hk(event)"></textarea>
+  <button class="send-btn" id="sb" onclick="send()">SEND</button>
+</div>
+<footer>PISCES MOON OS // GEMINI TERMINAL // SESSIONS STORED LOCALLY</footer>
+
+<!-- Sessions overlay -->
+<div class="overlay" id="sessOv" onclick="if(event.target===this)closeOv('sessOv')">
+  <div class="ovp">
+    <div class="ovhdr"><div class="ovtitle">// SAVED SESSIONS</div><button class="cbtn" onclick="closeOv('sessOv')">✕ CLOSE</button></div>
+    <div class="ovbody" id="sbody"></div>
+  </div>
+</div>
+
+<!-- Key overlay -->
+<div class="overlay" id="keyOv" onclick="if(event.target===this)closeOv('keyOv')">
+  <div class="kpanel">
+    <div style="font-family:'Orbitron',monospace;font-size:0.68rem;color:var(--accent);letter-spacing:3px;margin-bottom:12px">// GEMINI API KEY</div>
+    <div style="font-size:0.65rem;color:var(--text-dim);line-height:1.7;margin-bottom:8px">Get a free key at <strong style="color:var(--accent)">aistudio.google.com/app/apikey</strong><br>Stored in browser localStorage only.</div>
+    <input class="kinput" id="ki" type="password" placeholder="AIza...">
+    <div class="fr">
+      <button class="fb p" onclick="saveKey()">SAVE KEY</button>
+      <button class="fb d" onclick="clearKey()">CLEAR</button>
+      <button class="fb" onclick="closeOv('keyOv')">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const SK='pm:gemini:sessions', KK='pm:gemini:key', MH=60;
+let mdl='gemini-2.0-flash', hist=[], sid=null, busy=false;
+let apiKey=localStorage.getItem(KK)||'';
+
+function setModel(btn){document.querySelectorAll('.model-btn').forEach(b=>b.classList.remove('active'));btn.classList.add('active');mdl=btn.dataset.model;sys('Model → '+mdl);}
+function openKey(){document.getElementById('ki').value=apiKey?'••••••••':'';document.getElementById('keyOv').classList.add('open');}
+function saveKey(){const v=document.getElementById('ki').value.trim();if(v&&v!=='••••••••'){apiKey=v;localStorage.setItem(KK,v);}closeOv('keyOv');ck();sys('API key saved.');}
+function clearKey(){apiKey='';localStorage.removeItem(KK);closeOv('keyOv');ck();}
+function ck(){const w=document.getElementById('nkw');if(w)w.style.display=apiKey?'none':'block';}
+function closeOv(id){document.getElementById(id).classList.remove('open');}
+
+async function callGemini(msg){
+  if(!apiKey) throw new Error('No API key — click API KEY above.');
+  const contents=hist.map(m=>({role:m.role,parts:[{text:m.content}]}));
+  contents.push({role:'user',parts:[{text:msg}]});
+  const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${mdl}:generateContent?key=${apiKey}`,{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents,generationConfig:{maxOutputTokens:4096,temperature:0.9},
+      safetySettings:[{category:'HARM_CATEGORY_HARASSMENT',threshold:'BLOCK_NONE'},{category:'HARM_CATEGORY_HATE_SPEECH',threshold:'BLOCK_NONE'},{category:'HARM_CATEGORY_DANGEROUS_CONTENT',threshold:'BLOCK_MEDIUM_AND_ABOVE'}]})});
+  if(!r.ok){const e=await r.json().catch(()=>{});throw new Error(e?.error?.message||`HTTP ${r.status}`);}
+  const d=await r.json();
+  const t=d?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if(!t) throw new Error('Empty response from Gemini');
+  return t;
+}
+
+async function send(){
+  const inp=document.getElementById('inp'), msg=inp.value.trim();
+  if(!msg||busy) return;
+  inp.value='';inp.style.height='auto';
+  hw();
+  addMsg('user',msg);
+  hist.push({role:'user',content:msg});
+  trim();
+  busy=true;setBusy(true);
+  const th=addThink();
+  try{
+    const rep=await callGemini(msg);
+    th.remove();
+    addMsg('assistant',rep);
+    hist.push({role:'model',content:rep});
+    trim();upd();autoSave();
+  }catch(e){th.remove();addMsg('error','Error: '+e.message);}
+  busy=false;setBusy(false);
+}
+function hk(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
+function sug(btn){document.getElementById('inp').value=btn.textContent;send();}
+function ar(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,150)+'px';}
+
+function hw(){const w=document.getElementById('welcome');if(w)w.style.display='none';}
+function addMsg(role,content){
+  const chat=document.getElementById('chat'), div=document.createElement('div');
+  div.className='msg '+role;
+  const labels={user:'YOU',assistant:'GEMINI',model:'GEMINI',system:'SYSTEM',error:'ERROR'};
+  div.innerHTML=`<div class="msg-role">${labels[role]||role}</div><div class="msg-bubble">${fmt(content)}</div><div class="msg-time">${new Date().toLocaleTimeString()}</div>`;
+  chat.appendChild(div);chat.scrollTop=chat.scrollHeight;return div;
+}
+function addThink(){
+  const chat=document.getElementById('chat'), div=document.createElement('div');
+  div.className='thinking';
+  div.innerHTML=`<span class="dot think"></span> Gemini is thinking <div class="tdots"><span>.</span><span>.</span><span>.</span></div>`;
+  chat.appendChild(div);chat.scrollTop=chat.scrollHeight;return div;
+}
+function sys(t){const chat=document.getElementById('chat'),div=document.createElement('div');div.className='msg system';div.innerHTML=`<div class="msg-bubble">${esc(t)}</div>`;chat.appendChild(div);chat.scrollTop=chat.scrollHeight;}
+function fmt(t){
+  t=t.replace(/```(\w*)\n([\s\S]*?)```/g,(_,l,c)=>`<pre><code>${esc(c.trim())}</code></pre>`);
+  t=t.replace(/`([^`\n]+)`/g,(_,c)=>`<code>${esc(c)}</code>`);
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/\n/g,'<br>');
+  return t;
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function setBusy(on){
+  document.getElementById('sb').disabled=on;
+  document.getElementById('dot').className=on?'dot think':'dot live';
+  document.getElementById('st').textContent=on?'THINKING…':mdl.replace('gemini-','').toUpperCase();
+}
+function upd(){
+  document.getElementById('tc').textContent=Math.floor(hist.length/2);
+  document.getElementById('tk').textContent=hist.reduce((a,m)=>a+Math.ceil(m.content.length/4),0).toLocaleString();
+}
+function trim(){if(hist.length>MH)hist=hist.slice(-MH);}
+
+function loadSessions(){try{return JSON.parse(localStorage.getItem(SK)||'[]');}catch(_){return[];}}
+function autoSave(){
+  if(!hist.length)return;
+  if(!sid)sid='sess_'+Date.now();
+  const sessions=loadSessions().filter(s=>s.id!==sid);
+  const fq=hist.find(m=>m.role==='user')?.content||'Untitled';
+  sessions.unshift({id:sid,title:fq.slice(0,60),model:mdl,turns:Math.floor(hist.length/2),date:new Date().toLocaleString(),history:[...hist]});
+  localStorage.setItem(SK,JSON.stringify(sessions.slice(0,50)));
+}
+function saveSess(){if(!hist.length){sys('Nothing to save.');return;}autoSave();sys(`Session saved (${Math.floor(hist.length/2)} turns).`);}
+function newSess(){
+  if(hist.length&&!confirm('Start new session?'))return;
+  hist=[];sid=null;
+  const chat=document.getElementById('chat');chat.innerHTML='';
+  const w=document.getElementById('welcome');chat.appendChild(w);w.style.display='flex';
+  ck();upd();
+}
+function clearSess(){
+  if(!confirm('Clear all messages?'))return;
+  hist=[];sid=null;
+  const chat=document.getElementById('chat');chat.innerHTML='';
+  const w=document.getElementById('welcome');chat.appendChild(w);w.style.display='flex';
+  upd();
+}
+function openSessions(){
+  const sessions=loadSessions(), body=document.getElementById('sbody');
+  body.innerHTML=sessions.length?sessions.map(s=>`
+    <div class="si"><div style="flex:1" onclick="loadSess('${s.id}')"><div class="st">${esc(s.title)}</div><div class="sm">${s.date} · ${s.model} · ${s.turns} turns</div></div>
+    <button class="sdel" onclick="delSess('${s.id}',this)">DEL</button></div>`).join('')
+    :`<div style="padding:16px;font-size:0.68rem;color:var(--text-dim)">No saved sessions.</div>`;
+  document.getElementById('sessOv').classList.add('open');
+}
+function loadSess(id){
+  const s=loadSessions().find(x=>x.id===id);if(!s)return;
+  hist=[...(s.history||[])];sid=s.id;
+  const chat=document.getElementById('chat');chat.innerHTML='';
+  hist.forEach(m=>{const role=m.role==='model'?'assistant':m.role;const div=document.createElement('div');div.className='msg '+role;div.innerHTML=`<div class="msg-role">${role==='user'?'YOU':'GEMINI'}</div><div class="msg-bubble">${fmt(m.content)}</div>`;chat.appendChild(div);});
+  chat.scrollTop=chat.scrollHeight;upd();closeOv('sessOv');
+  const mb=document.querySelector(`[data-model="${s.model}"]`);if(mb)setModel(mb);
+}
+function delSess(id,btn){const sessions=loadSessions().filter(s=>s.id!==id);localStorage.setItem(SK,JSON.stringify(sessions));btn.closest('.si').remove();}
+function exportSess(){
+  if(!hist.length){sys('Nothing to export.');return;}
+  const lines=hist.map(m=>`[${m.role.toUpperCase()}]\n${m.content}`).join('\n\n---\n\n');
+  const a=document.createElement('a');a.href='data:text/plain;charset=utf-8,'+encodeURIComponent(lines);a.download='gemini_'+Date.now()+'.txt';a.click();
+}
+document.addEventListener('DOMContentLoaded',()=>{ck();document.getElementById('dot').className='dot live';document.getElementById('st').textContent=mdl.replace('gemini-','').toUpperCase();document.getElementById('inp').focus();});
+</script>
+</body>
+</html>

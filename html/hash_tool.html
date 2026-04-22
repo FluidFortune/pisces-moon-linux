@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — hash_tool.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // HASH TOOL -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // HASH TOOL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);--glow-gold:0 0 20px rgba(244,168,32,.4);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;letter-spacing:3px;}
+.content{padding:20px;max-width:1100px;margin:0 auto;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
+.pb{padding:14px 16px;}
+.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn:hover{background:var(--accent);color:var(--bg);box-shadow:var(--glow);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn.orange{border-color:var(--accent2);color:var(--accent2);}
+.btn.orange:hover{background:var(--accent2);color:var(--bg);}
+.btn.green{border-color:var(--accent3);color:var(--accent3);}
+.btn.green:hover{background:var(--accent3);color:var(--bg);}
+.btn.red{border-color:var(--accent4);color:var(--accent4);}
+.btn.red:hover{background:var(--accent4);color:var(--bg);}
+.btn.gold{border-color:var(--gold);color:var(--gold);}
+.btn.gold:hover{background:var(--gold);color:var(--bg);}
+.btn:disabled{opacity:.4;cursor:not-allowed;}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;transition:border-color .2s;}
+.pm-input:focus{border-color:var(--accent);}
+.pm-input::placeholder{color:var(--text-dim);}
+.pm-select{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:6px 8px;outline:none;cursor:pointer;}
+.pm-select:focus{border-color:var(--accent);}
+.dt{width:100%;border-collapse:collapse;font-size:.7rem;}
+.dt th{text-align:left;padding:7px 10px;color:var(--text-dim);font-size:.58rem;letter-spacing:2px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;}
+.dt td{padding:7px 10px;border-bottom:1px solid rgba(26,58,80,.3);}
+.dt tr:hover td{background:rgba(0,212,255,.04);}
+.ts{max-height:380px;overflow-y:auto;}
+.badge{display:inline-block;padding:1px 6px;font-size:.57rem;border-radius:2px;}
+.bc{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid var(--accent);}
+.bo{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid var(--accent2);}
+.bg{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
+.br{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
+.bw{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
+.bgo{background:rgba(244,168,32,.1);color:var(--gold);border:1px solid var(--gold);}
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;}
+.sc{background:var(--panel);border:1px solid var(--panel-border);padding:13px;position:relative;overflow:hidden;}
+.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.sc.o::before{background:var(--accent2);}.sc.g::before{background:var(--accent3);}.sc.r::before{background:var(--accent4);}.sc.w::before{background:var(--warn);}.sc.gold::before{background:var(--gold);}
+.slbl{font-size:.58rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;font-family:'Orbitron',monospace;}
+.sval{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--text-bright);font-weight:700;}
+.ssub{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+.hash-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.hash-algo{width:100px;font-size:.62rem;color:var(--text-dim);font-family:'Orbitron',monospace;letter-spacing:1px;flex-shrink:0;}
+.hash-val{flex:1;background:var(--bg3);border:1px solid var(--panel-border);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:8px 12px;word-break:break-all;min-height:36px;}
+.hash-val.match{border-color:var(--accent3);color:var(--accent3);}
+.hash-val.nomatch{border-color:var(--accent4);color:var(--accent4);}
+.drop-zone{border:2px dashed var(--panel-border);padding:30px;text-align:center;cursor:pointer;transition:all .3s;margin-bottom:16px;}
+.drop-zone:hover,.drop-zone.dragover{border-color:var(--accent);background:rgba(0,212,255,.04);box-shadow:var(--glow);}
+.drop-zone h3{font-family:'Orbitron',monospace;font-size:.75rem;color:var(--accent);letter-spacing:3px;margin-bottom:8px;}
+textarea.pm-input{resize:vertical;min-height:100px;width:100%;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.2.0/crypto-js.min.js"></script>
+</head><body>
+<header>
+  <div class="logo" style="color:var(--accent3)">PISCES MOON // <span style="color:var(--gold)">HASH TOOL</span></div>
+  <div style="font-size:.65rem;color:var(--text-dim)">MD5 · SHA-1 · SHA-256 · SHA-512</div>
+</header>
+<div class="content">
+  <div class="panel">
+    <div class="ph" style="color:var(--accent3)">INPUT</div>
+    <div class="pb">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn sm green" onclick="setMode('text')">TEXT</button>
+        <button class="btn sm orange" onclick="setMode('file')">FILE</button>
+        <button class="btn sm" onclick="clearAll()">CLEAR</button>
+        <span style="font-size:.62rem;color:var(--text-dim);align-self:center" id="modeLabel">Mode: TEXT</span>
+      </div>
+      <div id="textInput">
+        <textarea class="pm-input" id="inputText" placeholder="Enter text to hash..." oninput="computeHashes(this.value,'text')"></textarea>
+      </div>
+      <div id="fileInput" style="display:none">
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fi').click()" ondragover="dov(event)" ondragleave="dol(event)" ondrop="dod(event)">
+          <input type="file" id="fi" style="display:none" onchange="onFile(event)">
+          <h3>// DROP FILE HERE</h3>
+          <p style="font-size:.68rem;color:var(--text-dim)">or click to select</p>
+        </div>
+        <div id="fileInfo" style="font-size:.7rem;color:var(--text-dim)"></div>
+      </div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph" style="color:var(--accent3)">HASHES</div>
+    <div class="pb">
+      <div class="hash-row"><div class="hash-algo">MD5</div><div class="hash-val" id="h-md5">—</div><button class="btn sm" onclick="copy('h-md5')">COPY</button></div>
+      <div class="hash-row"><div class="hash-algo">SHA-1</div><div class="hash-val" id="h-sha1">—</div><button class="btn sm" onclick="copy('h-sha1')">COPY</button></div>
+      <div class="hash-row"><div class="hash-algo">SHA-256</div><div class="hash-val" id="h-sha256">—</div><button class="btn sm" onclick="copy('h-sha256')">COPY</button></div>
+      <div class="hash-row"><div class="hash-algo">SHA-512</div><div class="hash-val" id="h-sha512" style="font-size:.62rem">—</div><button class="btn sm" onclick="copy('h-sha512')">COPY</button></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph" style="color:var(--warn)">VERIFY — compare against known hash</div>
+    <div class="pb" style="display:flex;gap:10px;flex-wrap:wrap">
+      <input class="pm-input" id="verifyHash" placeholder="Paste expected hash here..." style="flex:1;min-width:200px" oninput="verify()">
+      <div id="verifyResult" style="font-size:.8rem;padding:8px 0;font-family:'Orbitron',monospace"></div>
+    </div>
+  </div>
+</div>
+<script>
+let currentMode='text', currentHash='';
+function setMode(m){
+  currentMode=m;
+  document.getElementById('textInput').style.display=m==='text'?'block':'none';
+  document.getElementById('fileInput').style.display=m==='file'?'block':'none';
+  document.getElementById('modeLabel').textContent='Mode: '+m.toUpperCase();
+  clearAll();
+}
+function computeHashes(input,type){
+  if(!input){clearHashes();return;}
+  const wl=type==='wordarray'?input:CryptoJS.enc.Utf8.parse(input);
+  document.getElementById('h-md5').textContent=CryptoJS.MD5(type==='wordarray'?input:input).toString();
+  document.getElementById('h-sha1').textContent=CryptoJS.SHA1(type==='wordarray'?input:input).toString();
+  document.getElementById('h-sha256').textContent=CryptoJS.SHA256(type==='wordarray'?input:input).toString();
+  document.getElementById('h-sha512').textContent=CryptoJS.SHA512(type==='wordarray'?input:input).toString();
+  currentHash=document.getElementById('h-sha256').textContent;
+  verify();
+}
+function clearHashes(){['h-md5','h-sha1','h-sha256','h-sha512'].forEach(id=>{document.getElementById(id).textContent='—';document.getElementById(id).className='hash-val';});}
+function clearAll(){clearHashes();document.getElementById('inputText').value='';document.getElementById('verifyHash').value='';document.getElementById('verifyResult').textContent='';currentHash='';}
+function copy(id){navigator.clipboard.writeText(document.getElementById(id).textContent);}
+function verify(){
+  const v=document.getElementById('verifyHash').value.trim().toLowerCase();
+  const el=document.getElementById('verifyResult');
+  if(!v||!currentHash){el.textContent='';return;}
+  const hashes=[document.getElementById('h-md5'),document.getElementById('h-sha1'),document.getElementById('h-sha256'),document.getElementById('h-sha512')].map(e=>e.textContent.toLowerCase());
+  const match=hashes.some(h=>h===v);
+  el.textContent=match?'✓ MATCH':'✗ NO MATCH';
+  el.style.color=match?'var(--accent3)':'var(--accent4)';
+}
+function onFile(e){
+  const file=e.target.files[0];if(!file)return;
+  document.getElementById('fileInfo').textContent=`${file.name} — ${(file.size/1024).toFixed(1)} KB`;
+  const r=new FileReader();
+  r.onload=ev=>{
+    const wa=CryptoJS.lib.WordArray.create(ev.target.result);
+    computeHashes(wa,'wordarray');
+  };
+  r.readAsArrayBuffer(file);
+}
+function dov(e){e.preventDefault();document.getElementById('dropZone').classList.add('dragover');}
+function dol(e){document.getElementById('dropZone').classList.remove('dragover');}
+function dod(e){e.preventDefault();document.getElementById('dropZone').classList.remove('dragover');const file=e.dataTransfer.files[0];if(file){const i=document.getElementById('fi');const dt=new DataTransfer();dt.items.add(file);i.files=dt.files;onFile({target:i});}}
+</script>
+</body></html>

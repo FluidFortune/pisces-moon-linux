@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — audio_player.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // AUDIO PLAYER -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // AUDIO PLAYER</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);--glow-gold:0 0 20px rgba(244,168,32,.4);}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--gold);text-shadow:var(--glow-gold);letter-spacing:3px;}
+.logo span{color:var(--accent);}
+.layout{display:flex;flex:1;overflow:hidden;}
+.playlist{width:260px;background:var(--bg2);border-right:1px solid var(--panel-border);display:flex;flex-direction:column;flex-shrink:0;}
+.pl-head{padding:10px 14px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.56rem;color:var(--gold);letter-spacing:2px;display:flex;justify-content:space-between;align-items:center;}
+.pl-list{flex:1;overflow-y:auto;}
+.pl-item{padding:9px 14px;cursor:pointer;border-bottom:1px solid rgba(26,58,80,.3);font-size:.68rem;transition:background .15s;display:flex;align-items:center;gap:8px;}
+.pl-item:hover{background:rgba(244,168,32,.05);}
+.pl-item.active{background:rgba(244,168,32,.1);border-left:2px solid var(--gold);}
+.pl-item .num{width:18px;text-align:center;color:var(--text-dim);flex-shrink:0;}
+.pl-item.active .num{color:var(--gold);}
+.pl-info{flex:1;overflow:hidden;}
+.pl-title{color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pl-meta{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
+.pl-dur{color:var(--text-dim);font-size:.62rem;flex-shrink:0;}
+.pl-item.active .pl-title{color:var(--gold);}
+.main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;background:var(--bg);}
+.album-art{width:200px;height:200px;background:var(--bg2);border:1px solid var(--panel-border);display:flex;align-items:center;justify-content:center;margin-bottom:24px;position:relative;overflow:hidden;}
+.album-art .icon{font-size:5rem;opacity:.5;}
+.spinning{animation:spin 4s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.track-info{text-align:center;margin-bottom:24px;}
+.track-title{font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--text-bright);letter-spacing:2px;margin-bottom:4px;}
+.track-artist{font-size:.75rem;color:var(--gold);}
+.track-album{font-size:.65rem;color:var(--text-dim);margin-top:2px;}
+.progress-wrap{width:100%;max-width:500px;margin-bottom:16px;}
+.progress-row{display:flex;justify-content:space-between;font-size:.65rem;color:var(--text-dim);margin-bottom:6px;}
+.progress-bar{width:100%;height:5px;background:var(--bg3);border:1px solid var(--panel-border);cursor:pointer;position:relative;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--accent2));transition:width .1s;}
+.progress-bar:hover .progress-fill{background:var(--gold);}
+.controls{display:flex;align-items:center;gap:16px;margin-bottom:20px;}
+.ctrl-btn{background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:1rem;width:42px;height:42px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;border-radius:2px;}
+.ctrl-btn:hover{border-color:var(--gold);color:var(--gold);}
+.ctrl-btn.active{border-color:var(--accent3);color:var(--accent3);}
+.play-btn{width:64px;height:64px;font-size:1.5rem;border-color:var(--gold);color:var(--gold);}
+.play-btn:hover{background:var(--gold);color:var(--bg);}
+.vol-row{display:flex;align-items:center;gap:10px;font-size:.65rem;color:var(--text-dim);}
+input[type=range]{-webkit-appearance:none;height:4px;background:var(--panel-border);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;background:var(--gold);cursor:pointer;border-radius:50%;}
+.eq-bars{display:flex;align-items:flex-end;gap:3px;height:30px;margin-left:12px;}
+.eq-bar{width:5px;background:var(--gold);border-radius:1px;transition:height .1s;}
+.drop-zone{border:2px dashed var(--panel-border);padding:16px;text-align:center;cursor:pointer;font-size:.68rem;color:var(--text-dim);transition:all .3s;margin:8px;}
+.drop-zone:hover{border-color:var(--gold);color:var(--gold);}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo">PISCES MOON // <span>AUDIO</span></div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <div class="eq-bars" id="eqBars"></div>
+    <span id="playerStatus" style="font-size:.65rem;color:var(--text-dim)">STOPPED</span>
+  </div>
+</header>
+<div class="layout">
+  <div class="playlist">
+    <div class="pl-head">PLAYLIST <button style="background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.55rem;padding:2px 7px;cursor:pointer" onclick="document.getElementById('fileInput').click()">+ ADD</button></div>
+    <input type="file" id="fileInput" multiple accept="audio/*" style="display:none" onchange="loadFiles(event)">
+    <div class="pl-list" id="plList">
+      <div class="drop-zone" onclick="document.getElementById('fileInput').click()" ondragover="event.preventDefault()" ondrop="dropFiles(event)">
+        <div style="font-family:'Orbitron',monospace;font-size:.6rem;color:var(--gold);margin-bottom:4px">DROP AUDIO HERE</div>
+        or click to browse
+      </div>
+    </div>
+  </div>
+  <div class="main">
+    <div class="album-art">
+      <div class="icon" id="albumIcon">🎵</div>
+    </div>
+    <div class="track-info">
+      <div class="track-title" id="trackTitle">NO TRACK LOADED</div>
+      <div class="track-artist" id="trackArtist">Load audio files from the playlist</div>
+      <div class="track-album" id="trackAlbum"></div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-row"><span id="curTime">0:00</span><span id="durTime">0:00</span></div>
+      <div class="progress-bar" id="progressBar" onclick="seek(event)">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="ctrl-btn" id="shuffleBtn" onclick="toggleShuffle()" title="Shuffle">⇀</button>
+      <button class="ctrl-btn" onclick="prevTrack()" title="Previous">⏮</button>
+      <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">▶</button>
+      <button class="ctrl-btn" onclick="nextTrack()" title="Next">⏭</button>
+      <button class="ctrl-btn" id="repeatBtn" onclick="toggleRepeat()" title="Repeat">↩</button>
+    </div>
+    <div class="vol-row">
+      🔈
+      <input type="range" id="volSlider" min="0" max="1" step="0.01" value="0.8" style="width:120px" oninput="setVol(this.value)">
+      🔊 &nbsp;&nbsp;
+      SPEED
+      <input type="range" id="speedSlider" min="0.5" max="2" step="0.1" value="1" style="width:80px" oninput="setSpeed(this.value)">
+      <span id="speedLabel" style="font-size:.62rem">1.0x</span>
+    </div>
+  </div>
+</div>
+<script>
+const audio = new Audio();
+let playlist = [], curIdx = -1, shuffle = false, repeat = false, eqInterval = null;
+let eqEls = [];
+
+// Init EQ bars
+for (let i=0; i<8; i++) {
+  const el = document.createElement('div');
+  el.className = 'eq-bar';
+  el.style.height = '4px';
+  document.getElementById('eqBars').appendChild(el);
+  eqEls.push(el);
+}
+
+function animateEQ(playing) {
+  clearInterval(eqInterval);
+  if (!playing) { eqEls.forEach(e=>e.style.height='4px'); return; }
+  eqInterval = setInterval(()=>eqEls.forEach(e=>e.style.height=(4+Math.random()*26)+'px'), 100);
+}
+
+audio.onended = () => { if(repeat)audio.play(); else nextTrack(); };
+audio.ontimeupdate = () => {
+  if (!audio.duration) return;
+  const pct = (audio.currentTime/audio.duration)*100;
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('curTime').textContent = fmt(audio.currentTime);
+  document.getElementById('durTime').textContent = fmt(audio.duration);
+};
+audio.onplay = () => { document.getElementById('playBtn').textContent='⏸'; document.getElementById('playerStatus').textContent='PLAYING'; animateEQ(true); document.getElementById('albumIcon').className='icon spinning'; };
+audio.onpause = () => { document.getElementById('playBtn').textContent='▶'; document.getElementById('playerStatus').textContent='PAUSED'; animateEQ(false); document.getElementById('albumIcon').className='icon'; };
+
+function fmt(s) { const m=Math.floor(s/60),sec=Math.floor(s%60); return m+':'+String(sec).padStart(2,'0'); }
+
+function loadFiles(e) {
+  const files = Array.from(e.target.files);
+  files.forEach(f => {
+    const url = URL.createObjectURL(f);
+    const name = f.name.replace(/\.[^.]+$/,'');
+    playlist.push({name, url, size:f.size, type:f.type});
+  });
+  renderPlaylist();
+  if (curIdx < 0 && playlist.length) loadTrack(0);
+}
+
+function dropFiles(e) {
+  e.preventDefault();
+  const dt = new DataTransfer();
+  Array.from(e.dataTransfer.files).forEach(f=>dt.items.add(f));
+  document.getElementById('fileInput').files = dt.files;
+  loadFiles({target:{files:dt.files}});
+}
+
+function renderPlaylist() {
+  const base = `<div class="drop-zone" onclick="document.getElementById('fileInput').click()" style="margin:6px;padding:8px;font-size:.62rem">+ ADD MORE FILES</div>`;
+  document.getElementById('plList').innerHTML = base + playlist.map((t,i)=>`
+    <div class="pl-item ${i===curIdx?'active':''}" onclick="loadTrack(${i})">
+      <div class="num">${i===curIdx?'▶':i+1}</div>
+      <div class="pl-info"><div class="pl-title">${esc(t.name)}</div><div class="pl-meta">${(t.size/1e6).toFixed(1)} MB</div></div>
+    </div>`).join('');
+}
+
+function loadTrack(i) {
+  curIdx = i;
+  const t = playlist[i];
+  if (!t) return;
+  audio.src = t.url;
+  audio.play();
+  document.getElementById('trackTitle').textContent = t.name;
+  document.getElementById('trackArtist').textContent = 'Local File';
+  document.getElementById('trackAlbum').textContent = '';
+  renderPlaylist();
+}
+
+function togglePlay() { audio.paused ? audio.play() : audio.pause(); }
+function nextTrack() { if(!playlist.length)return; loadTrack(shuffle?Math.floor(Math.random()*playlist.length):(curIdx+1)%playlist.length); }
+function prevTrack() { if(!playlist.length)return; loadTrack(shuffle?Math.floor(Math.random()*playlist.length):((curIdx-1+playlist.length)%playlist.length)); }
+function toggleShuffle() { shuffle=!shuffle; document.getElementById('shuffleBtn').classList.toggle('active',shuffle); }
+function toggleRepeat() { repeat=!repeat; document.getElementById('repeatBtn').classList.toggle('active',repeat); }
+function setVol(v) { audio.volume=parseFloat(v); }
+function setSpeed(v) { audio.playbackRate=parseFloat(v); document.getElementById('speedLabel').textContent=parseFloat(v).toFixed(1)+'x'; }
+function seek(e) {
+  const bar=document.getElementById('progressBar');
+  const pct=(e.clientX-bar.getBoundingClientRect().left)/bar.offsetWidth;
+  if(audio.duration) audio.currentTime=pct*audio.duration;
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script></body></html>

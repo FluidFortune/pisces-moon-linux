@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — medical_ref.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // MEDICAL REFERENCE -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // MEDICAL REF</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent4);letter-spacing:3px;}
+.content{padding:20px;max-width:1100px;margin:0 auto;}
+.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
+.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;color:var(--accent4);letter-spacing:3px;}
+.pb{padding:14px 16px;}
+.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent4);color:var(--accent4);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
+.btn:hover{background:var(--accent4);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;border-color:var(--accent);color:var(--accent);}
+.btn.sm:hover{background:var(--accent);color:var(--bg);}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;}
+.pm-input:focus{border-color:var(--accent4);}
+.pm-input::placeholder{color:var(--text-dim);}
+.tabs{display:flex;border-bottom:1px solid var(--panel-border);}
+.tab{padding:9px 16px;font-size:.6rem;color:var(--text-dim);cursor:pointer;letter-spacing:2px;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:'Orbitron',monospace;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent4);border-bottom-color:var(--accent4);}
+.tc{display:none;padding:16px;}.tc.active{display:block;}
+.ai-answer{background:rgba(255,51,102,.04);border:1px solid rgba(255,51,102,.15);padding:14px;font-size:.73rem;line-height:1.75;white-space:pre-wrap;}
+.info-card{background:var(--bg2);border:1px solid var(--panel-border);padding:12px;margin-bottom:8px;border-left:3px solid var(--accent4);}
+.info-card h3{font-family:'Orbitron',monospace;font-size:.65rem;color:var(--accent4);letter-spacing:2px;margin-bottom:6px;}
+.info-card p{font-size:.7rem;color:var(--text);line-height:1.65;}
+.thinking{display:flex;gap:5px;padding:10px 0;}
+.thinking span{width:7px;height:7px;background:var(--accent4);border-radius:50%;animation:th 1.2s infinite;}
+.thinking span:nth-child(2){animation-delay:.2s;}.thinking span:nth-child(3){animation-delay:.4s;}
+@keyframes th{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo">PISCES MOON // <span style="color:var(--gold)">MEDICAL REF</span></div>
+  <div style="font-size:.6rem;color:var(--accent4)">// NOT MEDICAL ADVICE — REFERENCE ONLY</div>
+</header>
+<div class="content">
+  <div class="panel">
+    <div class="ph">ASK GEMINI — Medical Reference</div>
+    <div class="pb">
+      <div style="background:rgba(255,51,102,.06);border:1px solid rgba(255,51,102,.2);padding:10px;margin-bottom:12px;font-size:.68rem;color:var(--accent4)">
+        ⚠ FOR REFERENCE ONLY. In emergencies call 911. This is not a substitute for professional medical advice.
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <input class="pm-input" id="medQuery" placeholder="symptoms of X, dosage of Y, first aid for Z..." style="flex:1;min-width:200px">
+        <button class="btn" onclick="askMed()">ASK ↵</button>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
+        <button class="btn sm" onclick="q('Common OTC medications and uses')">MEDICATIONS</button>
+        <button class="btn sm" onclick="q('First aid for wounds and burns')">FIRST AID</button>
+        <button class="btn sm" onclick="q('Heart attack and stroke warning signs')">CARDIAC</button>
+        <button class="btn sm" onclick="q('Signs of concussion and head injury')">NEURO</button>
+        <button class="btn sm" onclick="q('Allergic reaction and anaphylaxis treatment')">ALLERGIES</button>
+        <button class="btn sm" onclick="q('Fever management by age')">FEVER</button>
+      </div>
+      <div id="medResult" style="margin-top:12px"></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="st(0)">VITALS</div>
+    <div class="tab" onclick="st(1)">FIRST AID</div>
+    <div class="tab" onclick="st(2)">CPR</div>
+    <div class="tab" onclick="st(3)">EMERGENCY #s</div>
+  </div>
+
+  <div class="tc active" id="tc0">
+    <div class="info-card"><h3>ADULT NORMAL VITALS</h3><p>Heart Rate: 60–100 bpm &nbsp;|&nbsp; Blood Pressure: 90-120 / 60-80 mmHg<br>Respiratory Rate: 12–20 breaths/min &nbsp;|&nbsp; Temperature: 97.8–99.1°F (36.5–37.3°C)<br>Oxygen Saturation (SpO2): 95–100% &nbsp;|&nbsp; Blood Glucose (fasting): 70–100 mg/dL</p></div>
+    <div class="info-card"><h3>PEDIATRIC VITALS (approximate)</h3><p>Newborn HR: 100-160 &nbsp;|&nbsp; Infant (1-12mo): 80-140 &nbsp;|&nbsp; Toddler (1-3yr): 80-130<br>Child (3-10yr): 70-120 &nbsp;|&nbsp; Pre-teen: 60-100<br>BP and RR also vary significantly by age — consult reference for specifics.</p></div>
+    <div class="info-card"><h3>WHEN TO SEEK EMERGENCY CARE</h3><p>Chest pain, difficulty breathing, sudden severe headache, facial drooping, arm weakness, speech difficulty (stroke), uncontrolled bleeding, loss of consciousness, seizures, severe allergic reaction, suspected poisoning.</p></div>
+  </div>
+
+  <div class="tc" id="tc1">
+    <div class="info-card"><h3>BLEEDING CONTROL</h3><p>1. Apply direct pressure with clean cloth. 2. Elevate above heart if possible. 3. Do not remove cloth — add more on top. 4. Tourniquet for limb: 2-3" above wound, note time applied. 5. Seek medical care for deep wounds, spurting blood, or wounds that won't stop.</p></div>
+    <div class="info-card"><h3>BURNS</h3><p>Minor: cool running water 10-20 min. Do NOT use ice, butter, or toothpaste. Cover loosely. Severe: call 911. Do not pop blisters. Chemical: flush with water 20+ min. Electrical: don't touch victim if still in contact.</p></div>
+    <div class="info-card"><h3>FRACTURES / SPRAINS</h3><p>RICE: Rest, Ice (20 min on/off), Compression, Elevation. Splint fractures in position found. Do not straighten angulated fractures. Seek X-ray to differentiate sprain from fracture.</p></div>
+    <div class="info-card"><h3>CHOKING — HEIMLICH</h3><p>Adult conscious: stand behind, hands clasped above navel, below chest. Upward thrusts until dislodged. Infant: 5 back blows + 5 chest thrusts. Unconscious: CPR. If alone: use chair back or counter edge.</p></div>
+  </div>
+
+  <div class="tc" id="tc2">
+    <div class="info-card"><h3>CPR — ADULT (Hands-Only)</h3><p>1. Ensure scene safety. 2. Check responsiveness (tap/shout). 3. Call 911. 4. Hard, fast compressions center of chest, 2–2.4 inches deep. 5. Rate: 100-120/min (Stayin' Alive tempo). 6. Minimize interruptions. 7. Use AED as soon as available. Continue until EMS arrives.</p></div>
+    <div class="info-card"><h3>CPR — INFANT</h3><p>2 fingers on center of chest (just below nipple line). Depth: 1.5 inches. Rate: 100-120/min. 30 compressions : 2 rescue breaths if trained. Cover infant's mouth AND nose.</p></div>
+    <div class="info-card"><h3>AED USE</h3><p>1. Power on. 2. Attach pads (bare chest, dry). 3. Follow voice prompts. 4. Clear before shock. 5. Resume CPR immediately after shock. AEDs are designed for untrained users — let the device guide you.</p></div>
+  </div>
+
+  <div class="tc" id="tc3">
+    <div class="info-card"><h3>EMERGENCY CONTACTS (US)</h3><p>Emergency: <span style="color:var(--accent4);font-size:1rem">911</span><br>
+    Poison Control: <span style="color:var(--text-bright)">1-800-222-1222</span><br>
+    Crisis / Suicide: <span style="color:var(--text-bright)">988</span><br>
+    Non-Emergency: <span style="color:var(--text-bright)">311</span><br>
+    CDC Info: <span style="color:var(--text-bright)">1-800-232-4636</span></p></div>
+    <div class="info-card"><h3>WHAT TO TELL 911</h3><p>1. Your location (address, cross streets, landmarks). 2. Nature of emergency. 3. Number of people injured. 4. Condition of patient. 5. Your phone number. Stay on the line — let dispatcher guide you.</p></div>
+  </div>
+</div>
+<script>
+function st(i){document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));document.querySelectorAll('.tc').forEach((t,j)=>t.classList.toggle('active',i===j));}
+function q(question){document.getElementById('medQuery').value=question;askMed();}
+async function askMed(){
+  const query=document.getElementById('medQuery').value.trim();if(!query)return;
+  const el=document.getElementById('medResult');
+  el.innerHTML='<div class="thinking"><span></span><span></span><span></span></div>';
+  const key=localStorage.getItem('pm_gemini_key')||'';
+  if(!key){el.innerHTML='<div class="ai-answer" style="color:var(--accent4)">No API key set. Go to Gemini Terminal.</div>';return;}
+  try{
+    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key='+key,{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({contents:[{role:'user',parts:[{text:'You are a medical reference tool. Provide factual, general health information. Always state this is reference only and to consult a healthcare professional for personal advice. Query: '+query}]}],generationConfig:{maxOutputTokens:700}})
+    });
+    const data=await r.json();
+    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'No response';
+    el.innerHTML='<div class="ai-answer">'+esc(text)+'</div><div style="font-size:.6rem;color:var(--accent4);margin-top:8px">⚠ Reference only. Consult a healthcare professional.</div>';
+  }catch(e){el.innerHTML='<div class="ai-answer" style="color:var(--accent4)">⚠ '+e.message+'</div>';}
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script></body></html>

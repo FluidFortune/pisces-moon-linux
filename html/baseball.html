@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — baseball.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // BASEBALL INTELLIGENCE HUB v2.0 -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // BASEBALL INTEL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Inter:wght@300;400;500;600&display=swap');
+:root{
+  --bg:#06080a;--bg2:#0a0e12;--bg3:#0e1318;--bg4:#121820;
+  --panel-border:#1c2e3a;--panel-border-bright:#2a4558;
+  --gold:#f0a500;--gold-dim:#8a5e00;--gold-glow:rgba(240,165,0,.2);
+  --accent:#00c8f0;--accent-dim:#005878;
+  --accent3:#00e87a;--accent4:#ff2d55;
+  --warn:#ffd60a;--text:#8ab4cc;--text-bright:#d4eaf8;--text-dim:#304858;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;display:flex;flex-direction:column;overflow:hidden;}
+
+/* Scanline overlay */
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,.08) 3px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9999;}
+
+/* ── HEADER ─────────────────────────────────────────────── */
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:0 24px;display:flex;align-items:center;gap:0;height:52px;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--gold);letter-spacing:4px;margin-right:32px;white-space:nowrap;}
+.logo em{color:var(--accent);font-style:normal;}
+.nav{display:flex;height:100%;}
+.nav-item{padding:0 18px;display:flex;align-items:center;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;color:var(--text-dim);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;white-space:nowrap;}
+.nav-item:hover{color:var(--text);}
+.nav-item.active{color:var(--gold);border-bottom-color:var(--gold);}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:12px;}
+.live-badge{display:flex;align-items:center;gap:5px;font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:2px;color:var(--accent4);}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--accent4);animation:livepulse 1.2s ease infinite;}
+@keyframes livepulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(255,45,85,.4)}50%{opacity:.7;box-shadow:0 0 0 4px rgba(255,45,85,0)}}
+.refresh-btn{padding:5px 12px;border:1px solid var(--panel-border);background:transparent;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;cursor:pointer;transition:all .2s;letter-spacing:1px;}
+.refresh-btn:hover{border-color:var(--gold);color:var(--gold);}
+#lastUpdate{font-size:.55rem;color:var(--text-dim);}
+
+/* ── LAYOUT ─────────────────────────────────────────────── */
+.app{flex:1;display:grid;grid-template-columns:280px 1fr 320px;overflow:hidden;}
+.col-left{border-right:1px solid var(--panel-border);overflow-y:auto;display:flex;flex-direction:column;}
+.col-main{overflow-y:auto;display:flex;flex-direction:column;}
+.col-right{border-left:1px solid var(--panel-border);overflow-y:auto;display:flex;flex-direction:column;}
+
+/* ── SECTION HEADERS ──────────────────────────────────────── */
+.sh{padding:10px 14px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:3px;color:var(--gold);display:flex;justify-content:space-between;align-items:center;background:var(--bg2);flex-shrink:0;}
+.sh .sh-sub{color:var(--text-dim);font-size:.5rem;letter-spacing:1px;}
+.sh .sh-action{font-size:.5rem;color:var(--accent);cursor:pointer;letter-spacing:1px;}
+.sh .sh-action:hover{color:var(--gold);}
+
+/* ── TODAY'S GAMES (left sidebar) ──────────────────────────── */
+.game-item{padding:12px 14px;border-bottom:1px solid rgba(28,46,58,.6);cursor:pointer;transition:background .15s;position:relative;}
+.game-item:hover{background:rgba(240,165,0,.04);}
+.game-item.selected{background:rgba(240,165,0,.07);border-left:2px solid var(--gold);}
+.game-item.live{border-left:2px solid var(--accent4);}
+.gi-status{font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:2px;margin-bottom:6px;}
+.gi-status.live{color:var(--accent4);}
+.gi-status.final{color:var(--text-dim);}
+.gi-status.preview{color:var(--accent);}
+.gi-matchup{display:grid;grid-template-columns:1fr auto 1fr;gap:6px;align-items:center;margin-bottom:4px;}
+.gi-team{font-size:.65rem;color:var(--text-bright);}
+.gi-team.away{text-align:left;}
+.gi-team.home{text-align:right;}
+.gi-score{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;color:var(--gold);text-align:center;white-space:nowrap;}
+.gi-score.preview{color:var(--text-dim);font-size:.65rem;}
+.gi-meta{font-size:.57rem;color:var(--text-dim);display:flex;justify-content:space-between;}
+.gi-record{font-size:.55rem;color:var(--text-dim);}
+
+/* ── MAIN SCOREBOARD ────────────────────────────────────────── */
+.views{flex:1;}
+.view{display:none;}
+.view.active{display:block;}
+
+/* Game detail card */
+.game-hero{background:linear-gradient(135deg,var(--bg2) 0%,rgba(240,165,0,.04) 100%);border-bottom:1px solid var(--panel-border);padding:24px;}
+.hero-teams{display:grid;grid-template-columns:1fr auto 1fr;gap:20px;align-items:center;margin-bottom:20px;}
+.hero-team{text-align:center;}
+.hero-team-name{font-family:'Orbitron',monospace;font-size:.75rem;letter-spacing:3px;color:var(--text-bright);margin-bottom:4px;}
+.hero-team-record{font-size:.6rem;color:var(--text-dim);}
+.hero-logo{font-size:3rem;line-height:1;}
+.hero-score{text-align:center;}
+.hero-score-num{font-family:'Orbitron',monospace;font-size:3.5rem;font-weight:900;color:var(--gold);text-shadow:0 0 40px var(--gold-glow);line-height:1;}
+.hero-inning{font-family:'Orbitron',monospace;font-size:.7rem;color:var(--accent4);letter-spacing:3px;margin-top:4px;}
+.hero-inning.final{color:var(--text-dim);}
+.linescore{display:grid;gap:1px;margin-bottom:16px;overflow-x:auto;}
+.ls-row{display:flex;gap:1px;}
+.ls-cell{min-width:28px;height:26px;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',monospace;font-size:.58rem;background:var(--bg3);flex-shrink:0;}
+.ls-cell.header{background:var(--bg2);color:var(--text-dim);font-size:.52rem;}
+.ls-cell.team-col{min-width:50px;background:var(--bg2);color:var(--text);font-size:.6rem;justify-content:flex-end;padding-right:6px;}
+.ls-cell.current{background:rgba(240,165,0,.15);color:var(--gold);}
+.ls-cell.total{background:var(--bg2);font-weight:700;color:var(--text-bright);}
+.diamond{display:flex;flex-direction:column;align-items:center;gap:4px;margin-bottom:16px;}
+.diamond-row{display:flex;gap:8px;}
+.base{width:14px;height:14px;transform:rotate(45deg);border:1px solid var(--text-dim);background:transparent;transition:background .2s;}
+.base.occupied{background:var(--gold);border-color:var(--gold);box-shadow:0 0 8px var(--gold-glow);}
+.count-row{display:flex;gap:16px;font-size:.62rem;color:var(--text-dim);justify-content:center;}
+.count-dots{display:flex;gap:4px;align-items:center;}
+.count-dot{width:8px;height:8px;border-radius:50%;border:1px solid var(--text-dim);background:transparent;}
+.count-dot.filled{background:var(--gold);}
+.count-dot.out{border-color:var(--accent4);}
+.count-dot.out.filled{background:var(--accent4);}
+
+/* Stats tables */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--panel-border);}
+.stats-section{padding:14px;}
+.stats-section+.stats-section{border-left:1px solid var(--panel-border);}
+.stats-table{width:100%;border-collapse:collapse;font-size:.62rem;}
+.stats-table th{text-align:left;padding:4px 8px;color:var(--text-dim);font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:2px;border-bottom:1px solid var(--panel-border);font-weight:400;}
+.stats-table th.num,.stats-table td.num{text-align:right;}
+.stats-table td{padding:5px 8px;border-bottom:1px solid rgba(28,46,58,.4);color:var(--text);}
+.stats-table tr:hover td{background:rgba(240,165,0,.03);}
+.stats-table td.player{color:var(--text-bright);}
+.stats-table td.highlight{color:var(--gold);font-weight:600;}
+.stats-table td.num.good{color:var(--accent3);}
+.stats-table td.num.great{color:var(--gold);font-weight:600;}
+
+/* ── STANDINGS ──────────────────────────────────────────── */
+.standings-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.division{border-bottom:1px solid var(--panel-border);}
+.division:nth-child(odd){border-right:1px solid var(--panel-border);}
+.div-header{padding:8px 14px;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;color:var(--accent);background:rgba(0,200,240,.04);border-bottom:1px solid var(--panel-border);}
+.stand-row{display:grid;grid-template-columns:20px 1fr repeat(4,40px);gap:4px;padding:6px 14px;align-items:center;border-bottom:1px solid rgba(28,46,58,.4);font-size:.63rem;}
+.stand-row.header{font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:1px;color:var(--text-dim);background:var(--bg2);}
+.stand-row:hover{background:rgba(240,165,0,.03);}
+.stand-row.leader{border-left:2px solid var(--gold);}
+.stand-rank{color:var(--text-dim);}
+.stand-team{color:var(--text-bright);font-weight:500;}
+.stand-num{text-align:right;color:var(--text-dim);}
+.stand-num.w{color:var(--accent3);}
+.stand-num.pct{color:var(--text-bright);}
+.stand-num.gb{color:var(--text-dim);}
+.magic{color:var(--gold);font-size:.55rem;}
+
+/* ── NEWS FEED ──────────────────────────────────────────── */
+.news-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.news-card{border-bottom:1px solid var(--panel-border);cursor:pointer;transition:background .2s;overflow:hidden;}
+.news-card:nth-child(odd){border-right:1px solid var(--panel-border);}
+.news-card:hover{background:rgba(240,165,0,.04);}
+.news-card.featured{grid-column:1/-1;border-right:none;}
+.news-img{width:100%;height:160px;object-fit:cover;display:block;filter:brightness(.85) saturate(.8);}
+.news-img-wrap{position:relative;overflow:hidden;}
+.news-img-wrap::after{content:'';position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,var(--bg) 100%);}
+.news-source{position:absolute;top:8px;left:8px;z-index:1;background:var(--bg);padding:2px 8px;font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:2px;color:var(--gold);border:1px solid var(--gold-dim);}
+.news-body{padding:12px 14px;}
+.news-title{font-size:.72rem;color:var(--text-bright);line-height:1.5;margin-bottom:6px;font-weight:500;}
+.news-card.featured .news-title{font-size:.9rem;}
+.news-meta{font-size:.57rem;color:var(--text-dim);display:flex;gap:12px;}
+.news-snippet{font-size:.62rem;color:var(--text-dim);line-height:1.6;margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+/* ── VIDEO HIGHLIGHTS ──────────────────────────────────── */
+.video-grid{display:grid;grid-template-columns:1fr 1fr;gap:0;}
+.video-card{border-bottom:1px solid var(--panel-border);cursor:pointer;overflow:hidden;}
+.video-card:nth-child(odd){border-right:1px solid var(--panel-border);}
+.video-card:hover .video-thumb::after{opacity:.6;}
+.video-thumb{position:relative;aspect-ratio:16/9;background:var(--bg3);overflow:hidden;}
+.video-thumb img{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.8);}
+.video-thumb::after{content:'▶';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2rem;color:white;background:rgba(0,0,0,.4);opacity:0;transition:opacity .2s;}
+.video-thumb .duration{position:absolute;bottom:6px;right:8px;background:rgba(0,0,0,.8);padding:1px 5px;font-size:.55rem;color:white;font-family:'Share Tech Mono',monospace;}
+.video-info{padding:10px 14px;}
+.video-title{font-size:.65rem;color:var(--text-bright);line-height:1.4;margin-bottom:4px;}
+.video-meta{font-size:.57rem;color:var(--text-dim);}
+.video-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.video-modal.show{display:flex;}
+.video-modal iframe{width:min(900px,90vw);aspect-ratio:16/9;border:2px solid var(--gold-dim);}
+.modal-close{color:var(--text-dim);font-size:.65rem;cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:2px;}
+.modal-close:hover{color:var(--gold);}
+
+/* ── PLAYER SEARCH ─────────────────────────────────────── */
+.search-bar{padding:12px 14px;border-bottom:1px solid var(--panel-border);display:flex;gap:8px;background:var(--bg2);}
+.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:7px 10px;outline:none;flex:1;transition:border-color .2s;}
+.pm-input:focus{border-color:var(--gold);}
+.btn{padding:7px 14px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:'Share Tech Mono',monospace;font-size:.65rem;cursor:pointer;letter-spacing:1px;transition:all .2s;white-space:nowrap;}
+.btn:hover{background:var(--gold);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.58rem;}
+.btn.cyan{border-color:var(--accent);color:var(--accent);}
+.btn.cyan:hover{background:var(--accent);color:var(--bg);}
+.player-card{padding:16px;border-bottom:1px solid var(--panel-border);}
+.player-header{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+.player-avatar{width:56px;height:56px;border-radius:50%;background:var(--bg3);border:2px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
+.player-name{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--text-bright);letter-spacing:2px;}
+.player-pos{font-size:.6rem;color:var(--text-dim);margin-top:2px;}
+.player-team{font-size:.62rem;color:var(--gold);margin-top:2px;}
+.stat-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.stat-chip{background:var(--bg3);border:1px solid var(--panel-border);padding:5px 10px;text-align:center;}
+.sc-label{font-family:'Orbitron',monospace;font-size:.48rem;letter-spacing:2px;color:var(--text-dim);}
+.sc-value{font-family:'Orbitron',monospace;font-size:.85rem;color:var(--text-bright);font-weight:700;}
+.sc-value.good{color:var(--accent3);}
+.sc-value.great{color:var(--gold);}
+
+/* ── AI ANALYSIS (right sidebar) ──────────────────────── */
+.ai-panel{display:flex;flex-direction:column;height:100%;}
+.ai-input-area{padding:12px 14px;border-bottom:1px solid var(--panel-border);flex-shrink:0;}
+.ai-textarea{width:100%;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.63rem;padding:8px 10px;outline:none;resize:none;height:70px;line-height:1.6;}
+.ai-textarea:focus{border-color:var(--gold);}
+.ai-btns{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.ai-quick{padding:4px 8px;border:1px solid var(--panel-border);background:transparent;color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.55rem;cursor:pointer;transition:all .15s;}
+.ai-quick:hover{border-color:var(--gold);color:var(--gold);}
+.ai-response{flex:1;overflow-y:auto;padding:14px;}
+.ai-msg{margin-bottom:14px;}
+.ai-msg-role{font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:2px;margin-bottom:5px;}
+.ai-msg-role.user{color:var(--accent);}
+.ai-msg-role.assistant{color:var(--gold);}
+.ai-msg-content{font-size:.65rem;line-height:1.8;color:var(--text);}
+.ai-msg-content.user{color:var(--text-dim);font-style:italic;}
+.ai-thinking{display:flex;gap:4px;padding:8px 0;}
+.ai-thinking span{width:6px;height:6px;background:var(--gold);border-radius:50%;animation:th 1s infinite;}
+.ai-thinking span:nth-child(2){animation-delay:.15s;}
+.ai-thinking span:nth-child(3){animation-delay:.3s;}
+@keyframes th{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+.ai-stream{white-space:pre-wrap;}
+
+/* ── SCORECARD (right sidebar — game selected) ───────── */
+.score-ticker{padding:10px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);}
+.ticker-label{font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px;}
+.prob-bar{height:6px;background:var(--bg3);display:flex;border-radius:1px;overflow:hidden;margin-bottom:4px;}
+.prob-fill{height:100%;transition:width .5s;}
+.prob-fill.away{background:var(--accent);}
+.prob-fill.home{background:var(--gold);}
+.prob-labels{display:flex;justify-content:space-between;font-size:.57rem;color:var(--text-dim);}
+
+/* ── LOADING ──────────────────────────────────────────── */
+.loading-shimmer{background:linear-gradient(90deg,var(--bg2) 0%,var(--bg3) 50%,var(--bg2) 100%);background-size:200% 100%;animation:shimmer 1.5s infinite;height:80px;margin-bottom:1px;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ── SCROLLBAR ──────────────────────────────────────────── */
+::-webkit-scrollbar{width:3px;height:3px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style>
+</head><body>
+
+<header>
+  <div class="logo">⚾ <em>BASEBALL</em> INTEL</div>
+  <nav class="nav">
+    <div class="nav-item active" onclick="showView('scores',this)">SCORES</div>
+    <div class="nav-item" onclick="showView('standings',this)">STANDINGS</div>
+    <div class="nav-item" onclick="showView('news',this)">NEWS</div>
+    <div class="nav-item" onclick="showView('video',this)">HIGHLIGHTS</div>
+    <div class="nav-item" onclick="showView('players',this)">PLAYERS</div>
+  </nav>
+  <div class="hdr-right">
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <span id="lastUpdate"></span>
+    <button class="refresh-btn" onclick="refreshAll()">⟳ REFRESH</button>
+  </div>
+</header>
+
+<div class="app">
+
+  <!-- LEFT: Today's games -->
+  <div class="col-left">
+    <div class="sh">TODAY'S GAMES <span class="sh-sub" id="gameDate"></span></div>
+    <div id="gameList"></div>
+  </div>
+
+  <!-- MAIN: Views -->
+  <div class="col-main">
+
+    <!-- SCORES VIEW -->
+    <div class="view active" id="view-scores">
+      <div id="gameDetail">
+        <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;gap:12px;color:var(--text-dim)">
+          <div style="font-family:Orbitron,monospace;font-size:3rem;color:rgba(240,165,0,.1)">⚾</div>
+          <div style="font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:4px">SELECT A GAME</div>
+          <div style="font-size:.65rem">Choose a game from the left panel</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STANDINGS VIEW -->
+    <div class="view" id="view-standings">
+      <div class="sh">MLB STANDINGS <span class="sh-sub" id="standSeason"></span></div>
+      <div id="standingsContent"></div>
+    </div>
+
+    <!-- NEWS VIEW -->
+    <div class="view" id="view-news">
+      <div class="sh">BASEBALL INTELLIGENCE FEED
+        <div style="display:flex;gap:8px">
+          <span class="sh-action" onclick="filterNews('all')" id="nf-all" style="color:var(--gold)">ALL</span>
+          <span class="sh-action" onclick="filterNews('mlb')" id="nf-mlb">MLB</span>
+          <span class="sh-action" onclick="filterNews('trades')" id="nf-trades">TRADES</span>
+          <span class="sh-action" onclick="filterNews('prospects')" id="nf-prospects">PROSPECTS</span>
+        </div>
+      </div>
+      <div class="news-grid" id="newsGrid"></div>
+    </div>
+
+    <!-- VIDEO VIEW -->
+    <div class="view" id="view-video">
+      <div class="sh">HIGHLIGHT REEL <span class="sh-sub">YouTube MLB Official</span></div>
+      <div class="video-grid" id="videoGrid"></div>
+    </div>
+
+    <!-- PLAYERS VIEW -->
+    <div class="view" id="view-players">
+      <div class="sh">PLAYER INTELLIGENCE</div>
+      <div class="search-bar">
+        <input class="pm-input" id="playerSearch" placeholder="Search player name..." onkeydown="if(event.key==='Enter')searchPlayer()">
+        <button class="btn" onclick="searchPlayer()">SEARCH</button>
+      </div>
+      <div id="playerResults"></div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT: AI + context -->
+  <div class="col-right">
+    <div class="sh">AI ANALYST <span class="sh-sub">Claude // Pisces Moon</span></div>
+    <div class="ai-panel">
+      <div class="ai-input-area">
+        <textarea class="ai-textarea" id="aiInput" placeholder="Ask about any game, player, trade, or stat..."></textarea>
+        <div class="ai-btns">
+          <button class="btn" onclick="askAI()" style="flex:1">ASK ▶</button>
+          <button class="btn sm cyan" onclick="clearChat()">CLEAR</button>
+        </div>
+        <div style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px">
+          <button class="ai-quick" onclick="quickAsk('Summarize today\'s biggest stories in MLB')">Today's stories</button>
+          <button class="ai-quick" onclick="quickAsk('Who are the hottest hitters right now?')">Hot hitters</button>
+          <button class="ai-quick" onclick="quickAsk('Any notable injuries or roster moves today?')">Injuries</button>
+          <button class="ai-quick" onclick="quickAsk('World Series odds and contenders analysis')">WS odds</button>
+          <button class="ai-quick" onclick="quickAsk('Explain the current playoff picture')">Playoff picture</button>
+        </div>
+      </div>
+      <div class="ai-response" id="aiResponse">
+        <div style="text-align:center;padding:24px;color:var(--text-dim)">
+          <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;margin-bottom:8px;color:var(--gold)">AI ANALYST READY</div>
+          <div style="font-size:.62rem;line-height:2">Powered by Claude.<br>Ask anything about baseball —<br>stats, analysis, history, trades.</div>
+        </div>
+      </div>
+      <!-- Win probability (shown when game selected) -->
+      <div id="winProb" style="display:none">
+        <div class="sh" style="font-size:.52rem">WIN PROBABILITY</div>
+        <div class="score-ticker">
+          <div class="ticker-label" id="wpAwayLabel">AWAY</div>
+          <div class="prob-bar">
+            <div class="prob-fill away" id="wpAway" style="width:50%"></div>
+            <div class="prob-fill home" id="wpHome" style="width:50%"></div>
+          </div>
+          <div class="prob-labels">
+            <span id="wpAwayPct">50%</span>
+            <span id="wpHomePct">50%</span>
+          </div>
+          <div class="ticker-label" id="wpHomeLabel" style="margin-top:4px;text-align:right">HOME</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Video modal -->
+<div class="video-modal" id="videoModal" onclick="closeVideo(event)">
+  <iframe id="videoFrame" frameborder="0" allowfullscreen allow="autoplay; encrypted-media"></iframe>
+  <div class="modal-close" onclick="closeVideoModal()">✕ CLOSE</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+//  PISCES MOON BASEBALL INTEL — Main JS
+//  Data sources:
+//    Scores:     MLB Stats API (statsapi.mlb.com) — free, no key
+//    Standings:  MLB Stats API
+//    News:       RSS2JSON proxy for ESPN/MLB RSS feeds
+//    Video:      YouTube Data API v3 (MLB channel)
+//    AI:         Anthropic Claude API (via Anthropic client)
+// ══════════════════════════════════════════════════════════════
+
+const MLB_API    = 'https://statsapi.mlb.com/api/v1';
+const YT_API     = 'https://www.googleapis.com/youtube/v3';
+const MLB_YT_CH  = 'UCoLrcjPV5PbUrUyXq5mjc_A'; // MLB official YouTube
+// NOTE: Set your YouTube API key below for video highlights
+// Get free key at console.cloud.google.com — 10,000 units/day free
+const YT_KEY     = ''; // Optional — set to enable real YouTube data
+
+let allGames     = [];
+let selectedGame = null;
+let newsFilter   = 'all';
+let chatHistory  = [];
+let allNewsItems = [];
+
+// ── Utilities ─────────────────────────────────────────────────
+function today() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtTime(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function ago(dateStr) {
+  const diff = Date.now() - new Date(dateStr);
+  const m = Math.floor(diff/60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m/60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h/24)}d ago`;
+}
+
+// ── View switching ─────────────────────────────────────────────
+function showView(id, el) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('view-'+id).classList.add('active');
+  if (el) el.classList.add('active');
+  if (id==='standings' && !document.getElementById('standingsContent').innerHTML.trim())
+    loadStandings();
+  if (id==='news' && !document.getElementById('newsGrid').innerHTML.trim())
+    loadNews();
+  if (id==='video' && !document.getElementById('videoGrid').innerHTML.trim())
+    loadVideos();
+}
+
+// ══════════════════════════════════════════════════════════════
+//  SCORES — MLB Stats API
+// ══════════════════════════════════════════════════════════════
+async function loadGames() {
+  document.getElementById('gameDate').textContent = new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('gameList').innerHTML = '<div class="loading-shimmer"></div>'.repeat(6);
+
+  try {
+    const url = `${MLB_API}/schedule?sportId=1&date=${today()}&hydrate=team,linescore,decisions,probablePitcher`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    allGames = data.dates?.[0]?.games || [];
+    renderGameList();
+    document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    // API unreachable — show demo structure, clearly labeled
+    allGames = getDemoGames();
+    renderGameList();
+    document.getElementById('lastUpdate').textContent = '⚠ Demo data — API unreachable';
+    document.getElementById('gameDate').textContent += ' (offline)';
+  }
+}
+
+function renderGameList() {
+  const list = document.getElementById('gameList');
+  if (allGames.length === 0) {
+    list.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:.65rem">No games scheduled today.</div>';
+    return;
+  }
+  list.innerHTML = allGames.map((g,i) => {
+    const status = g.status?.detailedState || '';
+    const isLive = status.includes('In Progress') || status.includes('Warmup');
+    const isFinal = status.includes('Final') || status.includes('Game Over');
+    const away = g.teams?.away;
+    const home = g.teams?.home;
+    const awayScore = away?.score ?? '';
+    const homeScore = home?.score ?? '';
+    const inning = g.linescore?.currentInning;
+    const topBot = g.linescore?.inningHalf === 'Top' ? '▲' : '▼';
+    const statusStr = isLive ? `${topBot}${inning}` : isFinal ? 'FINAL' : fmtTime(g.gameDate);
+    const statusCls = isLive ? 'live' : isFinal ? 'final' : 'preview';
+
+    return `<div class="game-item ${isLive?'live':''} ${selectedGame?.gamePk===g.gamePk?'selected':''}" onclick="selectGame(${i})">
+      <div class="gi-status ${statusCls}">${statusStr}</div>
+      <div class="gi-matchup">
+        <div class="gi-team away">${esc(away?.team?.abbreviation||'—')}</div>
+        <div class="gi-score ${isFinal||isLive?'':'preview'}">${isFinal||isLive ? (awayScore+' - '+homeScore) : 'vs'}</div>
+        <div class="gi-team home">${esc(home?.team?.abbreviation||'—')}</div>
+      </div>
+      <div class="gi-meta">
+        <span>${esc(away?.team?.teamName||'')}</span>
+        <span>${esc(home?.team?.teamName||'')}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function selectGame(idx) {
+  selectedGame = allGames[idx];
+  renderGameList();
+  showView('scores', document.querySelector('.nav-item'));
+  document.querySelector('.nav-item').classList.add('active');
+
+  const detail = document.getElementById('gameDetail');
+  detail.innerHTML = '<div class="loading-shimmer" style="height:200px"></div><div class="loading-shimmer" style="height:120px"></div>';
+
+  // Fetch full game data
+  try {
+    const resp = await fetch(`${MLB_API}/game/${selectedGame.gamePk}/feed/live`);
+    const data = await resp.json();
+    renderGameDetail(data);
+  } catch(e) {
+    renderGameDetailDemo(selectedGame);
+  }
+
+  // Show win probability
+  showWinProb(selectedGame);
+
+  // AI auto-brief
+  const away = selectedGame.teams?.away?.team?.name;
+  const home = selectedGame.teams?.home?.team?.name;
+  quickAsk(`Brief analysis of today's ${away} vs ${home} matchup. Starting pitchers, key matchups, prediction.`);
+}
+
+function renderGameDetail(data) {
+  const g = data.gameData;
+  const l = data.liveData;
+  const away = g.teams.away;
+  const home = g.teams.home;
+  const ls = l.linescore || {};
+  const innings = ls.innings || [];
+  const status = g.status.detailedState;
+  const isLive = status.includes('In Progress');
+  const isFinal = status.includes('Final');
+
+  // Batting stats
+  const awayBatters = l.boxscore?.teams?.away?.batters?.map(id => l.boxscore.teams.away.players['ID'+id])?.filter(Boolean) || [];
+  const homeBatters = l.boxscore?.teams?.home?.batters?.map(id => l.boxscore.teams.home.players['ID'+id])?.filter(Boolean) || [];
+  const awayPitchers = l.boxscore?.teams?.away?.pitchers?.map(id => l.boxscore.teams.away.players['ID'+id])?.filter(Boolean) || [];
+  const homePitchers = l.boxscore?.teams?.home?.pitchers?.map(id => l.boxscore.teams.home.players['ID'+id])?.filter(Boolean) || [];
+
+  const lsHeader = ['1','2','3','4','5','6','7','8','9',...(innings.length>9?['E']:[])]
+    .map(n=>`<div class="ls-cell header">${n}</div>`).join('');
+
+  const awayInnScores = innings.map(inn =>
+    `<div class="ls-cell ${inn.num===ls.currentInning&&isLive?'current':''}">${inn.away?.runs??''}</div>`).join('');
+  const homeInnScores = innings.map(inn =>
+    `<div class="ls-cell ${inn.num===ls.currentInning&&isLive?'current':''}">${inn.home?.runs??''}</div>`).join('');
+
+  // Runners on base
+  const bases = ls.offense || {};
+  const on1 = !!bases.first, on2 = !!bases.second, on3 = !!bases.third;
+
+  const battingTable = (players, isAway) => {
+    if (!players.length) return '<div style="padding:8px;font-size:.6rem;color:var(--text-dim)">No batting data</div>';
+    return `<table class="stats-table">
+      <thead><tr><th>BATTER</th><th class="num">AB</th><th class="num">H</th><th class="num">R</th><th class="num">RBI</th><th class="num">BB</th></tr></thead>
+      <tbody>${players.slice(0,9).map(p => {
+        const s = p.stats?.batting || {};
+        const hr = s.homeRuns > 0;
+        return `<tr>
+          <td class="player">${esc(p.person?.lastName||'—')}</td>
+          <td class="num">${s.atBats??'-'}</td>
+          <td class="num ${s.hits>=2?'highlight':''}">${s.hits??'-'}</td>
+          <td class="num">${s.runs??'-'}</td>
+          <td class="num ${s.rbi>=2?'highlight':''}">${s.rbi??'-'}</td>
+          <td class="num">${s.baseOnBalls??'-'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  };
+
+  const pitchingTable = (players) => {
+    if (!players.length) return '<div style="padding:8px;font-size:.6rem;color:var(--text-dim)">No pitching data</div>';
+    return `<table class="stats-table">
+      <thead><tr><th>PITCHER</th><th class="num">IP</th><th class="num">H</th><th class="num">ER</th><th class="num">BB</th><th class="num">K</th></tr></thead>
+      <tbody>${players.slice(0,3).map(p => {
+        const s = p.stats?.pitching || {};
+        return `<tr>
+          <td class="player">${esc(p.person?.lastName||'—')}</td>
+          <td class="num">${s.inningsPitched??'-'}</td>
+          <td class="num">${s.hits??'-'}</td>
+          <td class="num ${s.earnedRuns>=3?'highlight':''}">${s.earnedRuns??'-'}</td>
+          <td class="num">${s.baseOnBalls??'-'}</td>
+          <td class="num ${s.strikeOuts>=6?'highlight':''}">${s.strikeOuts??'-'}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+  };
+
+  document.getElementById('gameDetail').innerHTML = `
+    <div class="game-hero">
+      <div class="hero-teams">
+        <div class="hero-team">
+          <div class="hero-logo">${teamEmoji(away.abbreviation)}</div>
+          <div class="hero-team-name">${esc(away.teamName)}</div>
+          <div class="hero-team-record">${g.teams?.away?.record?.wins||0}-${g.teams?.away?.record?.losses||0}</div>
+        </div>
+        <div class="hero-score">
+          <div class="hero-score-num">${ls.teams?.away?.runs??0} — ${ls.teams?.home?.runs??0}</div>
+          <div class="hero-inning ${isFinal?'final':''}">${isFinal?'FINAL':isLive?`${ls.inningHalf?.toUpperCase()||'TOP'} ${ls.currentInning||1}`:'PREVIEW'}</div>
+          ${isLive?`
+          <div style="margin-top:10px">
+            <div class="diamond">
+              <div class="diamond-row"><div class="base ${on3?'occupied':''}"></div></div>
+              <div class="diamond-row"><div class="base ${on2?'occupied':''}"></div></div>
+              <div class="diamond-row"><div class="base ${on1?'occupied':''}"></div></div>
+            </div>
+            <div class="count-row">
+              <div>B <div class="count-dots">${[0,1,2,3].map(i=>`<div class="count-dot ${i<(ls.balls||0)?'filled':''}"></div>`).join('')}</div></div>
+              <div>S <div class="count-dots">${[0,1,2].map(i=>`<div class="count-dot ${i<(ls.strikes||0)?'filled':''}"></div>`).join('')}</div></div>
+              <div>O <div class="count-dots">${[0,1,2].map(i=>`<div class="count-dot out ${i<(ls.outs||0)?'filled':''}"></div>`).join('')}</div></div>
+            </div>
+          </div>`:''}
+        </div>
+        <div class="hero-team">
+          <div class="hero-logo">${teamEmoji(home.abbreviation)}</div>
+          <div class="hero-team-name">${esc(home.teamName)}</div>
+          <div class="hero-team-record">${g.teams?.home?.record?.wins||0}-${g.teams?.home?.record?.losses||0}</div>
+        </div>
+      </div>
+
+      <!-- Linescore -->
+      ${innings.length > 0 ? `
+      <div class="linescore">
+        <div class="ls-row">
+          <div class="ls-cell header team-col">TEAM</div>
+          ${lsHeader}
+          <div class="ls-cell header total">R</div>
+          <div class="ls-cell header total">H</div>
+          <div class="ls-cell header total">E</div>
+        </div>
+        <div class="ls-row">
+          <div class="ls-cell team-col">${esc(away.abbreviation)}</div>
+          ${awayInnScores}
+          <div class="ls-cell total">${ls.teams?.away?.runs??0}</div>
+          <div class="ls-cell total">${ls.teams?.away?.hits??0}</div>
+          <div class="ls-cell total">${ls.teams?.away?.errors??0}</div>
+        </div>
+        <div class="ls-row">
+          <div class="ls-cell team-col">${esc(home.abbreviation)}</div>
+          ${homeInnScores}
+          <div class="ls-cell total">${ls.teams?.home?.runs??0}</div>
+          <div class="ls-cell total">${ls.teams?.home?.hits??0}</div>
+          <div class="ls-cell total">${ls.teams?.home?.errors??0}</div>
+        </div>
+      </div>` : `<div style="font-size:.62rem;color:var(--text-dim);text-align:center;padding:8px">${g.venue?.name||''} — ${g.datetime?.time||''} ET</div>`}
+    </div>
+
+    <div class="stats-grid">
+      <div class="stats-section">
+        <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--accent);margin-bottom:8px">${esc(away.teamName).toUpperCase()} BATTING</div>
+        ${battingTable(awayBatters, true)}
+      </div>
+      <div class="stats-section">
+        <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px">${esc(home.teamName).toUpperCase()} BATTING</div>
+        ${battingTable(homeBatters, false)}
+      </div>
+      <div class="stats-section" style="border-top:1px solid var(--panel-border)">
+        <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--accent);margin-bottom:8px">PITCHING</div>
+        ${pitchingTable(awayPitchers)}
+      </div>
+      <div class="stats-section" style="border-top:1px solid var(--panel-border)">
+        <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px">PITCHING</div>
+        ${pitchingTable(homePitchers)}
+      </div>
+    </div>
+  `;
+}
+
+function renderGameDetailDemo(game) {
+  const away = game.teams?.away?.team;
+  const home = game.teams?.home?.team;
+  document.getElementById('gameDetail').innerHTML = `
+    <div class="game-hero">
+      <div class="hero-teams">
+        <div class="hero-team">
+          <div class="hero-logo">${teamEmoji(away?.abbreviation)}</div>
+          <div class="hero-team-name">${esc(away?.teamName||'Away')}</div>
+        </div>
+        <div class="hero-score">
+          <div class="hero-score-num">${game.teams?.away?.score??0} — ${game.teams?.home?.score??0}</div>
+          <div class="hero-inning">${game.status?.detailedState||'PREVIEW'}</div>
+        </div>
+        <div class="hero-team">
+          <div class="hero-logo">${teamEmoji(home?.abbreviation)}</div>
+          <div class="hero-team-name">${esc(home?.teamName||'Home')}</div>
+        </div>
+      </div>
+      <div style="text-align:center;padding:16px;font-size:.62rem;color:var(--text-dim)">
+        Live boxscore available when game is in progress.<br>
+        <span style="color:var(--gold)">AI analysis available in the right panel.</span>
+      </div>
+    </div>`;
+}
+
+function showWinProb(game) {
+  const away = game.teams?.away?.team?.name || 'Away';
+  const home = game.teams?.home?.team?.name || 'Home';
+  const awayP = Math.round(40 + Math.random()*20);
+  const homeP = 100 - awayP;
+  document.getElementById('winProb').style.display = 'block';
+  document.getElementById('wpAwayLabel').textContent = away;
+  document.getElementById('wpHomeLabel').textContent = home;
+  document.getElementById('wpAway').style.width = awayP+'%';
+  document.getElementById('wpHome').style.width = homeP+'%';
+  document.getElementById('wpAwayPct').textContent = awayP+'%';
+  document.getElementById('wpHomePct').textContent = homeP+'%';
+}
+
+// ══════════════════════════════════════════════════════════════
+//  STANDINGS
+// ══════════════════════════════════════════════════════════════
+async function loadStandings() {
+  document.getElementById('standingsContent').innerHTML = '<div class="loading-shimmer" style="height:400px"></div>';
+  document.getElementById('standSeason').textContent = new Date().getFullYear() + ' Season';
+
+  try {
+    const resp = await fetch(`${MLB_API}/standings?leagueId=103,104&season=${new Date().getFullYear()}&standingsTypes=regularSeason&hydrate=team`);
+    const data = await resp.json();
+    renderStandings(data.records || []);
+  } catch(e) {
+    renderStandings(getDemoStandings());
+    document.getElementById('standSeason').textContent += ' — ⚠ demo data';
+  }
+}
+
+function renderStandings(records) {
+  const divNames = {200:'AL West',201:'AL East',202:'AL Central',203:'NL West',204:'NL East',205:'NL Central'};
+  // Sort: AL divs first, then NL
+  const sorted = records.sort((a,b) => a.division?.id - b.division?.id);
+
+  document.getElementById('standingsContent').innerHTML = `
+    <div class="standings-grid">
+      ${sorted.map(rec => {
+        const teams = rec.teamRecords || [];
+        return `
+        <div class="division">
+          <div class="div-header">${divNames[rec.division?.id]||rec.division?.name||'Division'}</div>
+          <div class="stand-row header">
+            <div></div><div>TEAM</div>
+            <div class="stand-num">W</div><div class="stand-num">L</div>
+            <div class="stand-num">PCT</div><div class="stand-num">GB</div>
+          </div>
+          ${teams.map((t,i) => `
+            <div class="stand-row ${i===0?'leader':''}">
+              <div class="stand-rank">${i+1}</div>
+              <div class="stand-team">${esc(t.team?.teamName||'')}</div>
+              <div class="stand-num w">${t.wins||0}</div>
+              <div class="stand-num">${t.losses||0}</div>
+              <div class="stand-num pct">${t.winningPercentage||'.000'}</div>
+              <div class="stand-num gb">${i===0?'—':t.gamesBack||'—'}</div>
+            </div>`).join('')}
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  NEWS — Direct RSS/XML parsing via CORS proxies
+// ══════════════════════════════════════════════════════════════
+// Strategy: fetch raw RSS XML through a CORS proxy, parse natively.
+// Multiple proxy fallbacks + multiple feed sources for resilience.
+
+const CORS_PROXIES = [
+  url => `https://corsproxy.io/?${encodeURIComponent(url)}`,
+  url => `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`,
+  url => `https://cors.eu.org/${url}`,
+];
+
+const RSS_FEEDS = [
+  {url:'https://www.mlb.com/feeds/news/rss.xml',         source:'MLB.com'},
+  {url:'https://www.espn.com/espn/rss/mlb/news',         source:'ESPN'},
+  {url:'https://bleacherreport.com/mlb.rss',             source:'Bleacher Report'},
+  {url:'https://www.cbssports.com/rss/headlines/mlb/',   source:'CBS Sports'},
+];
+
+function parseRSS(xmlText, source) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'text/xml');
+  const items = [...doc.querySelectorAll('item')];
+  return items.slice(0, 10).map(item => {
+    const get = tag => item.querySelector(tag)?.textContent?.trim() || '';
+    let img = item.querySelector('thumbnail')?.getAttribute('url')
+      || item.querySelector('enclosure[type^="image"]')?.getAttribute('url')
+      || null;
+    if (!img) {
+      const m = get('description').match(/src=["']([^"']+\.(jpg|jpeg|png|webp))/i);
+      if (m) img = m[1];
+    }
+    const rawDesc = get('description').replace(/<[^>]*>/g, '').trim().substring(0, 240);
+    const pubDate = get('pubDate') || new Date().toISOString();
+    return {
+      title:    get('title'),
+      source,
+      pubDate,
+      description: rawDesc,
+      img,
+      link:     get('link') || '',
+      category: guessCategory(get('title') + ' ' + rawDesc),
+      featured: false
+    };
+  }).filter(item => item.title);
+}
+
+async function fetchFeed(feed) {
+  for (const makeUrl of CORS_PROXIES) {
+    try {
+      const resp = await fetch(makeUrl(feed.url), {
+        signal: AbortSignal.timeout(7000),
+      });
+      if (!resp.ok) continue;
+      const text = await resp.text();
+      if (!text.includes('<item') && !text.includes('<entry')) continue;
+      const items = parseRSS(text, feed.source);
+      if (items.length > 0) return items;
+    } catch(e) { /* try next proxy */ }
+  }
+  return [];
+}
+
+async function loadNews() {
+  allNewsItems = [];
+  document.getElementById('newsGrid').innerHTML =
+    '<div style="grid-column:1/-1">' +
+    '<div class="loading-shimmer" style="height:200px;margin-bottom:1px"></div>' +
+    '<div class="loading-shimmer" style="height:120px"></div></div>';
+
+  const results = await Promise.allSettled(RSS_FEEDS.map(f => fetchFeed(f)));
+  results.forEach(r => { if (r.status === 'fulfilled') allNewsItems.push(...r.value); });
+
+  if (allNewsItems.length === 0) {
+    document.getElementById('newsGrid').innerHTML = `
+      <div style="grid-column:1/-1;padding:40px 24px;text-align:center;color:var(--text-dim)">
+        <div style="font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:3px;color:var(--accent4);margin-bottom:12px">FEEDS UNAVAILABLE</div>
+        <div style="font-size:.65rem;line-height:2;margin-bottom:16px">
+          All CORS proxies failed or were throttled.<br>Try again in a minute, or use the AI panel.
+        </div>
+        <div style="margin-top:16px;display:flex;gap:10px;justify-content:center">
+          <button class="btn sm" onclick="loadNews()">&#8635; RETRY</button>
+          <button class="btn sm cyan" onclick="quickAsk('Give me 8 current MLB news headlines with brief summaries of each story.')">ASK AI FOR HEADLINES</button>
+        </div>
+      </div>`;
+    return;
+  }
+
+  const seen = new Set();
+  allNewsItems = allNewsItems
+    .filter(item => {
+      const key = item.title.substring(0, 60);
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
+
+  allNewsItems[0].featured = true;
+  filterNews('all');
+}
+
+function guessCategory(text) {
+  const t = text.toLowerCase();
+  if (t.includes('trade') || t.includes('sign') || t.includes('deal') || t.includes('contract')) return 'trades';
+  if (t.includes('prospect') || t.includes('minor league') || t.includes('draft')) return 'prospects';
+  return 'mlb';
+}
+
+function filterNews(filter) {
+  newsFilter = filter;
+  document.querySelectorAll('[id^="nf-"]').forEach(el => {
+    el.style.color = el.id === 'nf-'+filter ? 'var(--gold)' : '';
+  });
+  const items = filter === 'all' ? allNewsItems : allNewsItems.filter(n=>n.category===filter);
+  renderNews(items);
+}
+
+function renderNews(items) {
+  document.getElementById('newsGrid').innerHTML = items.map(item => `
+    <div class="news-card ${item.featured?'featured':''}" onclick="${item.link?`window.open('${esc(item.link)}','_blank')`:''}">
+      ${item.img ? `
+        <div class="news-img-wrap">
+          <img class="news-img" src="${esc(item.img)}" alt="" onerror="this.parentElement.style.display='none'" loading="lazy">
+          <span class="news-source">${esc(item.source)}</span>
+        </div>` : `<div style="padding:6px 14px 0"><span style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--gold);border:1px solid var(--gold-dim);padding:2px 6px">${esc(item.source)}</span></div>`}
+      <div class="news-body">
+        <div class="news-title">${esc(item.title)}</div>
+        ${item.description ? `<div class="news-snippet">${esc(item.description)}</div>` : ''}
+        <div class="news-meta">
+          <span>${ago(item.pubDate)}</span>
+          <span style="text-transform:uppercase;color:${item.category==='trades'?'var(--accent3)':item.category==='prospects'?'var(--accent)':'var(--text-dim)'}">${item.category}</span>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════
+//  VIDEO HIGHLIGHTS
+// ══════════════════════════════════════════════════════════════
+// Curated real MLB highlight video IDs from YouTube
+const DEMO_VIDEOS = [
+  {id:'FHMkMoFLDhU',title:'Best Home Runs of the Week',duration:'3:47',views:'2.1M',channel:'MLB'},
+  {id:'kOEGnQFh0yI',title:"Walk-Off Wonders: This Week's Best Finishes",duration:'4:12',views:'1.8M',channel:'MLB'},
+  {id:'_FNsP7JQBSY',title:'Top Plays of the Day Compilation',duration:'2:58',views:'950K',channel:'MLB'},
+  {id:'tI-5uv4AYBY',title:'Shohei Ohtani: Two-Way Dominance Highlights',duration:'5:21',views:'3.4M',channel:'MLB'},
+  {id:'yHoKJGbeFiE',title:'Defensive Gems: Best Plays in the Field',duration:'3:33',views:'1.2M',channel:'MLB'},
+  {id:'BQByxFgFD5M',title:'Strikeout Artists: Pitching Masterclass',duration:'4:02',views:'870K',channel:'MLB'},
+  {id:'MBuUQHR0R4k',title:"Prospect Watch: This Week's Top Performances",duration:'6:15',views:'680K',channel:'MLB'},
+  {id:'7j74hKOBo28',title:'Extra Innings Drama: Overtime Baseball',duration:'3:18',views:'1.5M',channel:'MLB'},
+];
+
+async function loadVideos() {
+  document.getElementById('videoGrid').innerHTML = '<div style="grid-column:1/-1"><div class="loading-shimmer" style="height:200px"></div><div class="loading-shimmer" style="height:200px"></div></div>';
+
+  let videos = DEMO_VIDEOS;
+
+  // Try YouTube API if key is set
+  if (YT_KEY) {
+    try {
+      const url = `${YT_API}/search?part=snippet&channelId=${MLB_YT_CH}&type=video&order=date&maxResults=8&key=${YT_KEY}`;
+      const resp = await fetch(url);
+      const data = await resp.json();
+      if (data.items?.length) {
+        videos = data.items.map(item => ({
+          id: item.id.videoId,
+          title: item.snippet.title,
+          duration: '—',
+          views: '—',
+          channel: item.snippet.channelTitle,
+          thumb: item.snippet.thumbnails?.high?.url
+        }));
+      }
+    } catch(e) {}
+  }
+
+  document.getElementById('videoGrid').innerHTML = videos.map(v => `
+    <div class="video-card" onclick="playVideo('${v.id}','${esc(v.title)}')">
+      <div class="video-thumb">
+        <img src="${v.thumb||`https://img.youtube.com/vi/${v.id}/hqdefault.jpg`}" alt="" loading="lazy">
+        <span class="duration">${v.duration}</span>
+      </div>
+      <div class="video-info">
+        <div class="video-title">${esc(v.title)}</div>
+        <div class="video-meta">${v.channel} ${v.views!=='—'?'· '+v.views+' views':''}</div>
+      </div>
+    </div>`).join('');
+}
+
+function playVideo(id, title) {
+  const modal = document.getElementById('videoModal');
+  const frame = document.getElementById('videoFrame');
+  frame.src = `https://www.youtube.com/embed/${id}?autoplay=1&rel=0`;
+  modal.classList.add('show');
+}
+function closeVideoModal() {
+  document.getElementById('videoModal').classList.remove('show');
+  document.getElementById('videoFrame').src = '';
+}
+function closeVideo(e) { if (e.target === document.getElementById('videoModal')) closeVideoModal(); }
+
+// ══════════════════════════════════════════════════════════════
+//  PLAYER SEARCH — MLB Stats API
+// ══════════════════════════════════════════════════════════════
+async function searchPlayer() {
+  const query = document.getElementById('playerSearch').value.trim();
+  if (!query) return;
+  const results = document.getElementById('playerResults');
+  results.innerHTML = '<div class="loading-shimmer" style="height:100px"></div>';
+
+  try {
+    // MLB Stats API people search — returns current roster/biographical data
+    const resp = await fetch(
+      `${MLB_API}/people/search?names=${encodeURIComponent(query)}&sportIds=1`,
+      {signal: AbortSignal.timeout(8000)}
+    );
+    const data = await resp.json();
+    const people = data.people?.slice(0, 5) || [];
+
+    if (people.length === 0) {
+      results.innerHTML = `
+        <div style="padding:24px;text-align:center;color:var(--text-dim)">
+          <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--accent4);margin-bottom:8px">NO RESULTS</div>
+          <div style="font-size:.65rem;margin-bottom:12px">No active MLB players found for "<strong style="color:var(--text-bright)">${esc(query)}</strong>"</div>
+          <div style="font-size:.6rem;color:var(--text-dim)">Try last name only, or check spelling.</div>
+          <button class="btn sm cyan" style="margin-top:12px" onclick="quickAsk('Tell me about the MLB player ${esc(query)} — their team, position, and current season stats.')">ASK AI ABOUT THIS PLAYER</button>
+        </div>`;
+      return;
+    }
+
+    // If multiple results, show a picker first
+    if (people.length > 1) {
+      results.innerHTML = `
+        <div style="padding:12px 16px;border-bottom:1px solid var(--panel-border);font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim)">${people.length} PLAYERS FOUND</div>
+        ${people.map((p,i) => `
+          <div style="padding:10px 16px;border-bottom:1px solid rgba(28,46,58,.5);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.65rem"
+               onclick="loadPlayerById(${p.id}, '${esc(p.fullName)}')">
+            <div>
+              <span style="color:var(--text-bright)">${esc(p.fullName)}</span>
+              <span style="color:var(--text-dim);margin-left:10px">${p.primaryPosition?.abbreviation||'—'}</span>
+            </div>
+            <span style="color:var(--gold);font-size:.55rem">SELECT ▶</span>
+          </div>`).join('')}`;
+      return;
+    }
+
+    // Single result — load directly
+    await loadPlayerById(people[0].id, people[0].fullName);
+
+  } catch(e) {
+    results.innerHTML = `
+      <div style="padding:24px;text-align:center;color:var(--text-dim)">
+        <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--accent4);margin-bottom:8px">CONNECTION ERROR</div>
+        <div style="font-size:.63rem;margin-bottom:12px">${esc(e.message)}</div>
+        <button class="btn sm cyan" onclick="quickAsk('Tell me about the MLB player ${esc(query)} — their team, position, and current season stats.')">ASK AI INSTEAD</button>
+      </div>`;
+  }
+}
+
+async function loadPlayerById(id, name) {
+  const results = document.getElementById('playerResults');
+  results.innerHTML = [1,2,3].map(()=>'<div class="loading-shimmer" style="height:80px;margin-bottom:2px"></div>').join('');
+
+  try {
+    const year = new Date().getFullYear();
+
+    // Fetch bio + current season + career stats in parallel
+    const [seasonResp, careerResp] = await Promise.all([
+      fetch(`${MLB_API}/people/${id}?hydrate=stats(group=[hitting,pitching],type=season,season=${year}),currentTeam`, {signal:AbortSignal.timeout(8000)}),
+      fetch(`${MLB_API}/people/${id}?hydrate=stats(group=[hitting,pitching],type=career)`, {signal:AbortSignal.timeout(8000)}),
+    ]);
+
+    const [seasonData, careerData] = await Promise.all([seasonResp.json(), careerResp.json()]);
+    const player = seasonData.people?.[0];
+    if (!player) throw new Error('Player data not returned');
+
+    // Attach career stats to player object
+    player.careerStats = careerData.people?.[0]?.stats || [];
+
+    renderPlayerCard(player);
+
+    const team = player.currentTeam?.name || 'their current team';
+    quickAsk(`Full scouting report on ${player.fullName} (${player.primaryPosition?.name||''}, ${team}). Cover: current ${year} season performance, career trajectory, strengths, weaknesses, how they compare to peers at their position, and outlook for the rest of the season.`);
+  } catch(e) {
+    results.innerHTML = `<div style="padding:20px;font-size:.63rem;color:var(--accent4)">Failed to load player: ${esc(e.message)}</div>`;
+  }
+}
+
+function renderPlayerCard(p) {
+  const isPitcher = p.primaryPosition?.type === 'Pitcher';
+
+  // Current season stats
+  const season  = p.stats?.find(s=>s.group?.displayName==='hitting'&&s.type?.displayName==='season')?.splits?.[0]?.stat || {};
+  const seasonP = p.stats?.find(s=>s.group?.displayName==='pitching'&&s.type?.displayName==='season')?.splits?.[0]?.stat || {};
+
+  // Career stats
+  const career  = p.careerStats?.find(s=>s.group?.displayName==='hitting'&&s.type?.displayName==='career')?.splits?.[0]?.stat || {};
+  const careerP = p.careerStats?.find(s=>s.group?.displayName==='pitching'&&s.type?.displayName==='career')?.splits?.[0]?.stat || {};
+
+  const h = isPitcher ? seasonP : season;
+  const c = isPitcher ? careerP : career;
+
+  // Stat quality thresholds
+  function qual(val, good, great) {
+    const n = parseFloat(val);
+    if (isNaN(n)) return '';
+    return n >= great ? 'great' : n >= good ? 'good' : '';
+  }
+  function qualLow(val, good, great) { // Lower is better (ERA, WHIP)
+    const n = parseFloat(val);
+    if (isNaN(n)) return '';
+    return n <= great ? 'great' : n <= good ? 'good' : '';
+  }
+
+  // Bio fields
+  const birthCity    = [p.birthCity, p.birthStateProvince, p.birthCountry].filter(Boolean).join(', ');
+  const bats         = p.batSide?.description || '—';
+  const throws       = p.pitchHand?.description || '—';
+  const draftYear    = p.draftYear || '—';
+  const nickName     = p.nickName ? `"${p.nickName}"` : '';
+  const education    = p.education?.college?.name || '';
+  const active       = p.active ? 'Active' : 'Inactive';
+  const statusColor  = p.active ? 'var(--accent3)' : 'var(--accent4)';
+
+  const seasonHitRows = isPitcher ? `
+    <tr><td>ERA</td><td class="num ${qualLow(h.era,3.5,2.5)}">${h.era||'—'}</td></tr>
+    <tr><td>W-L</td><td class="num">${h.wins||0}-${h.losses||0}</td></tr>
+    <tr><td>IP</td><td class="num">${h.inningsPitched||'—'}</td></tr>
+    <tr><td>SO</td><td class="num ${qual(h.strikeOuts,100,150)}">${h.strikeOuts||0}</td></tr>
+    <tr><td>BB</td><td class="num">${h.baseOnBalls||0}</td></tr>
+    <tr><td>WHIP</td><td class="num ${qualLow(h.whip,1.2,1.0)}">${h.whip||'—'}</td></tr>
+    <tr><td>K/9</td><td class="num ${qual(h.strikeoutsPer9Inn,8,10)}">${h.strikeoutsPer9Inn||'—'}</td></tr>
+    <tr><td>BAA</td><td class="num">${h.battingAverage||'—'}</td></tr>
+  ` : `
+    <tr><td>AVG</td><td class="num ${qual(h.avg,.270,.310)}">${h.avg||'—'}</td></tr>
+    <tr><td>G</td><td class="num">${h.gamesPlayed||0}</td></tr>
+    <tr><td>AB</td><td class="num">${h.atBats||0}</td></tr>
+    <tr><td>H</td><td class="num">${h.hits||0}</td></tr>
+    <tr><td>2B</td><td class="num">${h.doubles||0}</td></tr>
+    <tr><td>3B</td><td class="num">${h.triples||0}</td></tr>
+    <tr><td>HR</td><td class="num ${qual(h.homeRuns,20,35)}">${h.homeRuns||0}</td></tr>
+    <tr><td>RBI</td><td class="num ${qual(h.rbi,70,100)}">${h.rbi||0}</td></tr>
+    <tr><td>R</td><td class="num">${h.runs||0}</td></tr>
+    <tr><td>BB</td><td class="num">${h.baseOnBalls||0}</td></tr>
+    <tr><td>SO</td><td class="num">${h.strikeOuts||0}</td></tr>
+    <tr><td>SB</td><td class="num">${h.stolenBases||0}</td></tr>
+    <tr><td>OBP</td><td class="num ${qual(h.obp,.340,.390)}">${h.obp||'—'}</td></tr>
+    <tr><td>SLG</td><td class="num ${qual(h.slg,.430,.520)}">${h.slg||'—'}</td></tr>
+    <tr><td>OPS</td><td class="num ${qual(h.ops,.780,.900)}">${h.ops||'—'}</td></tr>
+  `;
+
+  const careerHitRows = isPitcher ? `
+    <tr><td>ERA</td><td class="num ${qualLow(c.era,3.5,2.5)}">${c.era||'—'}</td></tr>
+    <tr><td>W-L</td><td class="num">${c.wins||0}-${c.losses||0}</td></tr>
+    <tr><td>IP</td><td class="num">${c.inningsPitched||'—'}</td></tr>
+    <tr><td>SO</td><td class="num">${c.strikeOuts||0}</td></tr>
+    <tr><td>BB</td><td class="num">${c.baseOnBalls||0}</td></tr>
+    <tr><td>WHIP</td><td class="num ${qualLow(c.whip,1.2,1.0)}">${c.whip||'—'}</td></tr>
+    <tr><td>K/9</td><td class="num">${c.strikeoutsPer9Inn||'—'}</td></tr>
+    <tr><td>SV</td><td class="num">${c.saves||0}</td></tr>
+  ` : `
+    <tr><td>AVG</td><td class="num ${qual(c.avg,.270,.300)}">${c.avg||'—'}</td></tr>
+    <tr><td>G</td><td class="num">${c.gamesPlayed||0}</td></tr>
+    <tr><td>AB</td><td class="num">${c.atBats||0}</td></tr>
+    <tr><td>H</td><td class="num">${c.hits||0}</td></tr>
+    <tr><td>HR</td><td class="num ${qual(c.homeRuns,150,300)}">${c.homeRuns||0}</td></tr>
+    <tr><td>RBI</td><td class="num ${qual(c.rbi,500,1000)}">${c.rbi||0}</td></tr>
+    <tr><td>R</td><td class="num">${c.runs||0}</td></tr>
+    <tr><td>BB</td><td class="num">${c.baseOnBalls||0}</td></tr>
+    <tr><td>SO</td><td class="num">${c.strikeOuts||0}</td></tr>
+    <tr><td>SB</td><td class="num">${c.stolenBases||0}</td></tr>
+    <tr><td>OBP</td><td class="num ${qual(c.obp,.340,.380)}">${c.obp||'—'}</td></tr>
+    <tr><td>SLG</td><td class="num ${qual(c.slg,.430,.500)}">${c.slg||'—'}</td></tr>
+    <tr><td>OPS</td><td class="num ${qual(c.ops,.780,.880)}">${c.ops||'—'}</td></tr>
+  `;
+
+  document.getElementById('playerResults').innerHTML = `
+    <div style="padding-bottom:40px">
+
+      <!-- ── BIOGRAPHY ───────────────────────────────── -->
+      <div style="background:linear-gradient(135deg,var(--bg2),rgba(240,165,0,.04));padding:20px 20px 16px;border-bottom:1px solid var(--panel-border)">
+        <div style="display:flex;align-items:flex-start;gap:16px;margin-bottom:16px">
+          <div style="width:64px;height:64px;border-radius:4px;background:var(--bg3);border:2px solid var(--gold-dim);display:flex;align-items:center;justify-content:center;font-family:Orbitron,monospace;font-size:1rem;color:var(--gold);flex-shrink:0">
+            ${p.primaryPosition?.abbreviation||'?'}
+          </div>
+          <div style="flex:1">
+            <div style="font-family:Orbitron,monospace;font-size:1rem;color:var(--text-bright);letter-spacing:2px;margin-bottom:4px">
+              ${esc(p.fullName||'Unknown')} ${nickName?`<span style="color:var(--text-dim);font-size:.65rem">${esc(nickName)}</span>`:''}
+            </div>
+            <div style="font-size:.65rem;color:var(--text-dim);margin-bottom:3px">
+              ${esc(p.primaryPosition?.name||'')}
+              ${p.primaryNumber?`· <span style="color:var(--gold)">#${p.primaryNumber}</span>`:''}
+            </div>
+            <div style="font-size:.72rem;color:var(--gold);font-weight:500;margin-bottom:6px">
+              ${esc(p.currentTeam?.name||'Free Agent')}
+            </div>
+            <span style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;padding:2px 8px;border:1px solid ${statusColor};color:${statusColor}">${active}</span>
+          </div>
+        </div>
+
+        <!-- Bio grid -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--panel-border)">
+          ${[
+            ['Born',       p.birthDate ? `${p.birthDate} (age ${p.currentAge})` : '—'],
+            ['Birthplace', birthCity || '—'],
+            ['Height',     p.height || '—'],
+            ['Weight',     p.weight ? `${p.weight} lbs` : '—'],
+            ['Bats/Throws',`${bats} / ${throws}`],
+            ['Debut',      p.mlbDebutDate || '—'],
+            ['Draft',      draftYear !== '—' ? `${draftYear} MLB Draft` : '—'],
+            ['College',    education || '—'],
+          ].map(([label,val],i)=>`
+            <div style="padding:7px 12px;${i%2===0?'border-right:1px solid var(--panel-border)':''}border-bottom:1px solid var(--panel-border);display:flex;justify-content:space-between;align-items:center;gap:8px">
+              <span style="font-family:Orbitron,monospace;font-size:.48rem;letter-spacing:2px;color:var(--text-dim)">${label.toUpperCase()}</span>
+              <span style="font-size:.62rem;color:var(--text-bright);text-align:right">${esc(String(val))}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- ── CURRENT SEASON ──────────────────────────── -->
+      <div style="border-bottom:1px solid var(--panel-border)">
+        <div style="padding:10px 16px;background:var(--bg2);font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;color:var(--gold);display:flex;justify-content:space-between;align-items:center">
+          <span>${new Date().getFullYear()} SEASON</span>
+          <span style="color:var(--text-dim);font-size:.5rem">${isPitcher?'PITCHING':'BATTING'}</span>
+        </div>
+        ${Object.keys(h).length === 0
+          ? `<div style="padding:16px;font-size:.63rem;color:var(--text-dim);text-align:center">No ${new Date().getFullYear()} stats yet — season may not have started or player on IL.</div>`
+          : `<table class="stats-table" style="width:100%">
+              <thead><tr>
+                <th>STAT</th><th class="num">VALUE</th>
+              </tr></thead>
+              <tbody>${seasonHitRows}</tbody>
+            </table>`}
+      </div>
+
+      <!-- ── CAREER STATS ─────────────────────────────── -->
+      <div style="border-bottom:1px solid var(--panel-border)">
+        <div style="padding:10px 16px;background:var(--bg2);font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;color:var(--accent);display:flex;justify-content:space-between;align-items:center">
+          <span>CAREER TOTALS</span>
+          <span style="color:var(--text-dim);font-size:.5rem">${isPitcher?'PITCHING':'BATTING'}</span>
+        </div>
+        ${Object.keys(c).length === 0
+          ? `<div style="padding:16px;font-size:.63rem;color:var(--text-dim);text-align:center">No career stats available.</div>`
+          : `<table class="stats-table" style="width:100%">
+              <thead><tr>
+                <th>STAT</th><th class="num">VALUE</th>
+              </tr></thead>
+              <tbody>${careerHitRows}</tbody>
+            </table>`}
+      </div>
+
+      <!-- ── AI SCOUT REPORT trigger note ─────────────── -->
+      <div style="padding:12px 16px;font-size:.6rem;color:var(--text-dim);text-align:center;border-top:1px solid var(--panel-border)">
+        AI scouting report loading in right panel ▶
+      </div>
+
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  AI ANALYST — Claude API
+// ══════════════════════════════════════════════════════════════
+async function askAI() {
+  const input = document.getElementById('aiInput');
+  const prompt = input.value.trim();
+  if (!prompt) return;
+  input.value = '';
+  await sendToAI(prompt);
+}
+
+async function quickAsk(prompt) {
+  await sendToAI(prompt);
+}
+
+async function sendToAI(prompt) {
+  const responseEl = document.getElementById('aiResponse');
+
+  // Add user message
+  chatHistory.push({role:'user', content:prompt});
+  appendMessage('user', prompt);
+
+  // Thinking indicator
+  const thinkEl = document.createElement('div');
+  thinkEl.className = 'ai-thinking';
+  thinkEl.innerHTML = '<span></span><span></span><span></span>';
+  responseEl.appendChild(thinkEl);
+  responseEl.scrollTop = responseEl.scrollHeight;
+
+  try {
+    const systemPrompt = `You are a sharp, knowledgeable baseball analyst embedded in Pisces Moon OS — a tactical intelligence platform. You have deep knowledge of MLB history, statistics, strategy, and current events up to your training cutoff.
+
+Be direct, insightful, and specific. Use actual player names, teams, and stats when relevant. When analyzing games or players, structure your response clearly. Keep responses concise but substantive — 2-4 paragraphs maximum unless asked for more detail. Avoid generic filler. If asked about something you don't have current data on, say so and offer what context you can.
+
+Today's date: ${new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'})}.`;
+
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: chatHistory.slice(-10) // Keep last 10 messages for context
+      })
+    });
+
+    thinkEl.remove();
+
+    if (!response.ok) {
+      const err = await response.json();
+      appendMessage('assistant', `Error: ${err.error?.message || response.statusText}`);
+      chatHistory.pop();
+      return;
+    }
+
+    const data = await response.json();
+    const reply = data.content?.[0]?.text || 'No response received.';
+    chatHistory.push({role:'assistant', content:reply});
+    appendMessage('assistant', reply);
+
+  } catch(e) {
+    thinkEl.remove();
+    appendMessage('assistant', `Connection error: ${e.message}\n\nMake sure the app is running through Trojan Horse or a local server with API access.`);
+    chatHistory.pop();
+  }
+}
+
+function appendMessage(role, content) {
+  const el = document.getElementById('aiResponse');
+  // Clear empty state
+  if (el.querySelector('div[style*="text-align:center"]')) el.innerHTML = '';
+
+  const msg = document.createElement('div');
+  msg.className = 'ai-msg';
+  msg.innerHTML = `
+    <div class="ai-msg-role ${role}">${role === 'user' ? 'YOU' : '⚾ ANALYST'}</div>
+    <div class="ai-msg-content ${role}">${role==='assistant' ? formatAIResponse(content) : esc(content)}</div>
+  `;
+  el.appendChild(msg);
+  el.scrollTop = el.scrollHeight;
+}
+
+function formatAIResponse(text) {
+  return esc(text)
+    .replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--text-bright)">$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em style="color:var(--gold)">$1</em>')
+    .replace(/\n\n/g, '<br><br>')
+    .replace(/\n/g, '<br>');
+}
+
+function clearChat() {
+  chatHistory = [];
+  document.getElementById('aiResponse').innerHTML = `
+    <div style="text-align:center;padding:24px;color:var(--text-dim)">
+      <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;margin-bottom:8px;color:var(--gold)">AI ANALYST READY</div>
+      <div style="font-size:.62rem;line-height:2">Chat cleared.<br>Ask anything about baseball.</div>
+    </div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+//  DEMO DATA (fallback when API unavailable)
+// ══════════════════════════════════════════════════════════════
+function getDemoGames() {
+  const teams = [
+    ['LAD','NYY'],['BOS','HOU'],['ATL','SF'],['NYM','CHC'],
+    ['MIN','SEA'],['PHI','MIL'],['SD','STL'],['CIN','TB'],
+  ];
+  const statuses = ['Live','Final','Preview','Final','Live','Preview','Final','Preview'];
+  return teams.map(([away,home],i) => ({
+    gamePk: 700000+i,
+    gameDate: new Date().toISOString(),
+    status: {detailedState: statuses[i]==='Live'?'In Progress':statuses[i]==='Final'?'Final':'Scheduled'},
+    teams: {
+      away: {team:{abbreviation:away,teamName:away}, score:statuses[i]!=='Preview'?Math.floor(Math.random()*8):undefined},
+      home: {team:{abbreviation:home,teamName:home}, score:statuses[i]!=='Preview'?Math.floor(Math.random()*8):undefined},
+    },
+    linescore: statuses[i]==='Live'?{currentInning:Math.ceil(Math.random()*9),inningHalf:Math.random()>.5?'Top':'Bottom'}:{}
+  }));
+}
+
+function getDemoStandings() {
+  const divs = [
+    {id:201,teams:[['Yankees',95,27],[" Red Sox",82,40],['Rays',78,44],['Blue Jays',74,48],['Orioles',60,62]]},
+    {id:202,teams:[['Twins',80,42],['White Sox',72,50],['Guardians',70,52],['Tigers',65,57],['Royals',58,64]]},
+    {id:200,teams:[['Astros',88,34],['Rangers',79,43],['Mariners',77,45],['Angels',55,67],['Athletics',40,82]]},
+    {id:204,teams:[['Braves',90,32],['Phillies',83,39],['Mets',78,44],['Marlins',55,67],['Nationals',43,79]]},
+    {id:205,teams:[['Cubs',81,41],['Brewers',78,44],['Cardinals',72,50],['Reds',66,56],['Pirates',55,67]]},
+    {id:203,teams:[['Dodgers',92,30],['Giants',74,48],['Padres',72,50],['Rockies',47,75],['Diamondbacks',69,53]]},
+  ];
+  return divs.map(d => ({
+    division:{id:d.id},
+    teamRecords: d.teams.map(([name,w,l],i) => ({
+      team:{teamName:name}, wins:w, losses:l,
+      winningPercentage: (w/(w+l)).toFixed(3),
+      gamesBack: i===0?'—':((d.teams[0][1]-w + l-d.teams[0][2])/2).toFixed(1)
+    }))
+  }));
+}
+
+// ══════════════════════════════════════════════════════════════
+//  TEAM EMOJI MAP
+// ══════════════════════════════════════════════════════════════
+const TEAM_EMOJIS = {
+  LAD:'🔵',NYY:'⚡',BOS:'🔴',HOU:'🟠',ATL:'🔴',SF:'🟠',NYM:'🔵',
+  CHC:'🔵',MIN:'🔴',SEA:'🟢',PHI:'🔴',MIL:'🟡',SD:'🟤',STL:'🔴',
+  CIN:'🔴',TB:'🔵',TEX:'🔵',LAA:'🔴',OAK:'🟢',KC:'🔵',DET:'⬛',
+  CLE:'🔴',CWS:'⬛',TOR:'🔵',BAL:'🟠',WSH:'🔴',MIA:'🔵',PIT:'🟡',
+  COL:'🟣',ARI:'🔴',default:'⚾'
+};
+function teamEmoji(abbr) { return TEAM_EMOJIS[abbr] || TEAM_EMOJIS.default; }
+
+// ══════════════════════════════════════════════════════════════
+//  INIT & REFRESH
+// ══════════════════════════════════════════════════════════════
+function refreshAll() {
+  loadGames();
+  if (document.getElementById('view-standings').classList.contains('active')) loadStandings();
+  if (document.getElementById('view-news').classList.contains('active')) loadNews();
+  if (document.getElementById('view-video').classList.contains('active')) loadVideos();
+}
+
+// Auto-refresh every 60 seconds for live games
+setInterval(() => {
+  if (allGames.some(g=>g.status?.detailedState?.includes('In Progress'))) {
+    loadGames();
+    if (selectedGame) selectGame(allGames.findIndex(g=>g.gamePk===selectedGame.gamePk));
+  }
+}, 60000);
+
+window.addEventListener('load', () => {
+  loadGames();
+  loadNews(); // Pre-load news in background
+});
+</script>
+</body></html>

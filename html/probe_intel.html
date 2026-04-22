@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — probe_intel.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: MIT
+  fluidfortune.com
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files, to deal in
+  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+
+  Dedicated to Jennifer Soto and Clark Beddows.
+-->
+<!-- PISCES MOON OS // PROBE INTEL -->
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // PROBE INTEL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;}
+body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent);letter-spacing:3px;}
+.logo span{color:var(--accent2);}
+.auth-warn{background:rgba(0,212,255,.04);border-bottom:1px solid rgba(0,212,255,.15);padding:7px 24px;font-size:.6rem;color:rgba(0,212,255,.5);flex-shrink:0;}
+.ctrl-bar{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:10px 16px;display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
+.btn{padding:7px 16px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
+.btn:hover{background:var(--accent);color:var(--bg);}
+.btn.orange{border-color:var(--accent2);color:var(--accent2);}
+.btn.orange:hover{background:var(--accent2);color:var(--bg);}
+.btn.sm{padding:4px 10px;font-size:.6rem;}
+.btn:disabled{opacity:.3;cursor:not-allowed;}
+.tab-row{display:flex;gap:0;border-bottom:1px solid var(--panel-border);flex-shrink:0;}
+.tab{padding:8px 20px;font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:2px;cursor:pointer;color:var(--text-dim);border-bottom:2px solid transparent;transition:all .2s;}
+.tab:hover{color:var(--text);}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
+.stats-row{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--panel-border);flex-shrink:0;}
+.stat{padding:8px 12px;border-right:1px solid var(--panel-border);position:relative;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
+.stat:last-child{border-right:none;}
+.slbl{font-size:.5rem;color:var(--text-dim);letter-spacing:2px;font-family:'Orbitron',monospace;}
+.sval{font-family:'Orbitron',monospace;font-size:1rem;color:var(--text-bright);font-weight:700;margin-top:2px;}
+.main{display:grid;grid-template-columns:1fr 340px;flex:1;overflow:hidden;}
+.list-panel{overflow-y:auto;border-right:1px solid var(--panel-border);}
+.detail-panel{overflow-y:auto;padding:0;}
+/* Device view */
+.dev-row{padding:10px 16px;border-bottom:1px solid rgba(26,58,80,.3);cursor:pointer;transition:background .15s;}
+.dev-row:hover{background:rgba(0,212,255,.03);}
+.dev-row.selected{background:rgba(0,212,255,.07);border-left:2px solid var(--accent);}
+.dev-grid{display:grid;grid-template-columns:1fr auto;gap:4px;align-items:start;}
+.dev-mac{font-size:.68rem;color:var(--accent);letter-spacing:1px;}
+.dev-vendor{font-size:.6rem;color:var(--text-dim);margin-top:2px;}
+.dev-ssids{font-size:.6rem;color:var(--text);margin-top:4px;line-height:1.6;}
+.dev-meta{display:flex;gap:12px;margin-top:4px;font-size:.58rem;color:var(--text-dim);}
+.rssi-badge{font-family:'Orbitron',monospace;font-size:.58rem;padding:2px 6px;border-radius:2px;}
+.rs{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
+.rm{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
+.rw{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
+/* SSID view */
+.ssid-row{padding:10px 16px;border-bottom:1px solid rgba(26,58,80,.3);display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;}
+.ssid-name{font-size:.68rem;color:var(--accent3);}
+.ssid-count{font-family:'Orbitron',monospace;font-size:.85rem;color:var(--warn);}
+.ssid-bar{height:3px;background:var(--bg3);margin-top:4px;}
+.ssid-fill{height:100%;background:var(--accent3);}
+.ssid-sensitive{font-size:.55rem;color:var(--accent4);margin-left:8px;}
+/* Detail panel */
+.det-ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.58rem;color:var(--accent);letter-spacing:2px;background:var(--bg2);}
+.det-body{padding:14px 16px;}
+.det-section{margin-bottom:14px;}
+.det-label{font-family:'Orbitron',monospace;font-size:.5rem;color:var(--text-dim);letter-spacing:3px;margin-bottom:5px;}
+.det-value{font-size:.65rem;color:var(--text-bright);line-height:1.8;}
+.det-value.mono{font-family:'Share Tech Mono',monospace;color:var(--accent);}
+.ssid-chip{display:inline-block;padding:2px 8px;margin:2px;font-size:.58rem;border:1px solid rgba(0,255,136,.3);color:var(--accent3);background:rgba(0,255,136,.06);}
+.ssid-chip.sensitive{border-color:rgba(255,51,102,.4);color:var(--accent4);background:rgba(255,51,102,.06);}
+.ch-control{display:flex;align-items:center;gap:6px;margin-left:auto;}
+.ch-val{font-family:'Orbitron',monospace;font-size:1rem;color:var(--warn);min-width:20px;text-align:center;}
+.pill{padding:3px 10px;border:1px solid;border-radius:2px;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;}
+.pill.active{border-color:var(--accent);color:var(--accent);animation:blink .8s step-end infinite;}
+.pill.idle{border-color:var(--text-dim);color:var(--text-dim);}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.console{height:120px;overflow-y:auto;padding:10px 16px;background:var(--bg);border-top:1px solid var(--panel-border);font-size:.63rem;line-height:1.8;flex-shrink:0;}
+.cl-info{color:var(--text-dim);}.cl-ok{color:var(--accent3);}.cl-warn{color:var(--warn);}.cl-data{color:var(--accent);}
+::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
+</style></head><body>
+<header>
+  <div class="logo"><span>PROBE</span> INTEL</div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <span style="font-size:.62rem;color:var(--text-dim)">Pisces Moon OS // CYBER Suite</span>
+    <span class="pill idle" id="statusPill">IDLE</span>
+  </div>
+</header>
+<div class="auth-warn">⚠ PASSIVE ONLY — Reveals network history of nearby devices — USE ONLY IN AUTHORIZED ENVIRONMENTS</div>
+
+<div class="ctrl-bar">
+  <button class="btn" id="startBtn" onclick="startCapture()">▶ START CAPTURE</button>
+  <button class="btn orange sm" id="stopBtn" onclick="stopCapture()" disabled>■ STOP</button>
+  <button class="btn sm" onclick="exportLog()" style="border-color:var(--accent3);color:var(--accent3)">EXPORT JSON</button>
+  <div class="ch-control">
+    <span style="font-family:Orbitron,monospace;font-size:.58rem;color:var(--text-dim)">CH</span>
+    <button class="btn sm" style="padding:2px 8px" onclick="changeChannel(-1)">◀</button>
+    <span class="ch-val" id="chVal">1</span>
+    <button class="btn sm" style="padding:2px 8px" onclick="changeChannel(1)">▶</button>
+  </div>
+  <span style="font-size:.6rem;color:var(--text-dim);margin-left:auto" id="captureTime">—</span>
+</div>
+
+<div class="stats-row">
+  <div class="stat"><div class="slbl">PROBE FRAMES</div><div class="sval" id="stFrames">0</div></div>
+  <div class="stat"><div class="slbl">DEVICES</div><div class="sval" id="stDevices">0</div></div>
+  <div class="stat"><div class="slbl">UNIQUE SSIDS</div><div class="sval" id="stSSIDs">0</div></div>
+  <div class="stat"><div class="slbl">WILDCARD</div><div class="sval" id="stWild">0</div></div>
+  <div class="stat"><div class="slbl">SENSITIVE</div><div class="sval" id="stSens" style="color:var(--accent4)">0</div></div>
+</div>
+
+<div class="tab-row">
+  <div class="tab active" onclick="switchTab('devices',this)">DEVICES</div>
+  <div class="tab" onclick="switchTab('ssids',this)">NETWORKS</div>
+</div>
+
+<div class="main">
+  <div class="list-panel" id="listPanel">
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:200px;gap:10px;color:var(--text-dim)">
+      <div style="font-family:Orbitron,monospace;font-size:1.5rem;color:rgba(0,212,255,.15)">PROBE</div>
+      <div style="font-size:.65rem;text-align:center;line-height:2">Start capture to begin<br>passive probe request analysis.<br>Requires monitor-mode WiFi interface.</div>
+    </div>
+  </div>
+  <div class="detail-panel" id="detailPanel">
+    <div class="det-ph">DEVICE DETAIL</div>
+    <div class="det-body">
+      <div style="color:var(--text-dim);font-size:.65rem;line-height:2;margin-top:20px">Select a device to view<br>its probed network history.</div>
+    </div>
+  </div>
+</div>
+
+<div class="console" id="console">
+  <span class="cl-info">// PISCES MOON PROBE INTEL</span><br>
+  <span class="cl-info">// Passive 802.11 probe request capture</span><br>
+  <span class="cl-info">// Linux: sudo airmon-ng start wlan0 → wlan0mon</span><br>
+  <span class="cl-info">// Real capture: window.spadra.system.exec tshark/tcpdump pipeline</span><br>
+</div>
+
+<script>
+// ── State ────────────────────────────────────────────────────────────────
+let devices  = new Map();   // mac → {mac,vendor,rssi,probeCount,lastSeen,ssids[],wildcard}
+let ssidMap  = new Map();   // ssid → {ssid,count,sensitive}
+let totalFrames = 0, wildcardCount = 0, sensitiveCount = 0;
+let currentView = 'devices';
+let selectedMAC = null;
+let capturing = false;
+let captureTimer = null;
+let captureStart = 0;
+let channel = 1;
+
+const SENSITIVE = ['corp','vpn','internal','employee','staff','office','admin','secure','private','guest','iot','camera','mgmt','management','infrastructure','prod','dev','enterprise','cisco'];
+
+function isSensitive(ssid) {
+  const l = ssid.toLowerCase();
+  return SENSITIVE.some(k => l.includes(k));
+}
+
+// ── OUI table ────────────────────────────────────────────────────────────
+const OUI = {
+  'A4:C3:F0':'Apple','F4:5C:89':'Apple','18:65:90':'Apple','3C:22:FB':'Apple',
+  'E8:9F:80':'Intel','94:B8:6D':'Intel','50:01:BB':'Samsung','8C:77:12':'Samsung',
+  'A4:C3':'Qualcomm','BC:9F:EF':'Xiaomi','98:DE:D0':'Huawei','28:D2:44':'Microsoft',
+  '00:26:B9':'Nintendo','04:4B:ED':'Qualcomm','CC:08:FB':'Apple','60:F8:1D':'Apple',
+};
+function lookupOUI(mac) {
+  const parts = mac.split(':');
+  const k3 = parts.slice(0,3).join(':');
+  const k2 = parts.slice(0,2).join(':');
+  return OUI[k3] || OUI[k2] || 'Unknown';
+}
+
+// ── Logging ──────────────────────────────────────────────────────────────
+function log(msg, cls='cl-info') {
+  const c = document.getElementById('console');
+  const t = document.createElement('span');
+  t.className = cls; t.textContent = msg;
+  c.appendChild(t); c.appendChild(document.createElement('br'));
+  c.scrollTop = c.scrollHeight;
+}
+
+// ── Channel ──────────────────────────────────────────────────────────────
+function changeChannel(dir) {
+  channel = Math.max(1, Math.min(13, channel+dir));
+  document.getElementById('chVal').textContent = channel;
+  log(`// Channel → ${channel}`);
+}
+
+// ── Capture ──────────────────────────────────────────────────────────────
+function startCapture() {
+  capturing = true; captureStart = Date.now();
+  document.getElementById('startBtn').disabled = true;
+  document.getElementById('stopBtn').disabled = false;
+  document.getElementById('statusPill').className = 'pill active';
+  document.getElementById('statusPill').textContent = 'CAPTURING';
+  log('// Probe capture started','cl-ok');
+  simulateProbes();
+  captureTimer = setInterval(updateCaptureTime, 1000);
+}
+function stopCapture() {
+  capturing = false;
+  clearInterval(captureTimer);
+  document.getElementById('startBtn').disabled = false;
+  document.getElementById('stopBtn').disabled = true;
+  document.getElementById('statusPill').className = 'pill idle';
+  document.getElementById('statusPill').textContent = 'IDLE';
+  log('// Capture stopped','cl-warn');
+}
+function updateCaptureTime() {
+  const s = Math.floor((Date.now()-captureStart)/1000);
+  document.getElementById('captureTime').textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+}
+
+// ── Simulation ────────────────────────────────────────────────────────────
+const DEMO_MACS = ['A4:C3:F0:11:22:33','E8:9F:80:44:55:66','50:01:BB:77:88:99',
+  'BC:9F:EF:AA:BB:CC','18:65:90:DD:EE:FF','28:D2:44:12:34:56','F4:5C:89:98:76:54'];
+const DEMO_SSIDS = ['HomeNetwork_5G','CorpVPN','MyiPhone_Hotspot','Starbucks_WiFi',
+  'ATT-Router','NETGEAR_2G','AdminNet_Private','xfinitywifi','CiscoGuest',
+  'EnterpriseSec','DevLab','IoTDevices','CameraNet','MyHome'];
+
+function randRSSI() { return -50 - Math.floor(Math.random()*50); }
+function randMAC() { return Array.from({length:6},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join(':'); }
+
+let simTimer;
+function simulateProbes() {
+  simTimer = setInterval(() => {
+    if (!capturing) { clearInterval(simTimer); return; }
+    const mac   = DEMO_MACS[Math.floor(Math.random()*DEMO_MACS.length)];
+    const isWild = Math.random() > 0.65;
+    const ssid  = isWild ? null : DEMO_SSIDS[Math.floor(Math.random()*DEMO_SSIDS.length)];
+    const rssi  = randRSSI();
+
+    totalFrames++;
+    if (isWild) wildcardCount++;
+
+    // Update device
+    if (!devices.has(mac)) {
+      devices.set(mac, {mac, vendor:lookupOUI(mac), rssi, probeCount:0, lastSeen:Date.now(), ssids:[], wildcard:0});
+    }
+    const dev = devices.get(mac);
+    dev.rssi = rssi; dev.probeCount++; dev.lastSeen = Date.now();
+    if (isWild) dev.wildcard++;
+    else if (ssid && !dev.ssids.includes(ssid)) {
+      dev.ssids.push(ssid);
+    }
+
+    // Update SSID map
+    if (ssid) {
+      const sens = isSensitive(ssid);
+      if (!ssidMap.has(ssid)) {
+        ssidMap.set(ssid, {ssid, count:0, sensitive:sens});
+        if (sens) sensitiveCount++;
+      }
+      ssidMap.get(ssid).count++;
+    }
+
+    if (ssid) log(`// PROBE ${mac.substring(0,8)}... → "${ssid}" (${rssi}dBm) CH${channel}`,'cl-data');
+    updateStats();
+    renderList();
+  }, 400 + Math.random()*600);
+}
+
+// ── Stats ─────────────────────────────────────────────────────────────────
+function updateStats() {
+  document.getElementById('stFrames').textContent  = totalFrames;
+  document.getElementById('stDevices').textContent = devices.size;
+  document.getElementById('stSSIDs').textContent   = ssidMap.size;
+  document.getElementById('stWild').textContent    = wildcardCount;
+  document.getElementById('stSens').textContent    = sensitiveCount;
+}
+
+// ── Tab switch ────────────────────────────────────────────────────────────
+function switchTab(view, el) {
+  currentView = view;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  renderList();
+}
+
+// ── Render ────────────────────────────────────────────────────────────────
+function renderList() {
+  const panel = document.getElementById('listPanel');
+  if (currentView === 'devices') renderDevices(panel);
+  else renderSSIDs(panel);
+}
+
+function rssiClass(r) { return r>-60?'rs':r>-80?'rm':'rw'; }
+
+function renderDevices(panel) {
+  const arr = [...devices.values()].sort((a,b)=>b.probeCount-a.probeCount);
+  if (arr.length === 0) { panel.innerHTML = '<div style="padding:24px;color:var(--text-dim);font-size:.65rem">No devices yet...</div>'; return; }
+  panel.innerHTML = arr.map(d => `
+    <div class="dev-row ${selectedMAC===d.mac?'selected':''}" onclick="selectDevice('${d.mac}')">
+      <div class="dev-grid">
+        <div>
+          <div class="dev-mac">${d.mac}</div>
+          <div class="dev-vendor">${d.vendor}${d.ssids.some(s=>isSensitive(s))?'  <span style="color:var(--accent4);font-size:.55rem">⚠ SENSITIVE</span>':''}</div>
+          <div class="dev-ssids">${d.ssids.slice(0,3).map(s=>`"${esc(s)}"`).join(', ')}${d.ssids.length>3?` +${d.ssids.length-3} more`:''}</div>
+          <div class="dev-meta">
+            <span>Probes: ${d.probeCount}</span>
+            <span>Nets: ${d.ssids.length}</span>
+            <span>Wild: ${d.wildcard}</span>
+          </div>
+        </div>
+        <span class="rssi-badge ${rssiClass(d.rssi)}">${d.rssi}</span>
+      </div>
+    </div>`).join('');
+}
+
+function renderSSIDs(panel) {
+  const arr = [...ssidMap.values()].sort((a,b)=>b.count-a.count);
+  const max = arr[0]?.count || 1;
+  if (arr.length === 0) { panel.innerHTML = '<div style="padding:24px;color:var(--text-dim);font-size:.65rem">No specific SSIDs yet...<br>Wildcard probes don\'t reveal SSIDs.</div>'; return; }
+  panel.innerHTML = arr.map(s => `
+    <div class="ssid-row">
+      <div>
+        <div class="ssid-name">${esc(s.ssid)}${s.sensitive?'<span class="ssid-sensitive">⚠ SENSITIVE</span>':''}</div>
+        <div class="ssid-bar"><div class="ssid-fill" style="width:${s.count/max*100}%;background:${s.sensitive?'var(--accent4)':'var(--accent3)'}"></div></div>
+      </div>
+      <div class="ssid-count">${s.count}</div>
+    </div>`).join('');
+}
+
+// ── Device detail ─────────────────────────────────────────────────────────
+function selectDevice(mac) {
+  selectedMAC = mac;
+  renderList();
+  const d = devices.get(mac);
+  if (!d) return;
+  const panel = document.getElementById('detailPanel');
+  panel.innerHTML = `
+    <div class="det-ph">DEVICE DETAIL</div>
+    <div class="det-body">
+      <div class="det-section">
+        <div class="det-label">MAC ADDRESS</div>
+        <div class="det-value mono">${d.mac}</div>
+      </div>
+      <div class="det-section">
+        <div class="det-label">VENDOR / OUI</div>
+        <div class="det-value">${d.vendor}</div>
+      </div>
+      <div class="det-section">
+        <div class="det-label">SIGNAL</div>
+        <div class="det-value">${d.rssi} dBm</div>
+      </div>
+      <div class="det-section">
+        <div class="det-label">PROBE STATS</div>
+        <div class="det-value">Total: ${d.probeCount} | Wildcard: ${d.wildcard} | Specific: ${d.ssids.length}</div>
+      </div>
+      <div class="det-section">
+        <div class="det-label">PREVIOUSLY CONNECTED TO</div>
+        ${d.ssids.length > 0
+          ? d.ssids.map(s=>`<span class="ssid-chip ${isSensitive(s)?'sensitive':''}">${esc(s)}</span>`).join('')
+          : '<div class="det-value" style="color:var(--text-dim)">(Wildcard probes only — no SSID revealed)</div>'}
+      </div>
+      ${d.ssids.some(s=>isSensitive(s))?`
+      <div class="det-section" style="padding:10px;border:1px solid rgba(255,51,102,.3);background:rgba(255,51,102,.04)">
+        <div class="det-label" style="color:var(--accent4)">⚠ SENSITIVE NETWORKS DETECTED</div>
+        <div class="det-value" style="font-size:.6rem;margin-top:4px">This device has probed for corporate or sensitive SSIDs. Device may carry credentials for restricted networks.</div>
+      </div>`:''}
+    </div>`;
+}
+
+function exportLog() {
+  const out = {
+    timestamp: new Date().toISOString(),
+    channel, totalFrames, wildcardCount, sensitiveCount,
+    devices: [...devices.values()].map(d=>({mac:d.mac,vendor:d.vendor,probes:d.probeCount,rssi:d.rssi,ssids:d.ssids})),
+    ssids: [...ssidMap.values()]
+  };
+  const blob = new Blob([JSON.stringify(out,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `probe_${Date.now()}.json`;
+  a.click();
+  log('// Log exported','cl-ok');
+}
+
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+</script>
+</body></html>
