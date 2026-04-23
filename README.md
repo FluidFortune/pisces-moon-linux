@@ -113,9 +113,7 @@ The script detects ARM and skips any x86-specific steps automatically.
   Chromium works. Not tested but should work fine.
 
 ### What does NOT work on ARM
-- The **Luckfox Panel build environment** (`setup_panel_build.sh`) requires
-  x86-64 for the Rockchip cross-compiler. See the Panel section below.
-- That's it. Everything else works.
+All Pisces Moon Linux features work on ARM64. No exceptions.
 
 ### Debian arm64 setup (Pi 4/5)
 ```bash
@@ -251,29 +249,6 @@ demo/simulated mode automatically — no errors, no crashes.
 
 ---
 
-## LUCKFOX PANEL BUILD (Edge Node)
-
-The Pisces Moon Panel is a separate build target — a Luckfox Pico 86 Panel
-running Buildroot Linux with LVGL UI, acting as an edge node with an attached
-T-Beam S3 Supreme for radio duties.
-
-This requires an **x86-64 machine running Ubuntu 24.04** (or 22.04) with Docker.
-ARM machines cannot run the Rockchip cross-compiler.
-
-```bash
-# On your x86-64 Ubuntu machine:
-chmod +x tools/setup_panel_build.sh
-./tools/setup_panel_build.sh
-
-# Then inside Docker:
-sudo docker start -ai luckfox_pm_panel
-cd /home && ./build_inside_docker.sh
-```
-
-See `tools/setup_panel_build.sh` for full documentation.
-
----
-
 ## DIRECTORY STRUCTURE
 
 ```
@@ -287,7 +262,6 @@ pisces-moon-linux/
 │   └── ... (37 total)
 ├── tools/
 │   ├── edge_bridge.py          ← USB serial ↔ WebSocket bridge
-│   └── setup_panel_build.sh    ← Luckfox Panel build environment
 ├── licenses/
 │   ├── LICENSE-AGPL.txt        ← Platform license (install.sh, tools)
 │   └── LICENSE-MIT.txt         ← App license (html/ directory)
@@ -341,7 +315,7 @@ SD card layout for easy sync between devices.
 
 | Component | License | Applies To |
 |-----------|---------|------------|
-| Platform | AGPL-3.0 | install.sh, edge_bridge.py, setup_panel_build.sh, all build/tool scripts |
+| Platform | AGPL-3.0 | install.sh, edge_bridge.py, all build/tool scripts |
 | Applications | MIT | All files in html/ directory |
 
 **AGPL-3.0** — If you modify and deploy the platform (including as a networked
@@ -397,7 +371,6 @@ Dedicated to Jennifer Soto and Clark Beddows.
 - Baseball Intel rebuilt as full intelligence hub (live MLB API, AI analyst)
 - Player search with current season + career stats + biography
 - RSS news feed with multi-source fallback and native XML parsing
-- Luckfox Panel build environment and serial protocol (edge node work)
 - License headers added to all files (AGPL platform / MIT apps)
 
 **v0.2 — March 2026**
