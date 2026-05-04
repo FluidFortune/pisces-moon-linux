@@ -1,0 +1,91 @@
+# Pisces Moon OS — NOTICE
+
+Copyright (C) 2026 Eric Becker / Fluid Fortune (fluidfortune.com)
+
+This software is dedicated to **Jennifer Soto** and **Clark Beddows** (a.k.a. Mark Meadows).
+
+---
+
+## License
+
+Pisces Moon OS is released under the **GNU Affero General Public License v3.0 or later (AGPL-3.0-or-later)**. See the `LICENSE` file for the full text.
+
+**Commercial licenses are available** for organizations whose use cases are incompatible with AGPL-3.0 obligations. Contact eric@fluidfortune.com / fluidfortune.com for terms.
+
+Contributions are accepted under the terms of the Contributor License Agreement (`CLA.md`), which enables this dual-licensing model.
+
+---
+
+## Third-Party Software
+
+Pisces Moon OS bundles the following third-party libraries. Each retains its original license. Their inclusion does not change the AGPL-3.0-or-later license of Pisces Moon OS itself; it means downstream users have additional rights under those bundled libraries' licenses for those specific files.
+
+### `html/lib/leaflet.min.js` and `leaflet.min.css`
+- **Leaflet 1.9.4** — JavaScript library for interactive maps
+- Copyright (c) 2010-2023 Vladimir Agafonkin, (c) 2010-2011 CloudMade
+- License: BSD-2-Clause
+- Source: https://leafletjs.com
+
+### `html/lib/images/*.png`
+- **Leaflet image assets** (marker icons, layers control)
+- Same copyright and license as Leaflet (BSD-2-Clause)
+
+### `html/lib/zxing.min.js`
+- **ZXing-js 0.19.1** — Multi-format 1D/2D barcode reader
+- Copyright (c) 2016 ZXing-js contributors
+- License: Apache-2.0
+- Source: https://github.com/zxing-js/library
+
+### `html/lib/jsQR.js`
+- **jsQR 1.4.0** — QR code reading library
+- Copyright (c) 2017 Cosmo Wolfe
+- License: Apache-2.0
+- Source: https://github.com/cozmo/jsQR
+
+### `html/lib/qrcode.min.js`
+- **qrcodejs 1.0.0** — QR code generation
+- Copyright (c) 2012 davidshimjs
+- License: MIT
+- Source: https://github.com/davidshimjs/qrcodejs
+
+### `html/fonts/share-tech-mono.woff2`
+- **Share Tech Mono** font
+- Copyright (c) 2012 Carrois Apostrophe
+- License: SIL Open Font License 1.1 (OFL-1.1)
+- Source: Google Fonts (https://fonts.google.com/specimen/Share+Tech+Mono)
+
+### `html/fonts/orbitron-*.woff2`
+- **Orbitron** font (weights 400, 700, 900)
+- Copyright (c) Matt McInerney
+- License: SIL Open Font License 1.1 (OFL-1.1)
+- Source: Google Fonts (https://fonts.google.com/specimen/Orbitron)
+
+---
+
+## External Services Used (At Runtime)
+
+The following services are queried by certain apps over HTTPS. No data is sent except the minimum needed to fulfill the user's request. No telemetry, tracking, or analytics are transmitted.
+
+| App | Service | Purpose |
+|---|---|---|
+| `tides.html` | NOAA CO-OPS API (api.tidesandcurrents.noaa.gov) | Tide predictions for US coastal stations |
+| `barcode.html` | Open Food Facts (world.openfoodfacts.org) | Product lookup by EAN/UPC |
+| `offline_maps.html` | OpenStreetMap, OpenTopoMap, ESRI, CARTO | Map tile rendering (cached locally for offline use) |
+| `weather.html` | National Weather Service API (api.weather.gov) | Weather forecasts (US only) |
+| `news_*.html` | Various RSS feeds | News headlines |
+| `nfl/nba/nhl/mls.html` | ESPN API, sportsdata.io, statsapi.mlb.com | Sports scores and stats |
+| `gemini_terminal.html` | Google Gemini API (generativelanguage.googleapis.com) | LLM-assisted research (user-supplied API key) |
+
+All other apps function fully offline.
+
+---
+
+## Trademarks
+
+"Pisces Moon", "Fluid Fortune", "Clark Beddows Protocol", "Punky", "Little Soul", "Static", "Spadra Smelter", and "Wozbot" are trademarks of Eric Becker / Fluid Fortune. The AGPL-3.0 license does not grant any rights to use these trademarks. Forks of Pisces Moon OS distributed under AGPL-3.0 must use a different name and branding.
+
+---
+
+## Disclaimer
+
+This software is provided "as is", without warranty of any kind, express or implied. The medical reference and survival reference apps included in Pisces Moon OS are for informational purposes only and are not a substitute for professional medical or emergency advice. Always consult qualified professionals in actual emergencies.

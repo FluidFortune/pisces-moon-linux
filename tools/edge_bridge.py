@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
+# ═══════════════════════════════════════════════════════════════════════
 # Pisces Moon OS — edge_bridge.py
 # Copyright (C) 2026 Eric Becker / Fluid Fortune
 # SPDX-License-Identifier: AGPL-3.0-or-later
-# fluidfortune.com
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as published
 # by the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# See licenses/LICENSE-AGPL.txt for full terms.
 #
-# Dedicated to Jennifer Soto and Clark Beddows.
+# See LICENSE file for full text. Commercial licenses available.
+# Contact Eric Becker / Fluid Fortune (fluidfortune.com).
+# ═══════════════════════════════════════════════════════════════════════
 """
 PISCES MOON OS — Edge Bridge v1.0
 Relays T-Deck Plus serial data to HTML apps via WebSocket.
