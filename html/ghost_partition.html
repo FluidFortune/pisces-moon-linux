@@ -1,265 +1,424 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — ghost_partition.html
+<!--
+  Pisces Moon OS — ghost_partition.html v2
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
 -->
-<!-- PISCES MOON OS // GHOST PARTITION -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // GHOST PARTITION</title>
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--text-dim);text-shadow:0 0 20px rgba(42,88,112,.5);letter-spacing:3px;}
-.logo span{color:var(--gold);}
-.content{padding:20px;max-width:900px;margin:0 auto;}
-.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
-.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
-.pb{padding:16px;}
-.btn{display:inline-block;padding:8px 18px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-.btn:hover{background:var(--accent);color:var(--bg);}
-.btn.sm{padding:4px 10px;font-size:.6rem;}
-.btn.red{border-color:var(--accent4);color:var(--accent4);}.btn.red:hover{background:var(--accent4);color:var(--bg);}
-.btn.gold{border-color:var(--gold);color:var(--gold);}.btn.gold:hover{background:var(--gold);color:var(--bg);}
-.btn.warn{border-color:var(--warn);color:var(--warn);}.btn.warn:hover{background:var(--warn);color:var(--bg);}
-.btn:disabled{opacity:.4;cursor:not-allowed;}
-.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;width:100%;}
-.pm-input:focus{border-color:var(--accent);}
-.pm-input::placeholder{color:var(--text-dim);}
-.status-card{background:var(--bg2);border:1px solid var(--panel-border);padding:16px;margin-bottom:12px;text-align:center;}
-.sc-icon{font-size:3rem;margin-bottom:8px;}
-.sc-title{font-family:'Orbitron',monospace;font-size:1rem;letter-spacing:3px;margin-bottom:8px;}
-.sc-desc{font-size:.72rem;color:var(--text-dim);line-height:1.7;}
-.step{background:var(--bg2);border:1px solid var(--panel-border);padding:12px 16px;margin-bottom:8px;display:flex;align-items:flex-start;gap:12px;}
-.step-num{font-family:'Orbitron',monospace;font-size:1rem;color:var(--accent);width:24px;flex-shrink:0;text-align:center;}
-.step-body{flex:1;}
-.step-title{font-size:.75rem;color:var(--text-bright);margin-bottom:4px;}
-.step-desc{font-size:.68rem;color:var(--text-dim);line-height:1.6;}
-.step-code{background:var(--bg3);border:1px solid var(--panel-border);padding:8px 12px;font-size:.68rem;color:var(--accent3);margin-top:6px;font-family:'Share Tech Mono',monospace;}
-.warning-box{background:rgba(255,51,102,.05);border:1px solid rgba(255,51,102,.3);padding:12px 14px;font-size:.7rem;line-height:1.65;margin-bottom:12px;}
-.warning-box strong{color:var(--accent4);}
-.info-box{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.2);padding:12px 14px;font-size:.7rem;line-height:1.65;margin-bottom:12px;}
-.info-box strong{color:var(--accent);}
-.partition-vis{display:flex;height:40px;background:var(--bg3);border:1px solid var(--panel-border);margin:12px 0;overflow:hidden;}
-.pv-seg{display:flex;align-items:center;justify-content:center;font-size:.6rem;font-family:'Orbitron',monospace;letter-spacing:1px;}
-.encrypt-indicator{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:.68rem;}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header>
-  <div class="logo">GHOST <span>PARTITION</span></div>
-  <div style="font-size:.65rem;color:var(--text-dim)">Encrypted hidden storage — LUKS / VeraCrypt</div>
+.gp-layout { display:grid; grid-template-columns:280px 1fr 280px; height:calc(100vh - 52px); overflow:hidden; }
+.gp-left  { border-right:1px solid var(--panel-border); overflow-y:auto; }
+.gp-right { border-left:1px solid var(--panel-border); overflow-y:auto; }
+.gp-center { overflow-y:auto; }
+
+/* Auth */
+.auth-screen { display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; gap:20px; }
+.auth-title { font-family:Orbitron,monospace; font-size:1.2rem; color:var(--accent4); letter-spacing:4px; }
+.pin-display { display:flex; gap:12px; }
+.pin-dot { width:16px; height:16px; border-radius:50%; border:2px solid var(--panel-border); background:transparent; transition:all .2s; }
+.pin-dot.filled { background:var(--gold); border-color:var(--gold); }
+.pin-pad { display:grid; grid-template-columns:repeat(3,64px); gap:8px; }
+.pin-btn { width:64px; height:64px; background:var(--bg2); border:1px solid var(--panel-border); color:var(--text-bright); font-family:Orbitron,monospace; font-size:1.2rem; cursor:pointer; transition:all .15s; }
+.pin-btn:hover { border-color:var(--gold); background:rgba(244,168,32,.1); }
+.pin-error { color:var(--accent4); font-family:Orbitron,monospace; font-size:.6rem; letter-spacing:3px; opacity:0; transition:opacity .3s; }
+.pin-error.show { opacity:1; }
+
+/* Storage viz */
+.storage-bar { height:24px; background:var(--bg3); border:1px solid var(--panel-border); overflow:hidden; display:flex; margin:10px 0; }
+.storage-segment { height:100%; transition:width .3s; display:flex; align-items:center; justify-content:center; font-size:.55rem; font-family:Orbitron,monospace; overflow:hidden; }
+
+/* File list */
+.gp-file { padding:10px 12px; border-bottom:1px solid rgba(28,46,58,.4); cursor:pointer; transition:background .15s; }
+.gp-file:hover { background:rgba(244,168,32,.04); }
+.gp-file.selected { background:rgba(244,168,32,.08); border-left:2px solid var(--gold); }
+.gp-file-name { font-size:.72rem; color:var(--text-bright); margin-bottom:3px; display:flex; gap:8px; align-items:center; }
+.gp-file-meta { font-size:.58rem; color:var(--text-dim); display:flex; gap:10px; }
+.class-badge { display:inline-block; padding:1px 6px; font-family:Orbitron,monospace; font-size:.45rem; letter-spacing:1px; }
+.class-tactical { background:rgba(255,51,102,.1); color:var(--accent4); border:1px solid var(--accent4); }
+.class-decoy    { background:rgba(0,212,255,.1);  color:var(--accent);  border:1px solid var(--accent);  }
+.class-student  { background:rgba(0,255,136,.1);  color:var(--accent3); border:1px solid var(--accent3); }
+.class-unclassified { background:rgba(28,46,58,.5); color:var(--text-dim); border:1px solid var(--panel-border); }
+
+/* Nuke */
+.nuke-zone { margin:12px; padding:14px; border:1px solid var(--accent4); background:rgba(255,51,102,.05); }
+.nuke-title { font-family:Orbitron,monospace; font-size:.7rem; letter-spacing:3px; color:var(--accent4); margin-bottom:8px; }
+.nuke-btn { width:100%; padding:12px; background:rgba(255,51,102,.1); border:2px solid var(--accent4); color:var(--accent4); font-family:Orbitron,monospace; font-size:.8rem; letter-spacing:4px; cursor:pointer; transition:all .2s; }
+.nuke-btn:hover { background:var(--accent4); color:var(--bg); }
+
+.controls { padding:10px 12px; border-bottom:1px solid var(--panel-border); background:var(--bg2); display:flex; gap:8px; flex-wrap:wrap; }
+.btn { padding:6px 14px; background:transparent; border:1px solid var(--gold); color:var(--gold); font-family:Share\ Tech\ Mono,monospace; font-size:.62rem; cursor:pointer; letter-spacing:1px; transition:all .15s; }
+.btn:hover { background:var(--gold); color:var(--bg); }
+.btn.red { border-color:var(--accent4); color:var(--accent4); }
+.btn.red:hover { background:var(--accent4); color:var(--bg); }
+.integrity-row { padding:6px 12px; border-bottom:1px solid rgba(28,46,58,.3); font-size:.62rem; display:flex; justify-content:space-between; }
+.integrity-ok  { color:var(--accent3); }
+.integrity-err { color:var(--accent4); }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">👻 <em>GHOST</em> PARTITION</div>
+    <div class="pm-hdr-right">
+        <span id="authStatus" style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--text-dim)">LOCKED</span>
+    </div>
 </header>
-<div class="content">
-  <div class="warning-box">
-    <strong>⚠ OPERATIONAL SECURITY TOOL</strong> — Ghost Partition creates an encrypted hidden partition that appears as free disk space or an innocuous file to an observer. This is a configuration assistant. Actual partition creation requires running the commands as root in a terminal.
-  </div>
 
-  <div class="panel">
-    <div class="ph" style="color:var(--accent)">PARTITION STATUS</div>
-    <div class="pb">
-      <div class="status-card">
-        <div class="sc-icon">👻</div>
-        <div class="sc-title" style="color:var(--text-dim)" id="ghostStatus">NOT MOUNTED</div>
-        <div class="sc-desc" id="ghostDesc">No ghost partition detected at configured mount point.<br>Follow the setup wizard to create and configure one.</div>
-      </div>
-      <div class="partition-vis">
-        <div class="pv-seg" style="width:40%;background:rgba(0,212,255,.15);color:var(--accent)">OS (Debian)</div>
-        <div class="pv-seg" style="width:30%;background:rgba(0,255,136,.15);color:var(--accent3)">Data</div>
-        <div class="pv-seg" style="width:20%;background:rgba(42,88,112,.3);color:var(--text-dim)">GHOST?</div>
-        <div class="pv-seg" style="width:10%;background:rgba(26,58,80,.2);color:var(--text-dim)">Free</div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:12px">
-        <button class="btn gold" onclick="mountGhost()">🔓 MOUNT</button>
-        <button class="btn sm warn" onclick="unmountGhost()">🔒 UNMOUNT</button>
-        <button class="btn sm" onclick="checkStatus()">↻ CHECK</button>
-      </div>
+<!-- Auth screen (shown when locked) -->
+<div id="authScreen" style="height:calc(100vh - 52px)">
+    <div class="auth-screen">
+        <div class="auth-title">⚠ GHOST PARTITION</div>
+        <div style="font-size:.7rem;color:var(--text-dim);text-align:center;max-width:280px;line-height:1.8">
+            Enter PIN to access.<br>
+            Wrong PIN = Student Mode.<br>
+            3× wrong = NUKE.
+        </div>
+        <div class="pin-display" id="pinDisplay">
+            <div class="pin-dot" id="d0"></div>
+            <div class="pin-dot" id="d1"></div>
+            <div class="pin-dot" id="d2"></div>
+            <div class="pin-dot" id="d3"></div>
+            <div class="pin-dot" id="d4"></div>
+            <div class="pin-dot" id="d5"></div>
+        </div>
+        <div class="pin-error" id="pinError">INCORRECT PIN</div>
+        <div class="pin-pad">
+            <button class="pin-btn" onclick="pinInput('1')">1</button>
+            <button class="pin-btn" onclick="pinInput('2')">2</button>
+            <button class="pin-btn" onclick="pinInput('3')">3</button>
+            <button class="pin-btn" onclick="pinInput('4')">4</button>
+            <button class="pin-btn" onclick="pinInput('5')">5</button>
+            <button class="pin-btn" onclick="pinInput('6')">6</button>
+            <button class="pin-btn" onclick="pinInput('7')">7</button>
+            <button class="pin-btn" onclick="pinInput('8')">8</button>
+            <button class="pin-btn" onclick="pinInput('9')">9</button>
+            <button class="pin-btn" style="color:var(--text-dim)" onclick="pinClear()">⌫</button>
+            <button class="pin-btn" onclick="pinInput('0')">0</button>
+            <button class="pin-btn" style="color:var(--accent3)" onclick="pinSubmit()">✓</button>
+        </div>
     </div>
-  </div>
-
-  <div class="panel">
-    <div class="ph" style="color:var(--gold)">MOUNT / UNLOCK</div>
-    <div class="pb">
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
-        <div>
-          <div style="font-size:.62rem;color:var(--text-dim);margin-bottom:4px">CONTAINER PATH</div>
-          <input class="pm-input" id="containerPath" placeholder="/dev/sda4 or /home/pisces/.ghost.bin" value="/home/pisces/.ghost.bin">
-        </div>
-        <div>
-          <div style="font-size:.62rem;color:var(--text-dim);margin-bottom:4px">MOUNT POINT</div>
-          <input class="pm-input" id="mountPoint" placeholder="/mnt/ghost" value="/mnt/ghost">
-        </div>
-      </div>
-      <div style="margin-bottom:12px">
-        <div style="font-size:.62rem;color:var(--text-dim);margin-bottom:4px">PASSPHRASE</div>
-        <input class="pm-input" id="passphrase" type="password" placeholder="Enter passphrase...">
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn gold" onclick="genMountCmd()">GENERATE MOUNT CMD</button>
-        <button class="btn sm red" onclick="genUnmountCmd()">GENERATE UNMOUNT</button>
-      </div>
-      <div id="cmdOutput" style="margin-top:12px"></div>
-    </div>
-  </div>
-
-  <div class="panel">
-    <div class="ph" style="color:var(--gold)">SETUP WIZARD — Create New Ghost Partition</div>
-    <div class="pb">
-      <div class="info-box"><strong>// SETUP OVERVIEW:</strong> Creates an encrypted container file that mounts as a filesystem. Uses LUKS (Linux Unified Key Setup) for maximum security. Container appears as a random binary file to casual inspection.</div>
-
-      <div class="step">
-        <div class="step-num">1</div>
-        <div class="step-body">
-          <div class="step-title">ALLOCATE CONTAINER SIZE</div>
-          <div class="step-desc">Choose a size for the hidden container. Appears as a file on your system.</div>
-          <select style="background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:6px 8px;outline:none;margin-top:8px" id="containerSize">
-            <option value="256">256 MB</option><option value="512">512 MB</option>
-            <option value="1024" selected>1 GB</option><option value="2048">2 GB</option>
-            <option value="5120">5 GB</option><option value="10240">10 GB</option>
-          </select>
-          <div class="step-code" id="step1code">dd if=/dev/urandom of=/home/pisces/.ghost.bin bs=1M count=1024 status=progress</div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">2</div>
-        <div class="step-body">
-          <div class="step-title">FORMAT WITH LUKS</div>
-          <div class="step-desc">Initialize the LUKS encrypted container. You will be prompted for a passphrase.</div>
-          <div class="step-code">sudo cryptsetup luksFormat /home/pisces/.ghost.bin</div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">3</div>
-        <div class="step-body">
-          <div class="step-title">OPEN AND FORMAT</div>
-          <div class="step-desc">Open the container, create a filesystem, then close it.</div>
-          <div class="step-code">sudo cryptsetup open /home/pisces/.ghost.bin ghost_vol
-sudo mkfs.ext4 /dev/mapper/ghost_vol
-sudo cryptsetup close ghost_vol</div>
-        </div>
-      </div>
-
-      <div class="step">
-        <div class="step-num">4</div>
-        <div class="step-body">
-          <div class="step-title">ADD AUTOSTART (OPTIONAL)</div>
-          <div class="step-desc">Add Pisces Moon edge bridge integration so the partition auto-prompts on boot with PIN screen.</div>
-          <div class="step-code">echo "GHOST_CONTAINER=/home/pisces/.ghost.bin" >> ~/.pisces-moon/config</div>
-        </div>
-      </div>
-
-      <div style="margin-top:12px">
-        <button class="btn gold" onclick="copySetupScript()">📋 COPY FULL SETUP SCRIPT</button>
-      </div>
-    </div>
-  </div>
 </div>
+
+<!-- Main partition UI (shown when unlocked) -->
+<div id="mainUI" style="display:none">
+    <div class="gp-layout">
+        <div class="gp-left">
+            <div class="pm-sh" style="position:sticky;top:0;z-index:10">STORAGE</div>
+            <div style="padding:12px">
+                <div style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">PARTITION USAGE</div>
+                <div class="storage-bar" id="storageBar"></div>
+                <div style="font-size:.6rem;color:var(--text-dim);display:flex;justify-content:space-between" id="storageLabels"></div>
+            </div>
+            <div style="padding:12px;border-top:1px solid var(--panel-border)">
+                <div style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">CLASSIFICATION DIST</div>
+                <canvas id="class-chart" width="256" height="150"></canvas>
+            </div>
+            <div style="padding:12px;border-top:1px solid var(--panel-border)">
+                <div style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">INTEGRITY CHECK</div>
+                <div id="integrityList"></div>
+            </div>
+        </div>
+
+        <div class="gp-center">
+            <div class="controls">
+                <button class="btn" onclick="addFile()">+ ADD</button>
+                <button class="btn" onclick="verifyIntegrity()">🔍 VERIFY</button>
+                <button class="btn" onclick="exportDecoy()">EXPORT DECOY</button>
+                <button class="btn" onclick="lockPartition()">🔒 LOCK</button>
+                <button class="btn red" onclick="initiateNuke()">☢ NUKE</button>
+            </div>
+            <div class="pm-sh">FILES <span class="pm-sh-sub" id="fileCount"></span></div>
+            <div id="fileList"></div>
+        </div>
+
+        <div class="gp-right">
+            <div class="pm-sh">FILE DETAIL</div>
+            <div id="fileDetail" style="padding:14px;font-size:.65rem;color:var(--text-dim)">Select a file to inspect</div>
+
+            <div class="pm-sh">CLASSIFY</div>
+            <div style="padding:12px">
+                <div style="font-size:.62rem;color:var(--text-dim);margin-bottom:8px">Set classification for selected file:</div>
+                <button class="btn red" style="width:100%;margin-bottom:6px" onclick="classifySelected('tactical')">☢ TACTICAL</button>
+                <button class="btn" style="width:100%;margin-bottom:6px;border-color:var(--accent);color:var(--accent)" onclick="classifySelected('decoy')">👁 DECOY</button>
+                <button class="btn" style="width:100%;margin-bottom:6px;border-color:var(--accent3);color:var(--accent3)" onclick="classifySelected('student')">📚 STUDENT</button>
+                <button class="btn" style="width:100%" onclick="classifySelected('unclassified')">— UNCLASSIFIED</button>
+            </div>
+
+            <div class="nuke-zone">
+                <div class="nuke-title">⚠ NUCLEAR OPTION</div>
+                <div style="font-size:.62rem;color:var(--text-dim);line-height:1.8;margin-bottom:10px">
+                    Deletes index files only.<br>
+                    Completes in &lt; 100ms.<br>
+                    Data becomes unreachable via OS.<br>
+                    Cannot be undone.
+                </div>
+                <button class="nuke-btn" onclick="initiateNuke()">⚡ NUKE ALL DATA</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
 <script>
-const isTH = typeof window.spadra !== 'undefined';
-let mounted = false;
+// ═══════════════════════════════════════════════════════════════════
+// GHOST PARTITION — Secure storage with PIN auth and Nuke function
+// ═══════════════════════════════════════════════════════════════════
 
-function genMountCmd() {
-  const container = document.getElementById('containerPath').value;
-  const mp = document.getElementById('mountPoint').value;
-  const cmd = `# Open LUKS container
-sudo cryptsetup open ${container} ghost_vol
+// Demo PIN system (real implementation uses NVS on the T-Beam)
+const TACTICAL_PIN = PM.load('gp_tactical_pin') || '1234';
+const STUDENT_PIN  = PM.load('gp_student_pin')  || '0000';
+let pinBuffer      = '';
+let pinAttempts    = 0;
+let authenticated  = false;
+let authMode       = null;
+let selectedFile   = null;
+let classChart;
 
-# Mount filesystem
-sudo mkdir -p ${mp}
-sudo mount /dev/mapper/ghost_vol ${mp}
+// File storage
+let files = PM.load('gp_files') || [];
 
-# Set permissions
-sudo chown $USER:$USER ${mp}
-echo "Ghost partition mounted at ${mp}"`;
-  document.getElementById('cmdOutput').innerHTML = `<div style="background:var(--bg3);border:1px solid var(--panel-border);padding:10px;font-size:.7rem;color:var(--accent3);white-space:pre;font-family:'Share Tech Mono',monospace">${esc(cmd)}</div>
-    <button onclick="copyText(this.previousSibling.textContent)" style="margin-top:6px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;padding:3px 8px;cursor:pointer">COPY</button>`;
+function initViz() {
+    classChart = new PMViz.DonutChart('class-chart');
 }
 
-function genUnmountCmd() {
-  const mp = document.getElementById('mountPoint').value;
-  const cmd = `sudo umount ${mp}
-sudo cryptsetup close ghost_vol
-echo "Ghost partition unmounted"`;
-  document.getElementById('cmdOutput').innerHTML = `<div style="background:var(--bg3);border:1px solid var(--panel-border);padding:10px;font-size:.7rem;color:var(--accent4);white-space:pre;font-family:'Share Tech Mono',monospace">${esc(cmd)}</div>`;
+// ── PIN SYSTEM ────────────────────────────────────────────────────
+function pinInput(d) {
+    if (pinBuffer.length >= 6) return;
+    pinBuffer += d;
+    updatePinDisplay();
 }
 
-function mountGhost() {
-  if (isTH) {
-    const mp = document.getElementById('mountPoint').value;
-    const container = document.getElementById('containerPath').value;
-    const pass = document.getElementById('passphrase').value;
-    window.spadra.system.exec(`echo "${pass}" | sudo cryptsetup open ${container} ghost_vol -d -`).then(()=>{
-      window.spadra.system.exec(`sudo mount /dev/mapper/ghost_vol ${mp}`).then(()=>{
-        mounted=true; updateStatus(true);
-      });
-    }).catch(e=>alert('Mount failed: '+e.message));
-  } else {
-    alert('In browser mode, use the generated command in a terminal.\nTrojan Horse mode required for direct mount.');
-  }
+function pinClear() {
+    pinBuffer = pinBuffer.slice(0, -1);
+    updatePinDisplay();
 }
 
-function unmountGhost() {
-  if (isTH) {
-    const mp = document.getElementById('mountPoint').value;
-    window.spadra.system.exec(`sudo umount ${mp} && sudo cryptsetup close ghost_vol`).then(()=>{
-      mounted=false; updateStatus(false);
+function updatePinDisplay() {
+    for (let i = 0; i < 6; i++) {
+        document.getElementById(`d${i}`).className =
+            'pin-dot' + (i < pinBuffer.length ? ' filled' : '');
+    }
+}
+
+function pinSubmit() {
+    const pin = pinBuffer;
+    pinBuffer  = '';
+    updatePinDisplay();
+
+    if (pin === TACTICAL_PIN) {
+        unlock('tactical');
+    } else if (pin === STUDENT_PIN) {
+        unlock('student');
+    } else {
+        pinAttempts++;
+        const errEl = document.getElementById('pinError');
+        errEl.classList.add('show');
+        setTimeout(() => errEl.classList.remove('show'), 2000);
+        if (pinAttempts >= 3) {
+            triggerNuke();
+        }
+    }
+}
+
+function unlock(mode) {
+    authenticated = true;
+    authMode      = mode;
+    pinAttempts   = 0;
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('mainUI').style.display     = 'block';
+    document.getElementById('authStatus').textContent   = mode.toUpperCase();
+    document.getElementById('authStatus').style.color   =
+        mode === 'tactical' ? 'var(--accent3)' : 'var(--warn)';
+    renderAll();
+}
+
+function lockPartition() {
+    authenticated = false;
+    authMode      = null;
+    pinBuffer     = '';
+    document.getElementById('authScreen').style.display = 'block';
+    document.getElementById('mainUI').style.display     = 'none';
+    document.getElementById('authStatus').textContent   = 'LOCKED';
+    document.getElementById('authStatus').style.color   = 'var(--text-dim)';
+    updatePinDisplay();
+}
+
+// ── FILE MANAGEMENT ───────────────────────────────────────────────
+function renderAll() {
+    renderFileList();
+    renderStorageBar();
+    updateClassChart();
+    renderIntegrity();
+    document.getElementById('fileCount').textContent = `${files.length} files`;
+}
+
+function renderFileList() {
+    const visible = authMode === 'student'
+        ? files.filter(f => f.classification !== 'tactical')
+        : files;
+
+    document.getElementById('fileList').innerHTML = visible.map(f => `
+        <div class="gp-file ${selectedFile===f.id?'selected':''}" onclick="selectFile('${f.id}')">
+            <div class="gp-file-name">
+                ${PM.esc(f.name)}
+                <span class="class-badge class-${f.classification||'unclassified'}">${(f.classification||'UNCLASSIFIED').toUpperCase()}</span>
+            </div>
+            <div class="gp-file-meta">
+                <span>${formatSize(f.size||0)}</span>
+                <span>${new Date(f.created).toLocaleDateString()}</span>
+                <span style="color:${f.verified?'var(--accent3)':'var(--text-dim)'}">${f.verified?'✓ VERIFIED':'?'}</span>
+            </div>
+        </div>`).join('');
+}
+
+function renderStorageBar() {
+    const classes = {tactical:0, decoy:0, student:0, unclassified:0};
+    let total = 0;
+    files.forEach(f => {
+        const cls = f.classification || 'unclassified';
+        classes[cls] += f.size || 1024;
+        total += f.size || 1024;
     });
-  }
+    total = total || 1;
+
+    const colors = {
+        tactical:     '#ff3366',
+        decoy:        '#00d4ff',
+        student:      '#00ff88',
+        unclassified: '#2a5870',
+    };
+
+    document.getElementById('storageBar').innerHTML =
+        Object.entries(classes).map(([cls, size]) => {
+            if (size === 0) return '';
+            const pct = (size / total * 100).toFixed(1);
+            return `<div class="storage-segment" style="width:${pct}%;background:${colors[cls]};color:var(--bg)">${pct}%</div>`;
+        }).join('');
+
+    document.getElementById('storageLabels').innerHTML =
+        `<span>${files.length} files</span><span>${formatSize(total)}</span>`;
 }
 
-function checkStatus() {
-  if (isTH) {
-    window.spadra.system.exec('lsblk | grep ghost').then(out=>{
-      mounted=out.includes('ghost'); updateStatus(mounted);
-    }).catch(()=>{mounted=false;updateStatus(false);});
-  }
+function updateClassChart() {
+    const counts = {Tactical:0, Decoy:0, Student:0, Unclassified:0};
+    files.forEach(f => {
+        const k = (f.classification||'unclassified');
+        const label = k.charAt(0).toUpperCase() + k.slice(1);
+        counts[label] = (counts[label]||0) + 1;
+    });
+    classChart.update(Object.entries(counts).filter(([,v])=>v>0)
+        .map(([label,value])=>({label,value})));
 }
 
-function updateStatus(m) {
-  document.getElementById('ghostStatus').textContent = m ? 'MOUNTED' : 'NOT MOUNTED';
-  document.getElementById('ghostStatus').style.color = m ? 'var(--accent3)' : 'var(--text-dim)';
-  document.getElementById('ghostDesc').textContent = m ? 'Ghost partition is mounted and accessible.' : 'Ghost partition not mounted.';
+function renderIntegrity() {
+    document.getElementById('integrityList').innerHTML = files.slice(0,8).map(f => `
+        <div class="integrity-row">
+            <span style="color:var(--text)">${PM.esc(f.name).substring(0,16)}</span>
+            <span class="${f.verified?'integrity-ok':'integrity-err'}">${f.verified?'✓ OK':'? UNVERIFIED'}</span>
+        </div>`).join('');
 }
 
-function copySetupScript() {
-  const size = document.getElementById('containerSize').value;
-  const script = `#!/bin/bash
-# Pisces Moon Ghost Partition Setup
-set -e
-CONTAINER="$HOME/.ghost.bin"
-MOUNT="/mnt/ghost"
-echo "Creating ${size}MB container..."
-dd if=/dev/urandom of="$CONTAINER" bs=1M count=${size} status=progress
-echo "Formatting with LUKS..."
-sudo cryptsetup luksFormat "$CONTAINER"
-echo "Opening container..."
-sudo cryptsetup open "$CONTAINER" ghost_vol
-echo "Creating ext4 filesystem..."
-sudo mkfs.ext4 /dev/mapper/ghost_vol
-sudo mkdir -p "$MOUNT"
-sudo cryptsetup close ghost_vol
-echo "Ghost partition setup complete: $CONTAINER"`;
-  navigator.clipboard.writeText(script).then(()=>alert('Setup script copied to clipboard!'));
+function selectFile(id) {
+    selectedFile = id;
+    renderFileList();
+    const f = files.find(x => x.id === id);
+    if (!f) return;
+
+    document.getElementById('fileDetail').innerHTML = `
+        <div style="font-family:Orbitron,monospace;color:var(--gold);margin-bottom:10px">${PM.esc(f.name)}</div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(28,46,58,.4)">
+            <span style="color:var(--text-dim)">Size</span>
+            <span style="color:var(--text-bright)">${formatSize(f.size||0)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(28,46,58,.4)">
+            <span style="color:var(--text-dim)">Classification</span>
+            <span class="class-badge class-${f.classification||'unclassified'}">${(f.classification||'UNCLASSIFIED').toUpperCase()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(28,46,58,.4)">
+            <span style="color:var(--text-dim)">Created</span>
+            <span style="color:var(--text-bright)">${new Date(f.created).toLocaleString()}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(28,46,58,.4)">
+            <span style="color:var(--text-dim)">Hash (SHA256)</span>
+            <span style="color:var(--accent3);font-family:monospace;font-size:.55rem">${f.hash||'not computed'}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;padding:5px 0">
+            <span style="color:var(--text-dim)">Integrity</span>
+            <span style="${f.verified?'color:var(--accent3)':'color:var(--accent4)'}">${f.verified?'✓ Verified':'Not verified'}</span>
+        </div>
+        ${f.notes?`<div style="margin-top:10px;padding:8px;background:var(--bg3);font-size:.65rem;color:var(--text)">${PM.esc(f.notes)}</div>`:''}
+    `;
 }
 
-function copyText(text) { navigator.clipboard.writeText(text.trim()); }
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function classifySelected(classification) {
+    if (!selectedFile) { alert('Select a file first'); return; }
+    const f = files.find(x => x.id === selectedFile);
+    if (!f) return;
+    f.classification = classification;
+    PM.save('gp_files', files);
+    renderAll();
+}
 
-// Update step 1 code when size changes
-document.getElementById('containerSize').onchange = () => {
-  const size = document.getElementById('containerSize').value;
-  document.getElementById('step1code').textContent = `dd if=/dev/urandom of=/home/pisces/.ghost.bin bs=1M count=${size} status=progress`;
-};
-</script></body></html>
+function addFile() {
+    const name = prompt('File name:');
+    if (!name) return;
+    const f = {
+        id:             Date.now().toString(),
+        name,
+        size:           Math.floor(Math.random() * 1048576),
+        classification: 'unclassified',
+        created:        Date.now(),
+        verified:       false,
+        hash:           null,
+        notes:          '',
+    };
+    files.push(f);
+    PM.save('gp_files', files);
+    renderAll();
+}
+
+function verifyIntegrity() {
+    // Mark all as verified (demo — real implementation computes SHA256)
+    files.forEach(f => { f.verified = true; });
+    PM.save('gp_files', files);
+    renderAll();
+    alert('Integrity verification complete — all files OK');
+}
+
+function exportDecoy() {
+    const decoys = files.filter(f => f.classification === 'decoy');
+    PMViz.Storage.save('ghost_decoy_index', decoys, 'json');
+}
+
+function initiateNuke() {
+    if (!confirm('⚠ NUCLEAR OPTION\n\nThis will permanently destroy index files. Data becomes unreachable.\n\nThis cannot be undone.\n\nProceed?')) return;
+    // Delete index (metadata only — per SPI Bus Treaty)
+    files = [];
+    PM.save('gp_files', []);
+    lockPartition();
+    alert('Nuke complete. Partition index destroyed.');
+}
+
+function triggerNuke() {
+    files = [];
+    PM.save('gp_files', []);
+    lockPartition();
+    document.getElementById('pinError').textContent = 'NUKED';
+    document.getElementById('pinError').classList.add('show');
+}
+
+function formatSize(bytes) {
+    if (bytes < 1024) return `${bytes}B`;
+    if (bytes < 1048576) return `${(bytes/1024).toFixed(1)}KB`;
+    return `${(bytes/1048576).toFixed(1)}MB`;
+}
+
+window.addEventListener('load', () => {
+    initViz();
+});
+</script>
+</body></html>

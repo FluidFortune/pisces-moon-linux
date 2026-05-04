@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — simcity.html v2
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Full isometric city builder with Canvas rendering
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // CITY</title>
+<style>
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--gold);letter-spacing:3px;}
+.hdr-stats{display:flex;gap:16px;font-size:.62rem;}
+.stat{display:flex;flex-direction:column;align-items:center;}
+.stat-label{color:var(--text-dim);font-size:.48rem;letter-spacing:2px;font-family:'Orbitron',monospace;}
+.stat-value{color:var(--text-bright);font-family:'Orbitron',monospace;font-size:.85rem;font-weight:700;}
+.stat-value.green{color:var(--accent3);}
+.stat-value.red{color:var(--accent4);}
+.stat-value.gold{color:var(--gold);}
+.main{flex:1;display:grid;grid-template-columns:1fr 200px;overflow:hidden;}
+canvas#city{display:block;cursor:crosshair;touch-action:none;}
+.sidebar{background:var(--bg2);border-left:2px solid var(--panel-border);overflow-y:auto;display:flex;flex-direction:column;}
+.tool-section{border-bottom:1px solid var(--panel-border);padding:8px;}
+.tool-title{font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:2px;color:var(--gold);margin-bottom:6px;}
+.tool-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;}
+.tool-btn{padding:8px 4px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-size:.58rem;cursor:pointer;text-align:center;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tool-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(244,168,32,.1);}
+.tool-btn .icon{font-size:1.2rem;}
+.tool-btn .cost{font-size:.48rem;color:var(--text-dim);}
+.tool-btn.active .cost{color:var(--gold);}
+.info-panel{padding:10px;font-size:.6rem;line-height:1.8;flex:1;}
+.info-row{display:flex;justify-content:space-between;border-bottom:1px solid rgba(26,58,80,.4);padding:3px 0;}
+.info-label{color:var(--text-dim);}
+.info-val{color:var(--text-bright);}
+.msg-log{padding:8px;border-top:1px solid var(--panel-border);max-height:120px;overflow-y:auto;}
+.msg{font-size:.58rem;padding:2px 0;border-bottom:1px solid rgba(26,58,80,.3);}
+.msg.info{color:var(--accent);}
+.msg.warn{color:var(--warn);}
+.msg.good{color:var(--accent3);}
+.msg.bad{color:var(--accent4);}
+.speed-btns{display:flex;gap:4px;padding:8px;}
+.speed-btn{flex:1;padding:4px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-size:.55rem;cursor:pointer;text-align:center;transition:all .15s;}
+.speed-btn.active{border-color:var(--accent3);color:var(--accent3);}
+.pop-bar{height:6px;background:var(--panel-border);margin:4px 0;overflow:hidden;border-radius:3px;}
+.pop-fill{height:100%;border-radius:3px;transition:width .5s;}
+</style>
+</head><body>
+
+<header>
+  <div class="logo">🏙 PISCES CITY</div>
+  <div class="hdr-stats">
+    <div class="stat"><div class="stat-label">POPULATION</div><div class="stat-value gold" id="hPop">0</div></div>
+    <div class="stat"><div class="stat-label">FUNDS</div><div class="stat-value green" id="hFunds">§50,000</div></div>
+    <div class="stat"><div class="stat-label">INCOME</div><div class="stat-value" id="hIncome">§0/yr</div></div>
+    <div class="stat"><div class="stat-label">HAPPINESS</div><div class="stat-value" id="hHappy">😐</div></div>
+    <div class="stat"><div class="stat-label">YEAR</div><div class="stat-value" id="hYear">2026</div></div>
+  </div>
+</header>
+
+<div class="main">
+  <canvas id="city"></canvas>
+  <div class="sidebar">
+    <div class="tool-section">
+      <div class="tool-title">ZONE</div>
+      <div class="tool-grid">
+        <div class="tool-btn active" id="tool-r" onclick="setTool('residential')">
+          <span class="icon">🏠</span><span>RESIDENTIAL</span><span class="cost">§100</span>
+        </div>
+        <div class="tool-btn" id="tool-c" onclick="setTool('commercial')">
+          <span class="icon">🏪</span><span>COMMERCIAL</span><span class="cost">§150</span>
+        </div>
+        <div class="tool-btn" id="tool-i" onclick="setTool('industrial')">
+          <span class="icon">🏭</span><span>INDUSTRIAL</span><span class="cost">§120</span>
+        </div>
+        <div class="tool-btn" id="tool-p" onclick="setTool('park')">
+          <span class="icon">🌳</span><span>PARK</span><span class="cost">§50</span>
+        </div>
+      </div>
+    </div>
+    <div class="tool-section">
+      <div class="tool-title">BUILD</div>
+      <div class="tool-grid">
+        <div class="tool-btn" id="tool-road" onclick="setTool('road')">
+          <span class="icon">🛣</span><span>ROAD</span><span class="cost">§40</span>
+        </div>
+        <div class="tool-btn" id="tool-power" onclick="setTool('power')">
+          <span class="icon">⚡</span><span>POWER</span><span class="cost">§500</span>
+        </div>
+        <div class="tool-btn" id="tool-water" onclick="setTool('water')">
+          <span class="icon">💧</span><span>WATER</span><span class="cost">§300</span>
+        </div>
+        <div class="tool-btn" id="tool-fire" onclick="setTool('fire')">
+          <span class="icon">🚒</span><span>FIRE STA</span><span class="cost">§1000</span>
+        </div>
+        <div class="tool-btn" id="tool-police" onclick="setTool('police')">
+          <span class="icon">👮</span><span>POLICE</span><span class="cost">§1000</span>
+        </div>
+        <div class="tool-btn" id="tool-school" onclick="setTool('school')">
+          <span class="icon">🏫</span><span>SCHOOL</span><span class="cost">§800</span>
+        </div>
+      </div>
+    </div>
+    <div class="tool-section">
+      <div class="tool-title">DEMOLISH</div>
+      <div class="tool-grid">
+        <div class="tool-btn" id="tool-demo" onclick="setTool('demolish')" style="grid-column:span 2;border-color:var(--accent4);color:var(--accent4)">
+          <span class="icon">💥</span><span>DEMOLISH</span><span class="cost">§10 refund</span>
+        </div>
+      </div>
+    </div>
+    <div class="tool-section">
+      <div class="tool-title">SPEED</div>
+      <div class="speed-btns">
+        <div class="speed-btn" onclick="setSpeed(0)">⏸</div>
+        <div class="speed-btn active" onclick="setSpeed(1)">▶</div>
+        <div class="speed-btn" onclick="setSpeed(3)">▶▶</div>
+        <div class="speed-btn" onclick="setSpeed(10)">▶▶▶</div>
+      </div>
+    </div>
+    <div class="info-panel">
+      <div class="tool-title">CITY STATS</div>
+      <div class="info-row"><span class="info-label">Residential</span><span class="info-val" id="iRes">0</span></div>
+      <div class="info-row"><span class="info-label">Commercial</span><span class="info-val" id="iCom">0</span></div>
+      <div class="info-row"><span class="info-label">Industrial</span><span class="info-val" id="iInd">0</span></div>
+      <div class="info-row"><span class="info-label">Roads</span><span class="info-val" id="iRoad">0</span></div>
+      <div class="info-row"><span class="info-label">Power</span><span class="info-val" id="iPow">0</span></div>
+      <div class="info-row"><span class="info-label">Water</span><span class="info-val" id="iWat">0</span></div>
+      <div class="info-row"><span class="info-label">Tax rate</span><span class="info-val">7%</span></div>
+      <div style="margin-top:8px;">
+        <div style="font-size:.52rem;color:var(--text-dim);margin-bottom:3px;">RESIDENTIAL DEMAND</div>
+        <div class="pop-bar"><div class="pop-fill" id="rDemand" style="background:var(--accent3);width:50%"></div></div>
+        <div style="font-size:.52rem;color:var(--text-dim);margin-bottom:3px;margin-top:4px;">COMMERCIAL DEMAND</div>
+        <div class="pop-bar"><div class="pop-fill" id="cDemand" style="background:var(--gold);width:30%"></div></div>
+        <div style="font-size:.52rem;color:var(--text-dim);margin-bottom:3px;margin-top:4px;">INDUSTRIAL DEMAND</div>
+        <div class="pop-bar"><div class="pop-fill" id="iDemand" style="background:var(--accent2);width:20%"></div></div>
+      </div>
+    </div>
+    <div class="msg-log" id="msgLog"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// PISCES CITY — Isometric city builder
+// ═══════════════════════════════════════════════════════════════
+
+const canvas = document.getElementById('city');
+const ctx    = canvas.getContext('2d');
+
+// Grid config
+const GRID  = 40;   // grid cells
+const TW    = 64;   // tile width
+const TH    = 32;   // tile height
+
+// Tile types
+const EMPTY = 0, ROAD = 1, RESIDENTIAL = 2, COMMERCIAL = 3,
+      INDUSTRIAL = 4, PARK = 5, POWER = 6, WATER = 7,
+      FIRE = 8, POLICE = 9, SCHOOL = 10;
+
+// Costs
+const COSTS = {road:40, residential:100, commercial:150, industrial:120,
+               park:50, power:500, water:300, fire:1000, police:1000,
+               school:800, demolish:-10};
+
+// City state
+let grid     = Array.from({length:GRID}, () => Array(GRID).fill(EMPTY));
+let levels   = Array.from({length:GRID}, () => Array(GRID).fill(0)); // building growth 0-3
+let funds    = 50000;
+let year     = 2026;
+let pop      = 0;
+let speed    = 1;
+let tool     = 'residential';
+let msgs     = [];
+let tick     = 0;
+let isDragging = false;
+let lastCell = null;
+
+// Camera
+let camX = 0, camY = 0;
+let zoom = 1;
+let panStartX, panStartY, panStartCamX, panStartCamY;
+let isPanning = false;
+
+// Resize canvas
+function resize() {
+  const main = canvas.parentElement;
+  canvas.width  = main.offsetWidth;
+  canvas.height = main.offsetHeight;
+  camX = canvas.width  / 2 - (GRID * TW / 2);
+  camY = canvas.height / 4;
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ── Isometric projection ──────────────────────────────────────
+function gridToScreen(gx, gy) {
+  const sx = camX + (gx - gy) * (TW / 2) * zoom;
+  const sy = camY + (gx + gy) * (TH / 2) * zoom;
+  return { x: sx, y: sy };
+}
+
+function screenToGrid(sx, sy) {
+  const rx = (sx - camX) / zoom;
+  const ry = (sy - camY) / zoom;
+  const gx = Math.floor((rx / (TW/2) + ry / (TH/2)) / 2);
+  const gy = Math.floor((ry / (TH/2) - rx / (TW/2)) / 2);
+  return { gx, gy };
+}
+
+function inGrid(gx, gy) {
+  return gx >= 0 && gy >= 0 && gx < GRID && gy < GRID;
+}
+
+// ── Tile colors and heights ───────────────────────────────────
+const TILE_COLORS = {
+  [EMPTY]:       { top:'#1a2a1a', side:'#0f1a0f', border:'#1f331f' },
+  [ROAD]:        { top:'#2a2a2a', side:'#1a1a1a', border:'#333333' },
+  [RESIDENTIAL]: { top:'#1a4a2a', side:'#0f2a18', border:'#2a6a3a' },
+  [COMMERCIAL]:  { top:'#1a2a4a', side:'#0f1a2a', border:'#2a3a6a' },
+  [INDUSTRIAL]:  { top:'#3a2a1a', side:'#2a1a0f', border:'#5a3a1a' },
+  [PARK]:        { top:'#0a3a0a', side:'#062006', border:'#1a5a1a' },
+  [POWER]:       { top:'#3a3a0a', side:'#2a2a06', border:'#5a5a0a' },
+  [WATER]:       { top:'#0a1a4a', side:'#060a2a', border:'#0a2a6a' },
+  [FIRE]:        { top:'#4a1a1a', side:'#2a0a0a', border:'#6a1a1a' },
+  [POLICE]:      { top:'#1a1a4a', side:'#0a0a2a', border:'#1a1a6a' },
+  [SCHOOL]:      { top:'#3a1a3a', side:'#2a0a2a', border:'#5a1a5a' },
+};
+
+const TILE_ICONS = {
+  [ROAD]:'', [RESIDENTIAL]:['🏠','🏡','🏘','🏗'],
+  [COMMERCIAL]:['🏪','🏬','🏢','🌆'],
+  [INDUSTRIAL]:['🏭','🏭','🏗','⚙'],
+  [PARK]:['🌳','🌲','🌿','🏞'],
+  [POWER]:['⚡','⚡','🔌','🔋'],
+  [WATER]:['💧','💧','🚿','🏊'],
+  [FIRE]:['🚒','🚒','🚒','🏅'],
+  [POLICE]:['👮','👮','🚔','🏅'],
+  [SCHOOL]:['🏫','🏫','🎓','🎓'],
+};
+
+// ── Draw tile ─────────────────────────────────────────────────
+function drawTile(gx, gy) {
+  const type  = grid[gx][gy];
+  const level = levels[gx][gy];
+  const col   = TILE_COLORS[type] || TILE_COLORS[EMPTY];
+  const { x, y } = gridToScreen(gx, gy);
+  const tw = TW * zoom, th = TH * zoom;
+  const h  = Math.max(th * 0.3, th * 0.3 + level * th * 0.4) * zoom;
+
+  // Ground diamond
+  ctx.beginPath();
+  ctx.moveTo(x, y - h);
+  ctx.lineTo(x + tw/2, y - h + th/2);
+  ctx.lineTo(x, y - h + th);
+  ctx.lineTo(x - tw/2, y - h + th/2);
+  ctx.closePath();
+  ctx.fillStyle = col.top;
+  ctx.fill();
+  ctx.strokeStyle = col.border;
+  ctx.lineWidth = 0.5;
+  ctx.stroke();
+
+  // Left wall
+  if (type !== EMPTY) {
+    ctx.beginPath();
+    ctx.moveTo(x - tw/2, y - h + th/2);
+    ctx.lineTo(x, y - h + th);
+    ctx.lineTo(x, y + th * 0.3);
+    ctx.lineTo(x - tw/2, y + th * 0.3 - th/2);
+    ctx.closePath();
+    ctx.fillStyle = col.side;
+    ctx.fill();
+    ctx.strokeStyle = col.border;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+
+    // Right wall
+    ctx.beginPath();
+    ctx.moveTo(x + tw/2, y - h + th/2);
+    ctx.lineTo(x, y - h + th);
+    ctx.lineTo(x, y + th * 0.3);
+    ctx.lineTo(x + tw/2, y + th * 0.3 - th/2);
+    ctx.closePath();
+    ctx.fillStyle = adjustColor(col.side, -10);
+    ctx.fill();
+    ctx.strokeStyle = col.border;
+    ctx.lineWidth = 0.5;
+    ctx.stroke();
+  }
+
+  // Icon on top
+  if (type !== EMPTY && TILE_ICONS[type]) {
+    const icons = TILE_ICONS[type];
+    const icon  = Array.isArray(icons) ? icons[Math.min(level, icons.length-1)] : icons;
+    if (icon) {
+      ctx.font = `${Math.max(10, 14 * zoom)}px sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(icon, x, y - h + th * 0.5);
+    }
+  }
+
+  // Road markings
+  if (type === ROAD) {
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth   = 1;
+    ctx.setLineDash([3, 4]);
+    ctx.beginPath();
+    ctx.moveTo(x - tw * 0.3, y - h + th * 0.5);
+    ctx.lineTo(x + tw * 0.3, y - h + th * 0.5);
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+}
+
+function adjustColor(hex, amount) {
+  // Simple brightness adjust
+  return hex; // simplified
+}
+
+// ── Draw grid ─────────────────────────────────────────────────
+function draw() {
+  ctx.fillStyle = '#020608';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Draw back to front for correct isometric layering
+  for (let d = 0; d < GRID * 2 - 1; d++) {
+    for (let gx = 0; gx < GRID; gx++) {
+      const gy = d - gx;
+      if (gy >= 0 && gy < GRID) {
+        drawTile(gx, gy);
+      }
+    }
+  }
+
+  // Hover highlight
+  if (hoverCell && inGrid(hoverCell.gx, hoverCell.gy)) {
+    const {x, y} = gridToScreen(hoverCell.gx, hoverCell.gy);
+    const tw = TW * zoom, th = TH * zoom;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + tw/2, y + th/2);
+    ctx.lineTo(x, y + th);
+    ctx.lineTo(x - tw/2, y + th/2);
+    ctx.closePath();
+    ctx.strokeStyle = '#ffcc00';
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+  }
+}
+
+let hoverCell = null;
+let animFrame;
+function loop() {
+  draw();
+  animFrame = requestAnimationFrame(loop);
+}
+loop();
+
+// ── Input handling ────────────────────────────────────────────
+function getEventPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const touch = e.touches ? e.touches[0] : e;
+  return { x: touch.clientX - rect.left, y: touch.clientY - rect.top };
+}
+
+let touchStartX, touchStartY, touchStartTime;
+let pinchDist0 = null;
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (e.touches.length === 2) {
+    // Pinch start
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    pinchDist0 = d;
+    return;
+  }
+  const pos = getEventPos(e);
+  touchStartX = pos.x;
+  touchStartY = pos.y;
+  touchStartTime = Date.now();
+  panStartX = pos.x;
+  panStartY = pos.y;
+  panStartCamX = camX;
+  panStartCamY = camY;
+}, {passive: false});
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (e.touches.length === 2 && pinchDist0) {
+    const d = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY
+    );
+    zoom = Math.max(0.4, Math.min(2.5, zoom * (d / pinchDist0)));
+    pinchDist0 = d;
+    return;
+  }
+  const pos = getEventPos(e);
+  const dx = pos.x - touchStartX;
+  const dy = pos.y - touchStartY;
+  if (Math.abs(dx) > 8 || Math.abs(dy) > 8) {
+    isPanning = true;
+    camX = panStartCamX + (pos.x - panStartX);
+    camY = panStartCamY + (pos.y - panStartY);
+  }
+  hoverCell = screenToGrid(pos.x, pos.y);
+}, {passive: false});
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  pinchDist0 = null;
+  if (!isPanning && Date.now() - touchStartTime < 300) {
+    const cell = screenToGrid(touchStartX, touchStartY);
+    placeTile(cell.gx, cell.gy);
+  }
+  isPanning = false;
+}, {passive: false});
+
+canvas.addEventListener('mousemove', e => {
+  const pos = getEventPos(e);
+  hoverCell = screenToGrid(pos.x, pos.y);
+  if (e.buttons === 2 || (e.buttons === 1 && e.shiftKey)) {
+    camX = panStartCamX + (pos.x - panStartX);
+    camY = panStartCamY + (pos.y - panStartY);
+  } else if (e.buttons === 1 && !e.shiftKey) {
+    const cell = screenToGrid(pos.x, pos.y);
+    if (!lastCell || lastCell.gx !== cell.gx || lastCell.gy !== cell.gy) {
+      placeTile(cell.gx, cell.gy);
+      lastCell = cell;
+    }
+  }
+});
+
+canvas.addEventListener('mousedown', e => {
+  const pos = getEventPos(e);
+  panStartX = pos.x; panStartY = pos.y;
+  panStartCamX = camX; panStartCamY = camY;
+  if (e.button === 0 && !e.shiftKey) {
+    const cell = screenToGrid(pos.x, pos.y);
+    placeTile(cell.gx, cell.gy);
+    lastCell = cell;
+  }
+});
+
+canvas.addEventListener('mouseup', () => { lastCell = null; });
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoom = Math.max(0.4, Math.min(2.5, zoom - e.deltaY * 0.001));
+}, {passive: false});
+
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+// ── Tile placement ────────────────────────────────────────────
+const TOOL_TYPES = {
+  residential:RESIDENTIAL, commercial:COMMERCIAL, industrial:INDUSTRIAL,
+  park:PARK, road:ROAD, power:POWER, water:WATER,
+  fire:FIRE, police:POLICE, school:SCHOOL
+};
+
+function placeTile(gx, gy) {
+  if (!inGrid(gx, gy)) return;
+
+  if (tool === 'demolish') {
+    if (grid[gx][gy] !== EMPTY) {
+      grid[gx][gy] = EMPTY;
+      levels[gx][gy] = 0;
+      funds += 10;
+      updateUI();
+    }
+    return;
+  }
+
+  const type = TOOL_TYPES[tool];
+  const cost = COSTS[tool];
+  if (type === undefined) return;
+  if (funds < cost) { addMsg('Insufficient funds!', 'bad'); return; }
+  if (grid[gx][gy] === type) return;
+
+  grid[gx][gy]   = type;
+  levels[gx][gy] = 1;
+  funds -= cost;
+  updateUI();
+}
+
+// ── City simulation ───────────────────────────────────────────
+function simulate() {
+  if (speed === 0) return;
+  tick++;
+
+  // Count tiles
+  let res=0, com=0, ind=0, roads=0, pwr=0, wat=0, parks=0, fire=0, police=0, school=0;
+  for (let x=0; x<GRID; x++) for (let y=0; y<GRID; y++) {
+    switch(grid[x][y]) {
+      case RESIDENTIAL: res++; break;
+      case COMMERCIAL:  com++; break;
+      case INDUSTRIAL:  ind++; break;
+      case ROAD:        roads++; break;
+      case POWER:       pwr++; break;
+      case WATER:       wat++; break;
+      case PARK:        parks++; break;
+      case FIRE:        fire++; break;
+      case POLICE:      police++; break;
+      case SCHOOL:      school++; break;
+    }
+  }
+
+  // Grow buildings based on demand
+  const hasPower   = pwr > 0;
+  const hasWater   = wat > 0;
+  const hasRoads   = roads > 0;
+  const services   = hasPower && hasWater && hasRoads;
+
+  // Demand calculation
+  const jobDemand  = Math.max(0, res * 0.8 - com - ind * 0.5);
+  const resDemand  = Math.max(0, com * 0.5 + ind * 0.3 - res * 0.6);
+  const comDemand  = Math.max(0, res * 0.4 - com * 0.8);
+  const indDemand  = Math.max(0, res * 0.3 - ind * 0.9);
+
+  document.getElementById('rDemand').style.width = Math.min(100, resDemand * 20 + 10) + '%';
+  document.getElementById('cDemand').style.width = Math.min(100, comDemand * 20 + 5) + '%';
+  document.getElementById('iDemand').style.width = Math.min(100, indDemand * 20 + 5) + '%';
+
+  // Grow tiles periodically
+  if (tick % Math.max(1, Math.floor(30/speed)) === 0 && services) {
+    for (let x=0; x<GRID; x++) for (let y=0; y<GRID; y++) {
+      const t = grid[x][y];
+      if (t === RESIDENTIAL && resDemand > 1 && levels[x][y] < 3 && Math.random() < 0.05 * resDemand) {
+        levels[x][y]++;
+      }
+      if (t === COMMERCIAL && comDemand > 1 && levels[x][y] < 3 && Math.random() < 0.04 * comDemand) {
+        levels[x][y]++;
+      }
+      if (t === INDUSTRIAL && indDemand > 1 && levels[x][y] < 3 && Math.random() < 0.04 * indDemand) {
+        levels[x][y]++;
+      }
+    }
+  }
+
+  // Population
+  pop = res * 8 * (services ? 1.5 : 0.5);
+  if (school > 0) pop = Math.floor(pop * 1.2);
+
+  // Tax income
+  const taxIncome = Math.floor(pop * 0.07 * 1.2);
+
+  // Maintenance costs
+  const maintenance = pwr * 10 + wat * 8 + fire * 50 + police * 50 + school * 40;
+
+  // Annual update
+  if (tick % Math.max(1, Math.floor(300/speed)) === 0) {
+    year++;
+    const net = taxIncome - maintenance;
+    funds += net;
+    updateIncome(net, taxIncome, maintenance);
+
+    // Random events
+    if (Math.random() < 0.05) triggerEvent();
+  }
+
+  // Stats update
+  document.getElementById('hPop').textContent  = pop.toLocaleString();
+  document.getElementById('hFunds').textContent = '§' + funds.toLocaleString();
+  document.getElementById('hYear').textContent  = year;
+  document.getElementById('iRes').textContent   = res;
+  document.getElementById('iCom').textContent   = com;
+  document.getElementById('iInd').textContent   = ind;
+  document.getElementById('iRoad').textContent  = roads;
+  document.getElementById('iPow').textContent   = pwr;
+  document.getElementById('iWat').textContent   = wat;
+
+  // Happiness
+  let happy = 3;
+  if (!hasPower) happy -= 1;
+  if (!hasWater) happy -= 1;
+  if (parks > 2) happy += 1;
+  if (fire > 0)  happy += 0.5;
+  if (police > 0) happy += 0.5;
+  if (school > 0) happy += 0.5;
+  happy = Math.max(1, Math.min(5, Math.round(happy)));
+  document.getElementById('hHappy').textContent = ['😢','😞','😐','😊','😄'][happy-1];
+}
+
+function updateUI() {
+  document.getElementById('hFunds').textContent  = '§' + funds.toLocaleString();
+  document.getElementById('hFunds').className    = 'stat-value' + (funds < 0 ? ' red' : ' green');
+}
+
+function updateIncome(net, income, maint) {
+  const el = document.getElementById('hIncome');
+  el.textContent  = (net >= 0 ? '+' : '') + '§' + net.toLocaleString() + '/yr';
+  el.className    = 'stat-value' + (net >= 0 ? ' green' : ' red');
+}
+
+function triggerEvent() {
+  const events = [
+    {msg:'Festival boosts tourism! +§2000', effect:()=>{ funds+=2000; }, type:'good'},
+    {msg:'Storm damages roads. -§1500', effect:()=>{ funds-=1500; }, type:'warn'},
+    {msg:'Tech company wants to relocate! Place more commercial zones.', effect:()=>{}, type:'info'},
+    {msg:'Crime wave! Police station needed.', effect:()=>{}, type:'warn'},
+    {msg:'Baby boom! Population growing faster.', effect:()=>{ pop = Math.floor(pop*1.1); }, type:'good'},
+    {msg:'Drought warning! Water plants critical.', effect:()=>{}, type:'warn'},
+    {msg:'Grant awarded! +§5000', effect:()=>{ funds+=5000; }, type:'good'},
+    {msg:'Pollution complaint from industrial zone.', effect:()=>{}, type:'warn'},
+  ];
+  const ev = events[Math.floor(Math.random()*events.length)];
+  ev.effect();
+  addMsg(ev.msg, ev.type);
+}
+
+function addMsg(text, type='info') {
+  msgs.unshift({text, type, ts: Date.now()});
+  if (msgs.length > 20) msgs.pop();
+  const log = document.getElementById('msgLog');
+  log.innerHTML = msgs.map(m => `<div class="msg ${m.type}">${m.text}</div>`).join('');
+}
+
+function setTool(t) {
+  tool = t;
+  document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tool-' + (t==='demolish'?'demo':t.substring(0,1)==='r'&&t!=='road'?'r':t.substring(0,1)==='c'?'c':t.substring(0,1)==='i'&&t!=='industrial'?'i':t==='road'?'road':t==='power'?'power':t==='water'?'water':t==='fire'?'fire':t==='police'?'police':t==='school'?'school':t==='park'?'p':t.substring(0,1))).classList.add('active');
+  // fix: just do it properly
+  document.querySelectorAll('.tool-btn').forEach(b => {
+    const id = b.id.replace('tool-','');
+    if ((id === 'r' && t === 'residential') ||
+        (id === 'c' && t === 'commercial') ||
+        (id === 'i' && t === 'industrial') ||
+        (id === 'p' && t === 'park') ||
+        (id === t)) b.classList.add('active');
+  });
+}
+
+let simInterval;
+function setSpeed(s) {
+  speed = s;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  const labels = ['⏸','▶','▶▶','▶▶▶'];
+  const speeds = [0,1,3,10];
+  const idx = speeds.indexOf(s);
+  if (idx >= 0) document.querySelectorAll('.speed-btn')[idx].classList.add('active');
+}
+
+// Start with a hint
+addMsg('Welcome to Pisces City! Build roads and zones to grow your city.', 'info');
+addMsg('Pinch to zoom, two-finger drag to pan on mobile.', 'info');
+
+// Simulation loop
+setInterval(simulate, 500);
+</script>
+</body></html>

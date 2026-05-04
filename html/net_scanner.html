@@ -1,326 +1,587 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — net_scanner.html
+<!--
+  Pisces Moon OS — net_scanner.html v2
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
 -->
-<!-- PISCES MOON OS // NET SCANNER -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // NET SCANNER</title>
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent2);text-shadow:0 0 20px rgba(255,107,0,.3);letter-spacing:3px;}
-.logo span{color:var(--accent);}
-.content{padding:20px;max-width:1200px;margin:0 auto;}
-.scan-bar{background:var(--panel);border:1px solid var(--panel-border);padding:16px;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
-.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;transition:border-color .2s;}
-.pm-input:focus{border-color:var(--accent);}
-.pm-select{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:7px 8px;outline:none;cursor:pointer;}
-.pm-select:focus{border-color:var(--accent);}
-.btn{display:inline-block;padding:8px 18px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);font-family:'Share Tech Mono',monospace;font-size:.7rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
-.btn:hover{background:var(--accent2);color:var(--bg);box-shadow:0 0 20px rgba(255,107,0,.3);}
-.btn.red{border-color:var(--accent4);color:var(--accent4);}
-.btn.red:hover{background:var(--accent4);color:var(--bg);}
-.btn.sm{padding:5px 12px;font-size:.62rem;}
-.btn:disabled{opacity:.4;cursor:not-allowed;}
-.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
-.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;color:var(--accent2);letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
-.pb{padding:0;}
-.dt{width:100%;border-collapse:collapse;font-size:.7rem;}
-.dt th{text-align:left;padding:7px 12px;color:var(--text-dim);font-size:.58rem;letter-spacing:2px;border-bottom:1px solid var(--panel-border);cursor:pointer;font-family:'Orbitron',monospace;}
-.dt th:hover{color:var(--accent2);}
-.dt td{padding:7px 12px;border-bottom:1px solid rgba(26,58,80,.3);font-size:.69rem;}
-.dt tr:hover td{background:rgba(255,107,0,.04);}
-.ts{max-height:420px;overflow-y:auto;}
-.badge{display:inline-block;padding:1px 6px;font-size:.57rem;border-radius:2px;}
-.bo{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid var(--accent2);}
-.bc{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid var(--accent);}
-.bg{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
-.br{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
-.bw{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
-.scan-profiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-bottom:16px;}
-.prof{background:var(--panel);border:1px solid var(--panel-border);padding:12px;cursor:pointer;transition:all .2s;}
-.prof:hover{border-color:var(--accent2);background:rgba(255,107,0,.04);}
-.prof.active{border-color:var(--accent2);background:rgba(255,107,0,.08);}
-.prof-name{font-family:'Orbitron',monospace;font-size:.62rem;color:var(--accent2);letter-spacing:2px;margin-bottom:4px;}
-.prof-desc{font-size:.6rem;color:var(--text-dim);line-height:1.5;}
-.console{background:var(--bg);border:1px solid var(--panel-border);padding:12px;font-size:.68rem;max-height:200px;overflow-y:auto;font-family:'Share Tech Mono',monospace;line-height:1.8;}
-.cl-info{color:var(--text-dim);}
-.cl-ok{color:var(--accent3);}
-.cl-warn{color:var(--warn);}
-.cl-err{color:var(--accent4);}
-.cl-data{color:var(--accent);}
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:16px;}
-.sc{background:var(--panel);border:1px solid var(--panel-border);padding:12px;position:relative;overflow:hidden;}
-.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent2);}
-.slbl{font-size:.58rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;font-family:'Orbitron',monospace;}
-.sval{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--text-bright);font-weight:700;}
-.pgbar{height:4px;background:var(--bg3);margin-top:6px;}
-.pgfill{height:100%;background:var(--accent2);transition:width .3s;}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header>
-  <div class="logo"><span>NET</span> SCANNER</div>
-  <div style="font-size:.65rem;color:var(--text-dim)" id="hdrInfo">Pisces Moon OS // CYBER Suite</div>
+.ns-layout {
+    display: grid;
+    grid-template-columns: 300px 1fr 300px;
+    height: calc(100vh - 52px);
+    overflow: hidden;
+}
+.ns-left  { border-right: 1px solid var(--panel-border); overflow-y: auto; }
+.ns-right { border-left:  1px solid var(--panel-border); overflow-y: auto; }
+.ns-center { position: relative; background: var(--bg); }
+
+/* Stats bar */
+.ns-stats {
+    display: flex;
+    border-bottom: 1px solid var(--panel-border);
+    background: var(--bg2);
+    padding: 0;
+}
+.ns-stat {
+    flex: 1;
+    padding: 10px 14px;
+    border-right: 1px solid var(--panel-border);
+    text-align: center;
+}
+.ns-stat:last-child { border-right: none; }
+.ns-stat-label { font-family:Orbitron,monospace; font-size:.48rem; letter-spacing:2px; color:var(--text-dim); }
+.ns-stat-value { font-family:Orbitron,monospace; font-size:1.2rem; color:var(--text-bright); font-weight:700; }
+
+/* Device list */
+.ns-device {
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(28,46,58,.4);
+    cursor: pointer;
+    transition: background .15s;
+}
+.ns-device:hover { background: rgba(0,212,255,.04); }
+.ns-device.selected { background: rgba(0,212,255,.08); border-left: 2px solid var(--accent); }
+.ns-device.threat { border-left: 2px solid var(--accent4); }
+.ns-device-ip { font-size:.75rem; color:var(--text-bright); font-family:Share\ Tech\ Mono,monospace; }
+.ns-device-meta { font-size:.6rem; color:var(--text-dim); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap; }
+.ns-threat-badge {
+    display:inline-block; padding:2px 6px;
+    background:rgba(255,51,102,.15); color:var(--accent4);
+    border:1px solid var(--accent4);
+    font-family:Orbitron,monospace; font-size:.48rem; letter-spacing:1px;
+}
+.ns-ok-badge {
+    display:inline-block; padding:2px 6px;
+    background:rgba(0,255,136,.1); color:var(--accent3);
+    border:1px solid var(--accent3);
+    font-family:Orbitron,monospace; font-size:.48rem; letter-spacing:1px;
+}
+
+/* Topology canvas */
+#ns-topology { width:100%; height:100%; }
+
+/* Detail panel */
+.ns-detail { padding:14px; }
+.ns-detail-ip { font-family:Orbitron,monospace; font-size:1rem; color:var(--accent); margin-bottom:10px; }
+.ns-detail-row { display:flex; justify-content:space-between; padding:5px 0;
+    border-bottom:1px solid rgba(28,46,58,.4); font-size:.68rem; }
+.ns-detail-row .label { color:var(--text-dim); }
+.ns-detail-row .value { color:var(--text-bright); font-family:Share\ Tech\ Mono,monospace; }
+.ns-ports { margin-top:10px; }
+.ns-port {
+    display:inline-block; margin:3px;
+    padding:3px 8px;
+    border:1px solid var(--panel-border);
+    font-family:Share\ Tech\ Mono,monospace; font-size:.62rem;
+    color:var(--text-dim);
+}
+.ns-port.open { border-color:var(--accent3); color:var(--accent3); }
+.ns-port.filtered { border-color:var(--warn); color:var(--warn); }
+
+/* Sparkline row */
+.ns-sparkline-row { padding:8px 12px; border-bottom:1px solid var(--panel-border); }
+.ns-sparkline-label { font-family:Orbitron,monospace; font-size:.5rem; letter-spacing:2px; color:var(--gold); margin-bottom:4px; }
+
+/* Threat panel */
+.ns-threat-panel { background:rgba(255,51,102,.05); border-bottom:1px solid var(--accent4); }
+.ns-threat-item { padding:8px 12px; border-bottom:1px solid rgba(255,51,102,.1); font-size:.65rem; }
+.ns-threat-item .threat-type { color:var(--accent4); font-family:Orbitron,monospace; font-size:.52rem; letter-spacing:1px; }
+
+.ns-controls {
+    position:absolute; top:8px; right:8px; z-index:10;
+    display:flex; gap:6px;
+}
+.ns-btn {
+    padding:6px 12px;
+    background:var(--bg2); border:1px solid var(--panel-border);
+    color:var(--text-dim); font-family:Share\ Tech\ Mono,monospace;
+    font-size:.6rem; cursor:pointer; letter-spacing:1px;
+    transition:all .15s;
+}
+.ns-btn:hover { border-color:var(--gold); color:var(--gold); }
+.ns-btn.active { border-color:var(--accent); color:var(--accent); }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">🌐 <em>NET</em> SCANNER</div>
+    <div class="pm-hdr-right">
+        <div class="pm-live-badge" id="liveBadge" style="opacity:.3">
+            <div class="pm-live-dot"></div>LIVE
+        </div>
+        <span class="pm-last-update" id="lastUpdate"></span>
+        <button class="pm-refresh" onclick="startScan()">⟳ SCAN</button>
+    </div>
 </header>
-<div class="content">
 
-  <!-- Scan profiles -->
-  <div class="scan-profiles" id="profiles"></div>
-
-  <!-- Scan config bar -->
-  <div class="scan-bar">
-    <input class="pm-input" id="target" placeholder="Target: 192.168.1.0/24 or host" style="flex:1;min-width:200px">
-    <select class="pm-select" id="profSel">
-      <option value="ping">Ping sweep</option>
-      <option value="quick">Quick scan (-F)</option>
-      <option value="services">Service detection (-sV)</option>
-      <option value="os">OS fingerprint (-O)</option>
-      <option value="vuln">Vuln scan (--script=vuln)</option>
-      <option value="full">Full scan (-A)</option>
-    </select>
-    <button class="btn" id="scanBtn" onclick="startScan()">▶ SCAN</button>
-    <button class="btn red sm" onclick="clearResults()">CLEAR</button>
-    <button class="btn sm" style="border-color:var(--accent3);color:var(--accent3)" onclick="exportResults()">EXPORT</button>
-  </div>
-
-  <!-- Progress -->
-  <div class="pgbar" id="pgbar"><div class="pgfill" id="pgfill" style="width:0%"></div></div>
-
-  <!-- Stats -->
-  <div class="stats-row" id="statsRow">
-    <div class="sc"><div class="slbl">HOSTS UP</div><div class="sval" id="sHosts">0</div></div>
-    <div class="sc"><div class="slbl">OPEN PORTS</div><div class="sval" id="sPorts">0</div></div>
-    <div class="sc"><div class="slbl">SERVICES</div><div class="sval" id="sSvcs">0</div></div>
-    <div class="sc"><div class="slbl">SCAN TIME</div><div class="sval" id="sTime">—</div></div>
-  </div>
-
-  <!-- Console output -->
-  <div class="panel">
-    <div class="ph">SCAN CONSOLE <span id="scanStatus" style="color:var(--text-dim);font-size:.6rem">IDLE</span></div>
-    <div class="pb"><div class="console" id="console"><span class="cl-info">// PISCES MOON NET SCANNER — nmap frontend</span><br><span class="cl-info">// Enter target and select scan profile. Requires nmap installed.</span><br></div></div>
-  </div>
-
-  <!-- Results table -->
-  <div class="panel" id="resultsPanel" style="display:none">
-    <div class="ph">SCAN RESULTS <span id="resultCount" style="color:var(--text-dim);font-size:.6rem"></span>
-      <div style="display:flex;gap:8px">
-        <input class="pm-input" id="filterInput" placeholder="filter..." style="width:160px;font-size:.62rem;padding:3px 8px" oninput="filterResults()">
-      </div>
+<!-- Stats bar spans full width -->
+<div class="ns-stats">
+    <div class="ns-stat">
+        <div class="ns-stat-label">HOSTS</div>
+        <div class="ns-stat-value" id="statHosts">0</div>
     </div>
-    <div class="pb ts">
-      <table class="dt">
-        <thead><tr>
-          <th onclick="sortBy('host')">HOST ↕</th>
-          <th onclick="sortBy('hostname')">HOSTNAME ↕</th>
-          <th onclick="sortBy('port')">PORT ↕</th>
-          <th onclick="sortBy('state')">STATE ↕</th>
-          <th onclick="sortBy('service')">SERVICE ↕</th>
-          <th onclick="sortBy('version')">VERSION ↕</th>
-          <th>FLAGS</th>
-        </tr></thead>
-        <tbody id="resultBody"></tbody>
-      </table>
+    <div class="ns-stat">
+        <div class="ns-stat-label">OPEN PORTS</div>
+        <div class="ns-stat-value" id="statPorts">0</div>
     </div>
-  </div>
+    <div class="ns-stat">
+        <div class="ns-stat-label">THREATS</div>
+        <div class="ns-stat-value" style="color:var(--accent4)" id="statThreats">0</div>
+    </div>
+    <div class="ns-stat">
+        <div class="ns-stat-label">GATEWAY</div>
+        <div class="ns-stat-value" id="statGW">—</div>
+    </div>
+    <div class="ns-stat">
+        <div class="ns-stat-label">SUBNET</div>
+        <div class="ns-stat-value" id="statSubnet">—</div>
+    </div>
 </div>
+
+<div class="ns-layout">
+    <!-- Left: device list -->
+    <div class="ns-left">
+        <div class="pm-sh" style="position:sticky;top:0;z-index:10">HOSTS</div>
+        <div id="deviceList"></div>
+    </div>
+
+    <!-- Center: topology visualization -->
+    <div class="ns-center">
+        <div class="ns-controls">
+            <button class="ns-btn active" id="btnTopo" onclick="setView('topo')">TOPOLOGY</button>
+            <button class="ns-btn" id="btnPorts" onclick="setView('ports')">PORT HEAT</button>
+            <button class="ns-btn" onclick="saveNow()">💾</button>
+        </div>
+        <canvas id="ns-topology"></canvas>
+    </div>
+
+    <!-- Right: detail + threats -->
+    <div class="ns-right">
+        <div class="pm-sh">THREATS <span class="pm-sh-sub" id="threatCount"></span></div>
+        <div id="threatPanel"></div>
+
+        <div class="pm-sh" style="margin-top:0">DEVICE DETAIL</div>
+        <div class="ns-detail" id="deviceDetail">
+            <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:.7rem">
+                Select a host to inspect
+            </div>
+        </div>
+
+        <div class="pm-sh">LATENCY</div>
+        <div class="ns-sparkline-row">
+            <div class="ns-sparkline-label">PING ms — SELECTED HOST</div>
+            <canvas id="ns-latency" width="276" height="50"></canvas>
+        </div>
+
+        <div class="pm-sh">VENDOR DIST</div>
+        <canvas id="ns-vendors" width="300" height="180" style="padding:8px"></canvas>
+    </div>
+</div>
+
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_transport.js"></script>
 <script>
-const PROFILES=[
-  {id:'ping',name:'PING SWEEP',desc:'Fast host discovery\nno port scan',cmd:'-sn'},
-  {id:'quick',name:'QUICK SCAN',desc:'Top 100 ports\nfast results',cmd:'-F'},
-  {id:'services',name:'SERVICES',desc:'Version detection\n-sV flag',cmd:'-sV --version-intensity 5'},
-  {id:'os',name:'OS DETECT',desc:'OS fingerprinting\nrequires root',cmd:'-O'},
-  {id:'vuln',name:'VULN SCAN',desc:'NSE vuln scripts\nslower scan',cmd:'--script=vuln'},
-  {id:'full',name:'FULL -A',desc:'OS+version+scripts\ncomprehensive',cmd:'-A'},
-];
+// ═══════════════════════════════════════════════════════════════════
+// NET SCANNER — D3 topology map, threat detection, port analysis
+// ═══════════════════════════════════════════════════════════════════
 
-let results=[],scanResults=[],sortCol='',sortDir='asc',scanning=false,startTime=0;
-let selProfile='quick';
+const devices   = new Map();  // ip → device object
+const threats   = [];
+let selectedIP  = null;
+let viewMode    = 'topo';
+let latencySpark, vendorChart;
+let animFrame   = null;
+let gateway     = null;
+let subnet      = null;
 
-function initProfiles(){
-  document.getElementById('profiles').innerHTML=PROFILES.map(p=>`
-    <div class="prof ${p.id===selProfile?'active':''}" onclick="selectProfile('${p.id}')">
-      <div class="prof-name">${p.name}</div>
-      <div class="prof-desc">${p.desc}</div>
-    </div>`).join('');
+// Known port names
+const PORT_NAMES = {
+    21:'FTP', 22:'SSH', 23:'TELNET', 25:'SMTP', 53:'DNS',
+    80:'HTTP', 110:'POP3', 143:'IMAP', 443:'HTTPS', 445:'SMB',
+    3389:'RDP', 8080:'HTTP-ALT', 8443:'HTTPS-ALT',
+    1883:'MQTT', 5900:'VNC', 554:'RTSP',
+};
+
+// OUI vendor prefix lookup (abbreviated)
+const OUI = {
+    '00:50:56':'VMware', 'ac:de:48':'Apple', 'b8:27:eb':'Raspberry Pi',
+    'dc:a6:32':'Raspberry Pi', '00:0c:29':'VMware', 'fc:fb:fb':'Tenda',
+    '50:c7:bf':'TP-Link', 'c8:3a:35':'Tenda', '00:e0:4c':'Realtek',
+    '00:1a:2b':'Generic', '18:31:bf':'Amazon Echo',
+};
+
+function vendorFromMAC(mac) {
+    if (!mac) return 'Unknown';
+    const prefix = mac.substring(0, 8).toUpperCase();
+    return OUI[prefix] || 'Unknown';
 }
 
-function selectProfile(id){
-  selProfile=id;
-  document.getElementById('profSel').value=id;
-  initProfiles();
+// ── Topology canvas ───────────────────────────────────────────────
+const topoCanvas = document.getElementById('ns-topology');
+const topoCtx    = topoCanvas.getContext('2d');
+const nodes      = new Map(); // ip → {x, y, vx, vy}
+
+function resizeTopo() {
+    const parent = topoCanvas.parentElement;
+    // Account for stats bar and controls
+    topoCanvas.width  = parent.offsetWidth;
+    topoCanvas.height = parent.offsetHeight;
 }
 
-function log(msg,cls='cl-info'){
-  const c=document.getElementById('console');
-  c.innerHTML+=`<span class="${cls}">${esc(msg)}</span><br>`;
-  c.scrollTop=c.scrollHeight;
-}
-
-function startScan(){
-  if(scanning)return;
-  const target=document.getElementById('target').value.trim();
-  if(!target){log('ERROR: No target specified','cl-err');return;}
-  const prof=PROFILES.find(p=>p.id===selProfile)||PROFILES[1];
-  scanning=true;
-  startTime=Date.now();
-  document.getElementById('scanBtn').disabled=true;
-  document.getElementById('scanStatus').textContent='SCANNING...';
-  document.getElementById('scanStatus').style.color='var(--warn)';
-  document.getElementById('resultsPanel').style.display='none';
-  scanResults=[];
-  log(`// Starting scan: nmap ${prof.cmd} ${target}`,'cl-info');
-  log(`// Profile: ${prof.name}`,'cl-info');
-  log('// '+'─'.repeat(50),'cl-dim');
-  animatePg();
-
-  // Simulate scan (real implementation uses window.spadra.system.exec or websocket to backend)
-  setTimeout(()=>finishScan(target,prof),1500+Math.random()*2000);
-}
-
-let pgInterval;
-function animatePg(){
-  let p=0;
-  pgInterval=setInterval(()=>{
-    p+=Math.random()*3;
-    if(p>95)p=95;
-    document.getElementById('pgfill').style.width=p+'%';
-  },200);
-}
-
-function finishScan(target,prof){
-  clearInterval(pgInterval);
-  document.getElementById('pgfill').style.width='100%';
-  const elapsed=((Date.now()-startTime)/1000).toFixed(1);
-
-  // Generate demo results based on target
-  scanResults=generateDemoResults(target,prof);
-
-  scanResults.forEach(r=>{
-    if(r.state==='open'){
-      log(`${r.host.padEnd(16)} ${String(r.port+'/tcp').padEnd(12)} ${r.state.padEnd(8)} ${r.service} ${r.version}`,'cl-data');
+function getOrCreateNode(ip) {
+    if (!nodes.has(ip)) {
+        nodes.set(ip, {
+            x:  topoCanvas.width  / 2 + (Math.random() - 0.5) * 200,
+            y:  topoCanvas.height / 2 + (Math.random() - 0.5) * 200,
+            vx: (Math.random() - 0.5) * 0.5,
+            vy: (Math.random() - 0.5) * 0.5,
+        });
     }
-  });
-
-  const hosts=new Set(scanResults.map(r=>r.host)).size;
-  const open=scanResults.filter(r=>r.state==='open').length;
-  const svcs=new Set(scanResults.filter(r=>r.state==='open').map(r=>r.service)).size;
-  log(`// Scan complete in ${elapsed}s — ${hosts} hosts, ${open} open ports`,'cl-ok');
-
-  document.getElementById('sHosts').textContent=hosts;
-  document.getElementById('sPorts').textContent=open;
-  document.getElementById('sSvcs').textContent=svcs;
-  document.getElementById('sTime').textContent=elapsed+'s';
-  document.getElementById('scanStatus').textContent='COMPLETE';
-  document.getElementById('scanStatus').style.color='var(--accent3)';
-  document.getElementById('scanBtn').disabled=false;
-  scanning=false;
-  document.getElementById('resultsPanel').style.display='block';
-  renderResults(scanResults);
-  setTimeout(()=>{document.getElementById('pgfill').style.width='0%';},1000);
+    return nodes.get(ip);
 }
 
-function generateDemoResults(target,prof){
-  const base=target.includes('/')?target.split('.').slice(0,3).join('.'):'192.168.1';
-  const hosts=['1','47','100','101','254'].map(n=>`${base}.${n}`);
-  const common=[
-    {port:22,service:'ssh',version:'OpenSSH 9.2'},
-    {port:80,service:'http',version:'nginx 1.24.0'},
-    {port:443,service:'https',version:'nginx 1.24.0'},
-    {port:53,service:'domain',version:'dnsmasq 2.89'},
-    {port:8080,service:'http-alt',version:''},
-    {port:445,service:'microsoft-ds',version:''},
-    {port:3389,service:'ms-wbt-server',version:''},
-    {port:5900,service:'vnc',version:'RealVNC 5.x'},
-  ];
-  const rows=[];
-  hosts.forEach(h=>{
-    const n=2+Math.floor(Math.random()*5);
-    const shuffled=common.sort(()=>Math.random()-.5).slice(0,n);
-    shuffled.forEach(s=>{
-      rows.push({host:h,hostname:h.endsWith('.1')?'router.local':h.endsWith('.47')?'piscesmoon.local':'',
-        port:s.port,state:Math.random()>.1?'open':'filtered',service:s.service,version:s.version,
-        flags:s.port===22?['SSH']:s.port===80||s.port===443?['HTTP']:[]});
+function drawTopology() {
+    const w   = topoCanvas.width;
+    const h   = topoCanvas.height;
+    const ctx = topoCtx;
+    const C   = PMViz.C;
+
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, w, h);
+
+    if (devices.size === 0) {
+        ctx.fillStyle  = C.textDim;
+        ctx.font       = '13px monospace';
+        ctx.textAlign  = 'center';
+        ctx.fillText('No hosts discovered', w/2, h/2);
+        ctx.fillText('Start a scan to populate the topology', w/2, h/2 + 20);
+        return;
+    }
+
+    const devArr = Array.from(devices.values());
+    const gwNode = gateway ? getOrCreateNode(gateway) : null;
+
+    // Center gateway
+    if (gwNode) {
+        gwNode.x = w / 2;
+        gwNode.y = h / 2;
+    }
+
+    // Update node positions (simple force-like simulation)
+    devArr.forEach(d => {
+        const n = getOrCreateNode(d.ip);
+
+        // Attract to center gently
+        n.vx += (w/2 - n.x) * 0.0002;
+        n.vy += (h/2 - n.y) * 0.0002;
+
+        // Repel from other nodes
+        devArr.forEach(d2 => {
+            if (d2.ip === d.ip) return;
+            const n2  = getOrCreateNode(d2.ip);
+            const dx  = n.x - n2.x;
+            const dy  = n.y - n2.y;
+            const dist = Math.sqrt(dx*dx + dy*dy) || 1;
+            if (dist < 100) {
+                n.vx += (dx / dist) * 0.8;
+                n.vy += (dy / dist) * 0.8;
+            }
+        });
+
+        // Apply velocity with damping
+        n.vx *= 0.9;
+        n.vy *= 0.9;
+
+        if (d.ip !== gateway) {
+            n.x += n.vx;
+            n.y += n.vy;
+        }
+
+        // Clamp to canvas
+        n.x = Math.max(40, Math.min(w - 40, n.x));
+        n.y = Math.max(40, Math.min(h - 40, n.y));
     });
-  });
-  return rows;
-}
 
-function renderResults(rows){
-  const filter=document.getElementById('filterInput').value.toLowerCase();
-  const filtered=filter?rows.filter(r=>JSON.stringify(r).toLowerCase().includes(filter)):rows;
-  document.getElementById('resultCount').textContent=`${filtered.length} results`;
-  document.getElementById('resultBody').innerHTML=filtered.map(r=>`
-    <tr>
-      <td style="color:var(--accent)">${esc(r.host)}</td>
-      <td style="color:var(--text-dim)">${esc(r.hostname)}</td>
-      <td><span class="badge ${r.state==='open'?'bo':r.state==='filtered'?'bw':'br'}">${r.port}</span></td>
-      <td><span class="badge ${r.state==='open'?'bg':r.state==='filtered'?'bw':'br'}">${r.state}</span></td>
-      <td style="color:var(--text-bright)">${esc(r.service)}</td>
-      <td style="color:var(--text-dim)">${esc(r.version)}</td>
-      <td>${(r.flags||[]).map(f=>`<span class="badge bc">${f}</span>`).join(' ')}</td>
-    </tr>`).join('');
-}
-
-function filterResults(){renderResults(scanResults);}
-
-function sortBy(col){
-  if(sortCol===col)sortDir=sortDir==='asc'?'desc':'asc';
-  else{sortCol=col;sortDir='asc';}
-  scanResults.sort((a,b)=>{
-    const av=String(a[col]||''), bv=String(b[col]||'');
-    return sortDir==='asc'?av.localeCompare(bv):bv.localeCompare(av);
-  });
-  renderResults(scanResults);
-}
-
-function clearResults(){
-  scanResults=[];
-  document.getElementById('console').innerHTML='<span class="cl-info">// Cleared.</span><br>';
-  document.getElementById('resultsPanel').style.display='none';
-  document.getElementById('sHosts').textContent='0';
-  document.getElementById('sPorts').textContent='0';
-  document.getElementById('sSvcs').textContent='0';
-  document.getElementById('sTime').textContent='—';
-}
-
-function exportResults(){
-  const lines=['HOST,HOSTNAME,PORT,STATE,SERVICE,VERSION',...scanResults.map(r=>`${r.host},${r.hostname},${r.port},${r.state},${r.service},${r.version}`)].join('\n');
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([lines],{type:'text/csv'}));
-  a.download='netscan_'+Date.now()+'.csv';a.click();
-}
-
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-// Auto-detect local subnet
-try{
-  const pc=new RTCPeerConnection({iceServers:[]});
-  pc.createDataChannel('');
-  pc.createOffer().then(o=>pc.setLocalDescription(o));
-  pc.onicecandidate=e=>{
-    if(e&&e.candidate){
-      const m=e.candidate.candidate.match(/(\d+\.\d+\.\d+)\.\d+/);
-      if(m&&!document.getElementById('target').value){
-        document.getElementById('target').value=m[1]+'.0/24';
-        pc.close();
-      }
+    // Draw edges (gateway → all)
+    if (gwNode) {
+        devArr.forEach(d => {
+            if (d.ip === gateway) return;
+            const n = getOrCreateNode(d.ip);
+            ctx.beginPath();
+            ctx.moveTo(gwNode.x, gwNode.y);
+            ctx.lineTo(n.x, n.y);
+            const isThreat = threats.some(t => t.ip === d.ip);
+            ctx.strokeStyle = isThreat ? C.accent4 + '44' : C.border;
+            ctx.lineWidth   = 1;
+            ctx.stroke();
+        });
     }
-  };
-}catch{}
 
-initProfiles();
-log('// Target auto-detected. Select scan profile and press SCAN.','cl-info');
+    // Draw nodes
+    devArr.forEach(d => {
+        const n         = getOrCreateNode(d.ip);
+        const isGW      = d.ip === gateway;
+        const isThreat  = threats.some(t => t.ip === d.ip);
+        const isSelected= d.ip === selectedIP;
+        const openPorts = (d.ports || []).filter(p => p.state === 'open').length;
+
+        const r      = isGW ? 18 : Math.max(8, Math.min(16, 8 + openPorts * 1.5));
+        const color  = isGW      ? C.gold :
+                       isThreat  ? C.accent4 :
+                       isSelected? C.accent :
+                       openPorts > 3 ? C.accent2 : C.accent3;
+
+        // Glow for selected/threats
+        if (isSelected || isThreat || isGW) {
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, r + 8, 0, Math.PI * 2);
+            ctx.fillStyle = color + '22';
+            ctx.fill();
+        }
+
+        // Node circle
+        ctx.beginPath();
+        ctx.arc(n.x, n.y, r, 0, Math.PI * 2);
+        ctx.fillStyle   = color + '33';
+        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = isSelected ? 2.5 : 1.5;
+        ctx.stroke();
+
+        // Icon
+        ctx.fillStyle  = color;
+        ctx.font       = `${r}px sans-serif`;
+        ctx.textAlign  = 'center';
+        ctx.fillText(
+            isGW ? '⬡' : isThreat ? '⚠' : '●',
+            n.x, n.y + r * 0.35
+        );
+
+        // IP label
+        ctx.fillStyle  = isSelected ? C.textBright : C.textDim;
+        ctx.font       = '9px monospace';
+        ctx.textAlign  = 'center';
+        ctx.fillText(d.ip, n.x, n.y + r + 12);
+        if (d.hostname) {
+            ctx.fillStyle = C.textDim;
+            ctx.fillText(d.hostname.substring(0, 14), n.x, n.y + r + 22);
+        }
+    });
+
+    animFrame = requestAnimationFrame(drawTopology);
+}
+
+// ── Threat detection ──────────────────────────────────────────────
+function analyzeThreats(device) {
+    const flags = [];
+    const age   = Date.now() - device.firstSeen;
+
+    // Appeared and disappeared quickly
+    if (age < 30000 && device.scanCount < 2) {
+        flags.push({type: 'PROBE/SCANNER', detail: 'Appeared briefly, possible scanner'});
+    }
+    // Unknown vendor
+    if (!device.vendor || device.vendor === 'Unknown') {
+        flags.push({type: 'UNKNOWN VENDOR', detail: 'MAC vendor not in OUI database — possible spoofing'});
+    }
+    // High open port count
+    const openPorts = (device.ports||[]).filter(p=>p.state==='open');
+    if (openPorts.length > 5) {
+        flags.push({type: 'HIGH EXPOSURE', detail: `${openPorts.length} open ports detected`});
+    }
+    // Dangerous ports
+    const dangerous = [23, 21, 3389, 5900]; // Telnet, FTP, RDP, VNC
+    openPorts.forEach(p => {
+        if (dangerous.includes(p.port)) {
+            flags.push({type: 'INSECURE SERVICE', detail: `${PORT_NAMES[p.port]||p.port} is open`});
+        }
+    });
+
+    return flags;
+}
+
+function updateThreats() {
+    threats.length = 0;
+    devices.forEach((d, ip) => {
+        const flags = analyzeThreats(d);
+        if (flags.length > 0) {
+            threats.push({ip, flags});
+        }
+    });
+
+    document.getElementById('statThreats').textContent = threats.length;
+    document.getElementById('threatCount').textContent =
+        threats.length > 0 ? `${threats.length} detected` : 'clean';
+
+    document.getElementById('threatPanel').innerHTML = threats.length === 0
+        ? '<div style="padding:14px;text-align:center;color:var(--accent3);font-size:.7rem">✓ No threats detected</div>'
+        : threats.map(t => `
+            <div class="ns-threat-item">
+                <div style="color:var(--text-bright);font-size:.7rem;margin-bottom:4px">${t.ip}</div>
+                ${t.flags.map(f => `
+                    <div style="margin:3px 0">
+                        <span class="ns-threat-badge">${f.type}</span>
+                        <span style="color:var(--text-dim);font-size:.6rem;margin-left:6px">${f.detail}</span>
+                    </div>`).join('')}
+            </div>`).join('');
+}
+
+// ── Device list ───────────────────────────────────────────────────
+function renderList() {
+    const devArr = Array.from(devices.values())
+        .sort((a, b) => {
+            const aNum = a.ip.split('.').reduce((acc,n,i) => acc + parseInt(n) * Math.pow(256, 3-i), 0);
+            const bNum = b.ip.split('.').reduce((acc,n,i) => acc + parseInt(n) * Math.pow(256, 3-i), 0);
+            return aNum - bNum;
+        });
+
+    const isThreat = (ip) => threats.some(t => t.ip === ip);
+
+    document.getElementById('deviceList').innerHTML = devArr.map(d => {
+        const open = (d.ports||[]).filter(p=>p.state==='open').length;
+        return `
+        <div class="ns-device ${selectedIP===d.ip?'selected':''} ${isThreat(d.ip)?'threat':''}"
+             onclick="selectDevice('${d.ip}')">
+            <div class="ns-device-ip">${d.ip}</div>
+            <div class="ns-device-meta">
+                <span>${d.vendor||'Unknown'}</span>
+                ${d.hostname ? `<span>${PM.esc(d.hostname)}</span>` : ''}
+                ${open > 0 ? `<span style="color:var(--accent3)">${open} open</span>` : ''}
+                ${isThreat(d.ip) ? '<span class="ns-threat-badge">THREAT</span>' : '<span class="ns-ok-badge">OK</span>'}
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('statHosts').textContent = devArr.length;
+    document.getElementById('statPorts').textContent =
+        devArr.reduce((s,d) => s + (d.ports||[]).filter(p=>p.state==='open').length, 0);
+}
+
+function selectDevice(ip) {
+    selectedIP = ip;
+    const d    = devices.get(ip);
+    if (!d) return;
+
+    renderList();
+
+    const ports = d.ports || [];
+    document.getElementById('deviceDetail').innerHTML = `
+        <div class="ns-detail-ip">${d.ip}</div>
+        ${d.hostname ? `<div class="ns-detail-row"><span class="label">Hostname</span><span class="value">${PM.esc(d.hostname)}</span></div>` : ''}
+        <div class="ns-detail-row"><span class="label">MAC</span><span class="value">${d.mac||'—'}</span></div>
+        <div class="ns-detail-row"><span class="label">Vendor</span><span class="value">${d.vendor||'—'}</span></div>
+        <div class="ns-detail-row"><span class="label">OS Guess</span><span class="value">${d.os||'—'}</span></div>
+        <div class="ns-detail-row"><span class="label">First Seen</span><span class="value">${new Date(d.firstSeen).toLocaleTimeString()}</span></div>
+        <div class="ns-detail-row"><span class="label">Scans</span><span class="value">${d.scanCount||1}</span></div>
+        <div class="ns-ports">
+            ${ports.map(p => `
+                <span class="ns-port ${p.state}">
+                    ${p.port}${PORT_NAMES[p.port]?'/'+PORT_NAMES[p.port]:''}
+                </span>`).join('')}
+        </div>
+    `;
+}
+
+// ── Transport ─────────────────────────────────────────────────────
+const beam = new PMTransport({
+    onMessage: handleData,
+    onStatus: (s) => {
+        document.getElementById('liveBadge').style.opacity =
+            s.state === 'connected' ? '1' : '0.3';
+        document.getElementById('lastUpdate').textContent = s.message;
+    }
+});
+
+function handleData(msg) {
+    if (msg.type === 'NET_SCAN_HOST') {
+        addDevice(msg);
+    } else if (msg.type === 'NET_SCAN_DONE') {
+        document.getElementById('lastUpdate').textContent =
+            `Scan complete — ${msg.count} hosts`;
+        updateThreats();
+        updateVendorChart();
+        PMViz.Storage.autoSave('netscan',
+            () => Array.from(devices.values()), 60);
+    }
+}
+
+function addDevice(d) {
+    const ip = d.ip;
+    if (devices.has(ip)) {
+        const existing = devices.get(ip);
+        existing.scanCount = (existing.scanCount || 1) + 1;
+        if (d.ports) existing.ports = d.ports;
+    } else {
+        devices.set(ip, {
+            ip,
+            mac:       d.mac || '',
+            hostname:  d.hostname || '',
+            vendor:    d.vendor || vendorFromMAC(d.mac),
+            os:        d.os || '',
+            ports:     d.ports || [],
+            firstSeen: Date.now(),
+            scanCount: 1,
+        });
+        if (!gateway && d.gateway) {
+            gateway = d.ip;
+            document.getElementById('statGW').textContent = gateway;
+        }
+        if (!subnet && d.subnet) {
+            subnet = d.subnet;
+            document.getElementById('statSubnet').textContent = subnet;
+        }
+    }
+    renderList();
+}
+
+function updateVendorChart() {
+    const counts = {};
+    devices.forEach(d => {
+        const v = d.vendor || 'Unknown';
+        counts[v] = (counts[v] || 0) + 1;
+    });
+    if (!vendorChart) {
+        vendorChart = new PMViz.DonutChart('ns-vendors');
+    }
+    vendorChart.update(Object.entries(counts).map(([label,value])=>({label,value})));
+}
+
+function startScan() {
+    if (beam.connected) {
+        beam.send({type:'CMD_NET_SCAN', src:'app', cmd_id:'ns1'});
+    }
+}
+
+function setView(v) {
+    viewMode = v;
+    document.getElementById('btnTopo').className  = 'ns-btn' + (v==='topo' ?' active':'');
+    document.getElementById('btnPorts').className = 'ns-btn' + (v==='ports'?' active':'');
+}
+
+function saveNow() {
+    PMViz.Storage.save('netscan', Array.from(devices.values()), 'json');
+}
+
+window.addEventListener('load', async () => {
+    resizeTopo();
+    window.addEventListener('resize', () => {
+        resizeTopo();
+        cancelAnimationFrame(animFrame);
+        drawTopology();
+    });
+
+    latencySpark = new PMViz.Sparkline('ns-latency', {color: PMViz.C.accent, maxPts: 60});
+
+    try { await beam.connect(); }
+    catch(e) { console.log('No hardware — demo mode'); }
+
+    drawTopology();
+});
 </script>
 </body></html>

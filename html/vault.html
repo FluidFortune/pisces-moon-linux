@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — vault.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  AES-256-GCM local secrets vault. PIN-unlocked.
+  Covers: WiFi credentials, API keys, SSH passwords, any secret.
+  Zero external deps. All crypto via Web Crypto API.
+  Data never leaves the device.
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // VAULT</title>
+<link rel="stylesheet" href="pm_shared.css">
+<style>
+/* ── Lock screen ── */
+.lock-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:100;}
+.lock-icon{font-size:4rem;filter:drop-shadow(0 0 20px var(--accent));}
+.lock-title{font-family:Orbitron,monospace;font-size:1.2rem;color:var(--accent);letter-spacing:4px;}
+.lock-sub{font-size:.62rem;color:var(--text-dim);letter-spacing:2px;}
+.pin-dots{display:flex;gap:12px;margin:8px 0;}
+.pin-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--panel-border);transition:all .2s;}
+.pin-dot.filled{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px var(--accent);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:10px;}
+.pin-key{width:72px;height:56px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Orbitron,monospace;font-size:1rem;cursor:pointer;transition:all .15s;}
+.pin-key:hover{background:rgba(0,212,255,.1);border-color:var(--accent);}
+.pin-key:active{background:rgba(0,212,255,.2);}
+.pin-key.del{color:var(--accent4);}
+.pin-key.ok{color:var(--accent3);border-color:var(--accent3);}
+.lock-error{color:var(--accent4);font-size:.65rem;font-family:Share\ Tech\ Mono,monospace;min-height:1.2em;letter-spacing:1px;}
+.lock-hint{font-size:.58rem;color:var(--text-dim);opacity:.6;text-align:center;max-width:260px;line-height:1.7;}
+/* ── Main vault UI ── */
+.vault-layout{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 52px);overflow:hidden;}
+.vault-left{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.vault-right{display:flex;flex-direction:column;overflow:hidden;}
+.vault-list{flex:1;overflow-y:auto;}
+.vault-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.4);cursor:pointer;display:flex;gap:10px;align-items:center;transition:background .15s;}
+.vault-item:hover{background:rgba(0,212,255,.04);}
+.vault-item.selected{background:rgba(0,212,255,.08);border-left:2px solid var(--accent);}
+.vault-icon{font-size:1.3rem;flex-shrink:0;}
+.vault-info{flex:1;min-width:0;}
+.vault-item-name{font-size:.72rem;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vault-item-cat{font-size:.54rem;color:var(--text-dim);margin-top:2px;}
+.cat-chip{display:inline-block;padding:1px 6px;font-family:Orbitron,monospace;font-size:.42rem;letter-spacing:1px;border-radius:2px;border:1px solid;margin-right:4px;}
+.vault-form{padding:16px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.v-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.68rem;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;}
+.v-input:focus{border-color:var(--accent);}
+.v-label{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:3px;}
+.v-row{display:flex;gap:8px;}
+.v-group{display:flex;flex-direction:column;flex:1;}
+.v-detail{padding:16px;flex:1;overflow-y:auto;}
+.v-field{padding:10px 0;border-bottom:1px solid rgba(28,46,58,.3);}
+.v-field-label{font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:4px;}
+.v-field-val{font-size:.7rem;color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;word-break:break-all;display:flex;gap:8px;align-items:center;}
+.v-secret-mask{cursor:pointer;letter-spacing:.2em;}
+.copy-btn{padding:2px 8px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.45rem;cursor:pointer;flex-shrink:0;}
+.copy-btn:hover{border-color:var(--accent);color:var(--accent);}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:14px;}
+.vault-search{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.65rem;padding:7px 10px;outline:none;width:100%;box-sizing:border-box;}
+.vault-search:focus{border-color:var(--accent);}
+.v-textarea{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.66rem;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;min-height:60px;resize:vertical;line-height:1.6;}
+.v-textarea:focus{border-color:var(--accent);}
+.change-pin-row{padding:8px 10px;border-top:1px solid var(--panel-border);display:flex;gap:6px;}
+.v-actions{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
+.cat-selector{display:flex;gap:5px;flex-wrap:wrap;}
+.cat-sel-btn{padding:4px 9px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.46rem;cursor:pointer;letter-spacing:1px;}
+.cat-sel-btn.active{background:rgba(0,212,255,.12);border-color:var(--accent);color:var(--accent);}
+.v-count{font-size:.58rem;color:var(--text-dim);padding:6px 10px;border-bottom:1px solid var(--panel-border);}
+</style>
+</head><body>
+
+<!-- Lock Screen -->
+<div class="lock-screen" id="lockScreen">
+  <div class="lock-icon" id="lockIcon">🔒</div>
+  <div class="lock-title">VAULT</div>
+  <div class="lock-sub" id="lockSub">ENTER PIN TO UNLOCK</div>
+  <div class="pin-dots" id="pinDots"></div>
+  <div class="lock-error" id="lockError"></div>
+  <div class="pin-pad" id="pinPad"></div>
+  <div class="lock-hint" id="lockHint"></div>
+</div>
+
+<!-- Vault UI (hidden until unlocked) -->
+<div id="vaultApp" style="display:none">
+<header class="pm-header">
+  <div class="pm-logo">🔐 <em>VAULT</em></div>
+  <div class="pm-hdr-right">
+    <span id="vaultCount" style="font-size:.6rem;color:var(--text-dim);margin-right:10px"></span>
+    <button class="pm-refresh" onclick="showNewForm()">+ NEW SECRET</button>
+    <button class="pm-btn" style="margin-left:6px;font-size:.55rem;border-color:var(--accent4);color:var(--accent4)" onclick="lockVault()">LOCK</button>
+  </div>
+</header>
+<div class="vault-layout">
+  <div class="vault-left">
+    <div style="padding:8px 10px;border-bottom:1px solid var(--panel-border)">
+      <input class="vault-search" id="vaultSearch" placeholder="Search secrets..." oninput="renderList()">
+    </div>
+    <div class="v-count" id="vaultStats"></div>
+    <div class="vault-list" id="vaultList"></div>
+    <div class="change-pin-row">
+      <button class="pm-btn" style="flex:1;font-size:.54rem" onclick="showChangePIN()">CHANGE PIN</button>
+      <button class="pm-btn" style="flex:1;font-size:.54rem" onclick="exportBackup()">EXPORT BACKUP</button>
+    </div>
+  </div>
+  <div class="vault-right" id="vaultRight">
+    <div class="empty-state">
+      <div style="font-size:3rem;opacity:.3">🔐</div>
+      <div style="font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:2px;opacity:.5;color:var(--text-dim)">SELECT A SECRET</div>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// VAULT — AES-256-GCM encrypted local secrets store
+//
+// Architecture:
+//   - PIN → PBKDF2 (SHA-256, 100k iterations) → AES-256-GCM key
+//   - Each secret encrypted individually
+//   - Vault metadata (names, categories) stored encrypted per-item
+//   - localStorage key: pm_vault_store (array of encrypted blobs)
+//   - PIN hash (PBKDF2, separate salt) stored as pm_vault_pin_hash
+//   - No PIN = new vault setup flow
+// ═══════════════════════════════════════════════════════════════════
+
+const STORE_KEY  = 'pm_vault_store';
+const PIN_KEY    = 'pm_vault_pin_hash';
+const SALT_KEY   = 'pm_vault_salt';
+
+let vaultKey   = null;  // CryptoKey — active session only
+let secrets    = [];    // Decrypted array — active session only
+let selectedId = null;
+let pinEntry   = '';
+let pinMode    = 'unlock'; // 'unlock' | 'setup' | 'change_old' | 'change_new'
+let changePINOld = '';
+
+// ── Crypto helpers ────────────────────────────────────────────────
+async function deriveKey(pin, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(pin), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name:'PBKDF2', salt, iterations:100000, hash:'SHA-256' },
+    keyMaterial,
+    { name:'AES-GCM', length:256 },
+    false,
+    ['encrypt','decrypt']
+  );
+}
+
+async function encrypt(key, obj) {
+  const iv  = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder().encode(JSON.stringify(obj));
+  const ct  = await crypto.subtle.encrypt({ name:'AES-GCM', iv }, key, enc);
+  return { iv: b64(iv), ct: b64(new Uint8Array(ct)) };
+}
+
+async function decrypt(key, blob) {
+  const iv  = ub64(blob.iv);
+  const ct  = ub64(blob.ct);
+  const pt  = await crypto.subtle.decrypt({ name:'AES-GCM', iv }, key, ct);
+  return JSON.parse(new TextDecoder().decode(pt));
+}
+
+function b64(u8) { return btoa(String.fromCharCode(...u8)); }
+function ub64(s) { return new Uint8Array(atob(s).split('').map(c=>c.charCodeAt(0))); }
+
+function getSalt() {
+  let s = localStorage.getItem(SALT_KEY);
+  if (!s) { s = b64(crypto.getRandomValues(new Uint8Array(16))); localStorage.setItem(SALT_KEY, s); }
+  return ub64(s);
+}
+
+async function hashPIN(pin, salt) {
+  const key = await deriveKey(pin, salt);
+  // Use a known plaintext to verify correctness
+  const blob = await encrypt(key, {check:'PISCES_MOON_VAULT_v1'});
+  return JSON.stringify(blob);
+}
+
+// ── PIN Storage ───────────────────────────────────────────────────
+async function verifyPIN(pin) {
+  try {
+    const salt = getSalt();
+    const key  = await deriveKey(pin, salt);
+    const stored = JSON.parse(localStorage.getItem(PIN_KEY));
+    if (!stored) return null; // No PIN set yet
+    const obj = await decrypt(key, stored);
+    if (obj.check !== 'PISCES_MOON_VAULT_v1') return null;
+    return key;
+  } catch { return null; }
+}
+
+async function storePIN(pin) {
+  const salt = getSalt();
+  const key  = await deriveKey(pin, salt);
+  const blob = await encrypt(key, {check:'PISCES_MOON_VAULT_v1'});
+  localStorage.setItem(PIN_KEY, JSON.stringify(blob));
+  return key;
+}
+
+// ── Vault store ───────────────────────────────────────────────────
+async function loadVault(key) {
+  const raw = JSON.parse(localStorage.getItem(STORE_KEY) || '[]');
+  secrets = [];
+  for (const blob of raw) {
+    try { secrets.push(await decrypt(key, blob)); }
+    catch { /* skip corrupted */ }
+  }
+}
+
+async function saveVault() {
+  const blobs = [];
+  for (const s of secrets) blobs.push(await encrypt(vaultKey, s));
+  localStorage.setItem(STORE_KEY, JSON.stringify(blobs));
+}
+
+function uid() { return 'v_' + Date.now().toString(36) + Math.random().toString(36).substr(2,4); }
+
+// ── Lock screen ───────────────────────────────────────────────────
+const CATS = {
+  wifi:   { icon:'📶', label:'WiFi',    color:'#00d4ff' },
+  api:    { icon:'🔑', label:'API Key', color:'#f4a820' },
+  ssh:    { icon:'💻', label:'SSH',     color:'#00ff88' },
+  web:    { icon:'🌐', label:'Web',     color:'#a78bfa' },
+  crypto: { icon:'₿',  label:'Crypto',  color:'#fb923c' },
+  note:   { icon:'📝', label:'Note',    color:'#94a3b8' },
+  other:  { icon:'🗝️', label:'Other',   color:'#64748b' }
+};
+
+function buildPinDots(len, maxLen) {
+  const wrap = document.getElementById('pinDots');
+  wrap.innerHTML = Array.from({length: maxLen}, (_,i) =>
+    `<div class="pin-dot${i < len ? ' filled' : ''}"></div>`
+  ).join('');
+}
+
+function buildPinPad() {
+  const pad = document.getElementById('pinPad');
+  const keys = ['1','2','3','4','5','6','7','8','9','⌫','0','✓'];
+  pad.innerHTML = keys.map(k => {
+    const cls = k==='⌫'?'pin-key del':k==='✓'?'pin-key ok':'pin-key';
+    return `<button class="${cls}" onclick="pinKey('${k}')">${k}</button>`;
+  }).join('');
+}
+
+const MAX_PIN = 8;
+
+function pinKey(k) {
+  const errEl = document.getElementById('lockError');
+  errEl.textContent = '';
+  if (k === '⌫') { pinEntry = pinEntry.slice(0,-1); }
+  else if (k === '✓') { submitPIN(); return; }
+  else if (pinEntry.length < MAX_PIN) { pinEntry += k; }
+  buildPinDots(pinEntry.length, MAX_PIN);
+  if (pinEntry.length === MAX_PIN) submitPIN();
+}
+
+async function submitPIN() {
+  const errEl = document.getElementById('lockError');
+  if (pinEntry.length < 4) { errEl.textContent = 'PIN must be at least 4 digits'; pinEntry=''; buildPinDots(0,MAX_PIN); return; }
+
+  if (pinMode === 'setup') {
+    // Store new PIN
+    const key = await storePIN(pinEntry);
+    vaultKey = key;
+    await loadVault(key);
+    pinEntry = '';
+    unlock();
+    return;
+  }
+
+  if (pinMode === 'change_old') {
+    const key = await verifyPIN(pinEntry);
+    if (!key) { errEl.textContent = 'INCORRECT PIN'; pinEntry=''; buildPinDots(0,MAX_PIN); shake(); return; }
+    changePINOld = pinEntry;
+    pinEntry = '';
+    buildPinDots(0,MAX_PIN);
+    pinMode = 'change_new';
+    document.getElementById('lockSub').textContent = 'ENTER NEW PIN';
+    document.getElementById('lockHint').textContent = 'Minimum 4 digits, maximum 8';
+    return;
+  }
+
+  if (pinMode === 'change_new') {
+    const key = await storePIN(pinEntry);
+    // Re-encrypt all secrets with new key
+    vaultKey = key;
+    await saveVault();
+    pinEntry = '';
+    pinMode = 'unlock';
+    lockVault();
+    alert('PIN changed. Please unlock with your new PIN.');
+    return;
+  }
+
+  // Normal unlock
+  const key = await verifyPIN(pinEntry);
+  pinEntry = '';
+  if (!key) { errEl.textContent = 'INCORRECT PIN'; buildPinDots(0,MAX_PIN); shake(); return; }
+  vaultKey = key;
+  await loadVault(key);
+  unlock();
+}
+
+function shake() {
+  const lock = document.getElementById('lockIcon');
+  lock.style.animation = 'none';
+  lock.offsetHeight;
+  lock.style.animation = 'shake .4s ease';
+}
+
+function unlock() {
+  document.getElementById('lockScreen').style.display = 'none';
+  document.getElementById('vaultApp').style.display = 'block';
+  renderList();
+}
+
+function lockVault() {
+  vaultKey = null; secrets = []; selectedId = null;
+  pinEntry = ''; pinMode = 'unlock';
+  document.getElementById('lockSub').textContent = 'ENTER PIN TO UNLOCK';
+  document.getElementById('lockHint').textContent = '';
+  buildPinDots(0, MAX_PIN);
+  document.getElementById('lockError').textContent = '';
+  document.getElementById('lockScreen').style.display = 'flex';
+  document.getElementById('vaultApp').style.display = 'none';
+}
+
+function showChangePIN() {
+  pinMode = 'change_old';
+  pinEntry = '';
+  document.getElementById('lockSub').textContent = 'ENTER CURRENT PIN';
+  document.getElementById('lockHint').textContent = '';
+  buildPinDots(0, MAX_PIN);
+  document.getElementById('lockError').textContent = '';
+  document.getElementById('lockScreen').style.display = 'flex';
+  document.getElementById('vaultApp').style.display = 'none';
+}
+
+// ── Main UI ───────────────────────────────────────────────────────
+function renderList() {
+  const q = document.getElementById('vaultSearch').value.toLowerCase();
+  let list = secrets.filter(s => !q || (s.name + s.username + s.url + s.notes + s.cat).toLowerCase().includes(q));
+  list.sort((a,b) => a.name.localeCompare(b.name));
+
+  document.getElementById('vaultCount').textContent = `${secrets.length} SECRETS`;
+  document.getElementById('vaultStats').textContent = `${secrets.length} secrets stored · encrypted`;
+
+  const el = document.getElementById('vaultList');
+  if (!list.length) { el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:.62rem">No secrets found</div>`; return; }
+
+  el.innerHTML = list.map(s => {
+    const cat = CATS[s.cat] || CATS.other;
+    return `<div class="vault-item${s.id===selectedId?' selected':''}" onclick="selectSecret('${s.id}')">
+      <div class="vault-icon">${cat.icon}</div>
+      <div class="vault-info">
+        <div class="vault-item-name">${esc(s.name)}</div>
+        <div class="vault-item-cat">
+          <span class="cat-chip" style="color:${cat.color};border-color:${cat.color}44">${cat.label}</span>
+          ${s.username ? `<span style="color:var(--text-dim)">${esc(s.username)}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectSecret(id) {
+  selectedId = id;
+  renderList();
+  const s = secrets.find(x => x.id === id);
+  if (!s) return;
+  const cat = CATS[s.cat] || CATS.other;
+  const rp = document.getElementById('vaultRight');
+  rp.innerHTML = `<div class="v-detail">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--panel-border)">
+      <div style="font-size:2.5rem">${cat.icon}</div>
+      <div>
+        <div style="font-family:Orbitron,monospace;font-size:.9rem;color:var(--text-bright)">${esc(s.name)}</div>
+        <div style="font-size:.58rem;color:${cat.color};margin-top:4px">${cat.label}</div>
+      </div>
+    </div>
+    ${vField('USERNAME / ACCOUNT', s.username)}
+    ${vFieldSecret('PASSWORD / SECRET', s.password, id)}
+    ${vField('URL / HOST', s.url)}
+    ${s.notes ? vField('NOTES', s.notes) : ''}
+    <div class="v-actions">
+      <button class="pm-btn accent" onclick="showEditForm('${id}')">EDIT</button>
+      ${s.password ? `<button class="pm-btn" onclick="copySecret('${id}')">COPY SECRET</button>` : ''}
+      <button class="pm-btn" style="border-color:var(--accent4);color:var(--accent4)" onclick="deleteSecret('${id}')">DELETE</button>
+    </div>
+  </div>`;
+}
+
+function vField(label, val) {
+  if (!val) return '';
+  return `<div class="v-field">
+    <div class="v-field-label">${label}</div>
+    <div class="v-field-val"><span>${esc(val)}</span><button class="copy-btn" onclick="copyText('${esc(val)}')">COPY</button></div>
+  </div>`;
+}
+
+let secretVisible = {};
+function vFieldSecret(label, val, id) {
+  if (!val) return '';
+  const vis = secretVisible[id];
+  const display = vis ? esc(val) : '••••••••••••';
+  return `<div class="v-field">
+    <div class="v-field-label">${label}</div>
+    <div class="v-field-val">
+      <span class="v-secret-mask" onclick="toggleSecret('${id}')" title="Click to reveal">${display}</span>
+      <button class="copy-btn" onclick="copySecret('${id}')">COPY</button>
+      <button class="copy-btn" onclick="toggleSecret('${id}')">${vis?'HIDE':'SHOW'}</button>
+    </div>
+  </div>`;
+}
+
+function toggleSecret(id) {
+  secretVisible[id] = !secretVisible[id];
+  selectSecret(id);
+}
+
+function copyText(val) { navigator.clipboard.writeText(val).catch(()=>{}); }
+function copySecret(id) {
+  const s = secrets.find(x=>x.id===id);
+  if (s?.password) navigator.clipboard.writeText(s.password).catch(()=>{});
+}
+
+// ── New / Edit ────────────────────────────────────────────────────
+function showNewForm() {
+  selectedId = null;
+  renderList();
+  showForm({id:uid(), name:'', username:'', password:'', url:'', notes:'', cat:'other', ts:Date.now()}, false);
+}
+
+function showEditForm(id) {
+  const s = secrets.find(x=>x.id===id);
+  if (s) showForm(s, true);
+}
+
+function showForm(s, isEdit) {
+  const rp = document.getElementById('vaultRight');
+  rp.innerHTML = `
+    <div style="padding:10px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:2px;color:var(--text-dim)">
+      ${isEdit ? 'EDIT SECRET' : 'NEW SECRET'}
+    </div>
+    <div class="vault-form">
+      <div class="v-group">
+        <div class="v-label">NAME *</div>
+        <input class="v-input" id="vf_name" value="${esc(s.name)}" placeholder="e.g. Home WiFi, GitHub Token, SSH Root">
+      </div>
+      <div>
+        <div class="v-label">CATEGORY</div>
+        <div class="cat-selector">
+          ${Object.entries(CATS).map(([k,v]) =>
+            `<button class="cat-sel-btn${s.cat===k?' active':''}" onclick="selCat(this,'${k}')">${v.icon} ${v.label}</button>`
+          ).join('')}
+        </div>
+        <input type="hidden" id="vf_cat" value="${s.cat||'other'}">
+      </div>
+      <div class="v-row">
+        <div class="v-group">
+          <div class="v-label">USERNAME / ACCOUNT</div>
+          <input class="v-input" id="vf_user" value="${esc(s.username)}" placeholder="user@example.com">
+        </div>
+      </div>
+      <div class="v-group">
+        <div class="v-label">PASSWORD / SECRET / KEY</div>
+        <div style="display:flex;gap:6px">
+          <input class="v-input" id="vf_pass" type="password" value="${esc(s.password)}" placeholder="Secret value" style="flex:1">
+          <button class="pm-btn" onclick="togglePassVis()" style="flex-shrink:0;font-size:.55rem">SHOW</button>
+          <button class="pm-btn" onclick="genPass()" style="flex-shrink:0;font-size:.55rem">GEN</button>
+        </div>
+      </div>
+      <div class="v-group">
+        <div class="v-label">URL / HOST / SSID</div>
+        <input class="v-input" id="vf_url" value="${esc(s.url)}" placeholder="https://... or 192.168.x.x or network name">
+      </div>
+      <div class="v-group">
+        <div class="v-label">NOTES</div>
+        <textarea class="v-textarea" id="vf_notes" placeholder="Additional context...">${esc(s.notes)}</textarea>
+      </div>
+      <div class="v-row" style="margin-top:6px">
+        <button class="pm-btn accent" style="flex:1" onclick="saveForm('${s.id}')">SAVE SECRET</button>
+        <button class="pm-btn" style="flex:.4" onclick="showEmptyState()">CANCEL</button>
+      </div>
+    </div>`;
+}
+
+function selCat(btn, cat) {
+  document.querySelectorAll('.cat-sel-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('vf_cat').value = cat;
+}
+
+function togglePassVis() {
+  const inp = document.getElementById('vf_pass');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function genPass() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
+  const arr = crypto.getRandomValues(new Uint8Array(20));
+  const pass = Array.from(arr, b => chars[b % chars.length]).join('');
+  document.getElementById('vf_pass').value = pass;
+  document.getElementById('vf_pass').type = 'text';
+}
+
+async function saveForm(id) {
+  const name = document.getElementById('vf_name').value.trim();
+  if (!name) { alert('Name is required.'); return; }
+  const s = {
+    id,
+    name,
+    username: document.getElementById('vf_user').value.trim(),
+    password: document.getElementById('vf_pass').value,
+    url:      document.getElementById('vf_url').value.trim(),
+    notes:    document.getElementById('vf_notes').value.trim(),
+    cat:      document.getElementById('vf_cat').value || 'other',
+    ts:       Date.now()
+  };
+  const idx = secrets.findIndex(x=>x.id===id);
+  if (idx>=0) secrets[idx]=s; else secrets.push(s);
+  await saveVault();
+  renderList();
+  selectSecret(id);
+}
+
+async function deleteSecret(id) {
+  if (!confirm('Permanently delete this secret?')) return;
+  secrets = secrets.filter(x=>x.id!==id);
+  await saveVault();
+  selectedId = null;
+  renderList();
+  showEmptyState();
+}
+
+function showEmptyState() {
+  document.getElementById('vaultRight').innerHTML = `
+    <div class="empty-state">
+      <div style="font-size:3rem;opacity:.3">🔐</div>
+      <div style="font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:2px;opacity:.5;color:var(--text-dim)">SELECT A SECRET</div>
+    </div>`;
+}
+
+// ── Export (encrypted backup) ─────────────────────────────────────
+async function exportBackup() {
+  const raw = localStorage.getItem(STORE_KEY);
+  const salt = localStorage.getItem(SALT_KEY);
+  const pin  = localStorage.getItem(PIN_KEY);
+  const backup = JSON.stringify({ v:'1', store:raw, salt, pin, exported: new Date().toISOString() });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([backup], {type:'application/json'}));
+  a.download = `pm_vault_backup_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Init ─────────────────────────────────────────────────────────
+(async function init() {
+  buildPinDots(0, MAX_PIN);
+  buildPinPad();
+  const hasPIN = localStorage.getItem(PIN_KEY);
+  if (!hasPIN) {
+    pinMode = 'setup';
+    document.getElementById('lockSub').textContent = 'CREATE A PIN TO PROTECT YOUR VAULT';
+    document.getElementById('lockHint').textContent = 'Choose a 4–8 digit PIN. This PIN encrypts all secrets. If you forget it, your data cannot be recovered.';
+  }
+})();
+</script>
+<style>
+@keyframes shake {
+  0%,100%{transform:translateX(0)}20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}
+}
+</style>
+</body></html>

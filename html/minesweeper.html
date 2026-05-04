@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — minesweeper.html v1
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // MINESWEEPER</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050a0e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;font-family:'Courier New',monospace;touch-action:manipulation;user-select:none;}
+#hdr{color:#00d4ff;font-size:.65rem;letter-spacing:3px;margin-bottom:8px;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;}
+#hdr span{color:#fff;}
+#toolbar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;justify-content:center;}
+.btn{background:#0a1a2a;border:1px solid #00d4ff;color:#00d4ff;font-family:'Courier New',monospace;font-size:.55rem;letter-spacing:2px;padding:5px 9px;cursor:pointer;}
+.btn:active,.btn.active{background:#00d4ff;color:#050a0e;}
+#grid{display:grid;gap:2px;margin-bottom:8px;}
+.cell{width:28px;height:28px;background:#0a1a2a;border:1px solid #1a3a50;display:flex;align-items:center;justify-content:center;font-size:.75rem;cursor:pointer;transition:background .1s;}
+.cell:hover{background:#0f2235;}
+.cell.revealed{background:#080f14;border-color:#0d1e2d;cursor:default;}
+.cell.flagged{background:#0a1a2a;color:#ff3366;}
+.cell.mine-hit{background:#ff3366 !important;color:#fff;}
+.cell.mine-show{background:#1a0a0a;color:#ff3366;}
+.n1{color:#00d4ff;} .n2{color:#00ff88;} .n3{color:#ff6b00;} .n4{color:#9b59b6;}
+.n5{color:#ff3366;} .n6{color:#00d4ff;} .n7{color:#fff;} .n8{color:#888;}
+#msg{color:#00ff88;font-size:.85rem;letter-spacing:3px;min-height:20px;text-align:center;}
+#flag-mode{display:none;}
+#flag-hint{color:#2a5870;font-size:.5rem;letter-spacing:2px;margin-top:4px;text-align:center;}
+@media(max-width:480px){
+  .cell{width:24px;height:24px;font-size:.65rem;}
+  #flag-mode{display:block;}
+}
+</style>
+</head><body>
+<div id="hdr">
+  <span>💣 <span id="mine-count">0</span></span>
+  <span>⏱ <span id="timer">0</span>s</span>
+  <span>🏆 BEST <span id="best">—</span></span>
+</div>
+<div id="toolbar">
+  <button class="btn active" onclick="setDiff('easy')">EASY 9×9</button>
+  <button class="btn" onclick="setDiff('med')">MED 16×16</button>
+  <button class="btn" onclick="setDiff('hard')">HARD 30×16</button>
+  <button class="btn" onclick="newGame()">NEW ↺</button>
+  <button class="btn" id="flag-mode" onclick="toggleFlagMode()">🚩 FLAG</button>
+</div>
+<div id="grid"></div>
+<div id="msg">CLICK A CELL TO START</div>
+<div id="flag-hint">LONG-PRESS TO FLAG</div>
+
+<script>
+const DIFFS={
+  easy:{cols:9,rows:9,mines:10},
+  med:{cols:16,rows:16,mines:40},
+  hard:{cols:30,rows:16,mines:99}
+};
+let diff='easy',board=[],cols,rows,mines,revealed,flagged,gameOver,started,timerID,elapsed,flagMode=false;
+
+const COLOR_CLASS=['','n1','n2','n3','n4','n5','n6','n7','n8'];
+
+function setDiff(d){
+  diff=d;
+  document.querySelectorAll('.btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  newGame();
+}
+
+function newGame(){
+  const cfg=DIFFS[diff]; cols=cfg.cols; rows=cfg.rows; mines=cfg.mines;
+  board=Array.from({length:rows},()=>Array(cols).fill(0));
+  revealed=Array.from({length:rows},()=>Array(cols).fill(false));
+  flagged=Array.from({length:rows},()=>Array(cols).fill(false));
+  gameOver=false; started=false; elapsed=0;
+  clearInterval(timerID);
+  document.getElementById('mine-count').textContent=mines;
+  document.getElementById('timer').textContent='0';
+  document.getElementById('msg').textContent='CLICK A CELL TO START';
+  renderGrid();
+}
+
+function placeMines(safeR,safeC){
+  let placed=0;
+  while(placed<mines){
+    const r=Math.floor(Math.random()*rows),c=Math.floor(Math.random()*cols);
+    if(board[r][c]===-1)continue;
+    if(Math.abs(r-safeR)<=1&&Math.abs(c-safeC)<=1)continue;
+    board[r][c]=-1; placed++;
+  }
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    if(board[r][c]===-1)continue;
+    let cnt=0;
+    neighbors(r,c).forEach(([nr,nc])=>{if(board[nr][nc]===-1)cnt++;});
+    board[r][c]=cnt;
+  }
+}
+
+function neighbors(r,c){
+  const n=[];
+  for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++){
+    if(dr===0&&dc===0)continue;
+    const nr=r+dr,nc=c+dc;
+    if(nr>=0&&nr<rows&&nc>=0&&nc<cols)n.push([nr,nc]);
+  }
+  return n;
+}
+
+function reveal(r,c){
+  if(revealed[r][c]||flagged[r][c])return;
+  revealed[r][c]=true;
+  if(board[r][c]===0)neighbors(r,c).forEach(([nr,nc])=>reveal(nr,nc));
+}
+
+function checkWin(){
+  let unrev=0;
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++)if(!revealed[r][c]&&board[r][c]!==-1)unrev++;
+  return unrev===0;
+}
+
+function onClick(r,c){
+  if(gameOver)return;
+  if(flagMode){onFlag(r,c);return;}
+  if(flagged[r][c])return;
+  if(!started){
+    started=true;
+    placeMines(r,c);
+    timerID=setInterval(()=>{elapsed++;document.getElementById('timer').textContent=elapsed;},1000);
+  }
+  if(board[r][c]===-1){
+    revealed[r][c]=true;
+    gameOver=true; clearInterval(timerID);
+    showMines(r,c);
+    document.getElementById('msg').textContent='💥 DETONATED — CLICK NEW';
+    renderGrid(); return;
+  }
+  reveal(r,c);
+  if(checkWin()){
+    gameOver=true; clearInterval(timerID);
+    document.getElementById('msg').textContent=`✓ CLEARED — ${elapsed}s`;
+    const key=`pm_msw_best_${diff}`;
+    const prev=parseInt(localStorage.getItem(key)||'9999');
+    if(elapsed<prev){localStorage.setItem(key,elapsed);document.getElementById('best').textContent=elapsed+'s';}
+  }
+  renderGrid();
+}
+
+function onFlag(r,c){
+  if(revealed[r][c])return;
+  flagged[r][c]=!flagged[r][c];
+  const cnt=mines-flagged.flat().filter(Boolean).length;
+  document.getElementById('mine-count').textContent=cnt;
+  renderGrid();
+}
+
+function showMines(hr,hc){
+  for(let r=0;r<rows;r++)for(let c=0;c<cols;c++){
+    if(board[r][c]===-1&&!flagged[r][c])revealed[r][c]=true;
+  }
+}
+
+function toggleFlagMode(){
+  flagMode=!flagMode;
+  document.getElementById('flag-mode').classList.toggle('active',flagMode);
+}
+
+function renderGrid(){
+  const g=document.getElementById('grid');
+  g.style.gridTemplateColumns=`repeat(${cols},auto)`;
+  g.innerHTML='';
+  // update best from storage
+  const bv=localStorage.getItem(`pm_msw_best_${diff}`);
+  document.getElementById('best').textContent=bv?bv+'s':'—';
+
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const el=document.createElement('div');
+      el.className='cell';
+      if(flagged[r][c]&&!revealed[r][c]){el.classList.add('flagged');el.textContent='🚩';}
+      else if(revealed[r][c]){
+        el.classList.add('revealed');
+        if(board[r][c]===-1){
+          const isHit=gameOver&&flagged[r][c]===false&&board[r][c]===-1;
+          el.classList.add('mine-show'); el.textContent='💣';
+        } else if(board[r][c]>0){
+          el.classList.add(COLOR_CLASS[board[r][c]]);
+          el.textContent=board[r][c];
+        }
+      }
+      // events
+      const rr=r,cc=c;
+      el.addEventListener('click',()=>onClick(rr,cc));
+      el.addEventListener('contextmenu',e=>{e.preventDefault();onFlag(rr,cc);});
+      // long press for mobile flag
+      let lpt;
+      el.addEventListener('touchstart',e=>{lpt=setTimeout(()=>{onFlag(rr,cc);renderGrid();},500);},{passive:true});
+      el.addEventListener('touchend',()=>clearTimeout(lpt),{passive:true});
+      el.addEventListener('touchmove',()=>clearTimeout(lpt),{passive:true});
+      g.appendChild(el);
+    }
+  }
+}
+
+newGame();
+</script>
+</body></html>

@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — field_notes.html (NEW APP)
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Structured GPS-stamped field intelligence notes
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // FIELD NOTES</title>
+<link rel="stylesheet" href="pm_shared.css">
+<style>
+.fn-layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 52px);overflow:hidden;}
+.fn-left{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.fn-right{display:flex;flex-direction:column;overflow:hidden;}
+.note-list{flex:1;overflow-y:auto;}
+.note-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.4);cursor:pointer;transition:background .15s;}
+.note-item:hover{background:rgba(244,168,32,.04);}
+.note-item.selected{background:rgba(244,168,32,.08);border-left:2px solid var(--gold);}
+.note-title{font-size:.72rem;color:var(--text-bright);margin-bottom:3px;display:flex;gap:6px;align-items:center;}
+.note-meta{font-size:.55rem;color:var(--text-dim);display:flex;gap:8px;flex-wrap:wrap;}
+.cat-badge{display:inline-block;padding:1px 6px;font-family:Orbitron,monospace;font-size:.45rem;letter-spacing:1px;border-radius:2px;}
+.note-form{padding:14px;flex:1;display:flex;flex-direction:column;gap:8px;overflow-y:auto;}
+.fn-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.68rem;padding:8px 10px;outline:none;width:100%;}
+.fn-input:focus{border-color:var(--gold);}
+textarea.fn-input{min-height:120px;resize:vertical;line-height:1.6;}
+.fn-row{display:flex;gap:8px;}
+.fn-label{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:3px;}
+.cat-selector{display:flex;gap:6px;flex-wrap:wrap;}
+.cat-btn{padding:5px 10px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.5rem;cursor:pointer;letter-spacing:1px;transition:all .15s;}
+.cat-btn:hover{border-color:var(--gold);color:var(--gold);}
+.cat-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(244,168,32,.1);}
+.fn-toolbar{padding:10px 12px;border-bottom:1px solid var(--panel-border);background:var(--bg2);display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex-shrink:0;}
+.fn-btn{padding:5px 12px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Share\ Tech\ Mono,monospace;font-size:.58rem;cursor:pointer;transition:all .15s;}
+.fn-btn:hover{border-color:var(--gold);color:var(--gold);}
+.gps-display{padding:8px 12px;background:var(--bg2);border-bottom:1px solid var(--panel-border);font-size:.6rem;color:var(--text-dim);font-family:Share\ Tech\ Mono,monospace;flex-shrink:0;}
+.note-view{padding:14px;flex:1;overflow-y:auto;}
+.nv-title{font-family:Orbitron,monospace;font-size:1rem;color:var(--gold);margin-bottom:10px;}
+.nv-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(28,46,58,.3);font-size:.65rem;}
+.nv-label{color:var(--text-dim);}
+.nv-val{color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;text-align:right;}
+.nv-body{margin-top:12px;font-size:.72rem;color:var(--text-bright);line-height:1.8;white-space:pre-wrap;}
+.filter-bar{padding:6px 12px;background:var(--bg2);border-bottom:1px solid var(--panel-border);display:flex;gap:6px;flex-wrap:wrap;flex-shrink:0;}
+.filter-btn{padding:3px 8px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.48rem;cursor:pointer;transition:all .15s;}
+.filter-btn.active{border-color:var(--accent);color:var(--accent);}
+</style>
+</head><body>
+<header class="pm-header">
+  <div class="pm-logo">📋 <em>FIELD</em> NOTES</div>
+  <div class="pm-hdr-right">
+    <button class="pm-refresh" onclick="exportCSV()">⬇ CSV</button>
+    <button class="pm-refresh" onclick="exportJSON()">⬇ JSON</button>
+    <button class="pm-refresh" onclick="newNote()">+ NOTE</button>
+  </div>
+</header>
+
+<div class="fn-layout">
+  <div class="fn-left">
+    <div class="filter-bar">
+      <span style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim)">FILTER:</span>
+      <div class="filter-btn active" onclick="setFilter('all')">ALL</div>
+      <div class="filter-btn" onclick="setFilter('security')">SEC</div>
+      <div class="filter-btn" onclick="setFilter('terrain')">TERRAIN</div>
+      <div class="filter-btn" onclick="setFilter('contact')">CONTACT</div>
+      <div class="filter-btn" onclick="setFilter('intel')">INTEL</div>
+      <div class="filter-btn" onclick="setFilter('hazard')">HAZARD</div>
+    </div>
+    <div class="pm-sh">NOTES <span class="pm-sh-sub" id="noteCount"></span>
+      <input id="searchInput" placeholder="Search..." oninput="renderList()" style="background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.58rem;padding:2px 8px;outline:none;width:80px;">
+    </div>
+    <div class="note-list" id="noteList"></div>
+  </div>
+
+  <div class="fn-right" id="rightPanel">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;color:var(--text-dim)">
+      <div style="font-size:3rem">📋</div>
+      <div style="font-family:Orbitron,monospace;font-size:.65rem;letter-spacing:3px;color:var(--gold)">FIELD NOTES</div>
+      <div style="font-size:.65rem;text-align:center;line-height:1.8">
+        GPS-stamped intelligence observations.<br>
+        Tap + NOTE to create an entry.<br>
+        All notes saved locally, export as CSV or JSON.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="pm_scraper.js"></script>
+<script src="pm_utils.js"></script>
+<script src="pm_transport.js"></script>
+<script>
+const CATEGORIES = [
+  {id:'security', label:'SECURITY', color:'#ff3366'},
+  {id:'terrain',  label:'TERRAIN',  color:'#00d4ff'},
+  {id:'contact',  label:'CONTACT',  color:'#f4a820'},
+  {id:'intel',    label:'INTEL',    color:'#9b59b6'},
+  {id:'hazard',   label:'HAZARD',   color:'#ff6b00'},
+  {id:'nature',   label:'NATURE',   color:'#00ff88'},
+  {id:'general',  label:'GENERAL',  color:'#7ab8d4'},
+];
+
+let notes = JSON.parse(localStorage.getItem('pm_field_notes') || '[]');
+let selectedId = null;
+let filterCat  = 'all';
+let editMode   = false;
+let currentGPS = {lat: null, lon: null, alt: null};
+
+function save() { localStorage.setItem('pm_field_notes', JSON.stringify(notes)); }
+function cat(id) { return CATEGORIES.find(c=>c.id===id) || CATEGORIES[6]; }
+
+// Transport — get GPS from T-Beam
+const beam = new PMTransport({
+  onMessage: msg => {
+    if (msg.type === 'GPS_FIX') {
+      currentGPS = {lat: msg.lat, lon: msg.lon, alt: msg.alt_m};
+      updateGPSDisplay();
+    }
+  },
+  onStatus: () => {}
+});
+
+function updateGPSDisplay() {
+  // Updates GPS display in note form if visible
+  const el = document.getElementById('formGPS');
+  if (el && currentGPS.lat) {
+    el.textContent = `📍 ${parseFloat(currentGPS.lat).toFixed(5)}, ${parseFloat(currentGPS.lon).toFixed(5)} ${currentGPS.alt?`· ${Math.round(currentGPS.alt)}m`:''}`;
+    el.style.color = 'var(--accent3)';
+  }
+}
+
+function newNote() {
+  selectedId = null;
+  showNoteForm({});
+}
+
+function showNoteForm(note) {
+  editMode = true;
+  const isNew = !note.id;
+  const activeCat = note.category || 'general';
+
+  document.getElementById('rightPanel').innerHTML = `
+    <div class="fn-toolbar">
+      <button class="fn-btn" style="border-color:var(--gold);color:var(--gold)" onclick="saveNote()">💾 SAVE</button>
+      <button class="fn-btn" onclick="cancelEdit()">CANCEL</button>
+      ${!isNew ? `<button class="fn-btn" style="border-color:var(--accent4);color:var(--accent4)" onclick="deleteNote('${note.id}')">DELETE</button>` : ''}
+    </div>
+    <div class="gps-display">
+      <span id="formGPS" style="color:${currentGPS.lat?'var(--accent3)':'var(--text-dim)'}">
+        ${currentGPS.lat ? `📍 ${parseFloat(currentGPS.lat).toFixed(5)}, ${parseFloat(currentGPS.lon).toFixed(5)}` : '📍 No GPS fix — connect T-Beam'}
+      </span>
+      <button style="float:right;background:none;border:none;color:var(--accent);cursor:pointer;font-size:.58rem;font-family:Orbitron,monospace" onclick="stampGPS()">STAMP GPS</button>
+    </div>
+    <div class="note-form">
+      <div>
+        <div class="fn-label">TITLE</div>
+        <input class="fn-input" id="formTitle" placeholder="Note title" value="${note.title||''}">
+      </div>
+      <div>
+        <div class="fn-label">CATEGORY</div>
+        <div class="cat-selector">
+          ${CATEGORIES.map(c=>`<div class="cat-btn ${c.id===activeCat?'active':''}" onclick="selectCat('${c.id}',this)" style="${c.id===activeCat?`border-color:${c.color};color:${c.color};background:${c.color}22`:''}">${c.label}</div>`).join('')}
+        </div>
+        <input type="hidden" id="formCat" value="${activeCat}">
+      </div>
+      <div>
+        <div class="fn-label">OBSERVATION</div>
+        <textarea class="fn-input" id="formBody" placeholder="Record your observation...">${note.body||''}</textarea>
+      </div>
+      <div class="fn-row">
+        <div style="flex:1">
+          <div class="fn-label">GPS LAT</div>
+          <input class="fn-input" id="formLat" placeholder="Latitude" value="${note.lat||currentGPS.lat||''}">
+        </div>
+        <div style="flex:1">
+          <div class="fn-label">GPS LON</div>
+          <input class="fn-input" id="formLon" placeholder="Longitude" value="${note.lon||currentGPS.lon||''}">
+        </div>
+      </div>
+      <div class="fn-row">
+        <div style="flex:1">
+          <div class="fn-label">ALTITUDE (m)</div>
+          <input class="fn-input" id="formAlt" placeholder="Alt" value="${note.alt||currentGPS.alt||''}">
+        </div>
+        <div style="flex:1">
+          <div class="fn-label">PRIORITY</div>
+          <select class="fn-input" id="formPriority">
+            <option value="low"    ${note.priority==='low'   ?'selected':''}>LOW</option>
+            <option value="medium" ${(!note.priority||note.priority==='medium')?'selected':''}>MEDIUM</option>
+            <option value="high"   ${note.priority==='high'  ?'selected':''}>HIGH</option>
+            <option value="urgent" ${note.priority==='urgent'?'selected':''}>URGENT</option>
+          </select>
+        </div>
+      </div>
+      <div>
+        <div class="fn-label">TAGS (comma separated)</div>
+        <input class="fn-input" id="formTags" placeholder="tag1, tag2, ..." value="${(note.tags||[]).join(', ')}">
+      </div>
+    </div>`;
+
+  document.getElementById('formTitle').focus();
+}
+
+function selectCat(id, el) {
+  document.getElementById('formCat').value = id;
+  document.querySelectorAll('.cat-btn').forEach(b => {
+    b.classList.remove('active');
+    b.style.borderColor=''; b.style.color=''; b.style.background='';
+  });
+  const c = cat(id);
+  el.classList.add('active');
+  el.style.borderColor = c.color;
+  el.style.color = c.color;
+  el.style.background = c.color + '22';
+}
+
+function stampGPS() {
+  if (currentGPS.lat) {
+    document.getElementById('formLat').value = parseFloat(currentGPS.lat).toFixed(6);
+    document.getElementById('formLon').value = parseFloat(currentGPS.lon).toFixed(6);
+    if (currentGPS.alt) document.getElementById('formAlt').value = Math.round(currentGPS.alt);
+  } else {
+    navigator.geolocation?.getCurrentPosition(pos => {
+      document.getElementById('formLat').value = pos.coords.latitude.toFixed(6);
+      document.getElementById('formLon').value = pos.coords.longitude.toFixed(6);
+      if (pos.coords.altitude) document.getElementById('formAlt').value = Math.round(pos.coords.altitude);
+    });
+  }
+}
+
+function saveNote() {
+  const title = document.getElementById('formTitle').value.trim();
+  if (!title) { alert('Enter a title'); return; }
+
+  const note = {
+    id:        selectedId || PM.uid(),
+    title,
+    category:  document.getElementById('formCat').value,
+    body:      document.getElementById('formBody').value,
+    lat:       document.getElementById('formLat').value,
+    lon:       document.getElementById('formLon').value,
+    alt:       document.getElementById('formAlt').value,
+    priority:  document.getElementById('formPriority').value,
+    tags:      document.getElementById('formTags').value.split(',').map(t=>t.trim()).filter(Boolean),
+    created:   selectedId ? (notes.find(n=>n.id===selectedId)?.created || Date.now()) : Date.now(),
+    modified:  Date.now(),
+  };
+
+  if (selectedId) {
+    const idx = notes.findIndex(n=>n.id===selectedId);
+    if (idx >= 0) notes[idx] = note;
+  } else {
+    notes.unshift(note);
+  }
+
+  save();
+  selectedId = note.id;
+  editMode = false;
+  renderList();
+  viewNote(note);
+}
+
+function viewNote(note) {
+  const c = cat(note.category);
+  const priorityColors = {low:'var(--text-dim)',medium:'var(--gold)',high:'var(--accent2)',urgent:'var(--accent4)'};
+  document.getElementById('rightPanel').innerHTML = `
+    <div class="fn-toolbar">
+      <button class="fn-btn" style="border-color:var(--gold);color:var(--gold)" onclick="editNote('${note.id}')">✏ EDIT</button>
+      <button class="fn-btn" style="border-color:var(--accent4);color:var(--accent4)" onclick="deleteNote('${note.id}')">DELETE</button>
+      ${note.lat&&note.lon?`<button class="fn-btn" onclick="openInMaps('${note.lat}','${note.lon}')">🗺 MAP</button>`:''}
+    </div>
+    <div class="note-view">
+      <div class="nv-title">${PM.esc(note.title)}</div>
+      <div class="nv-row"><span class="nv-label">Category</span><span class="nv-val"><span style="color:${c.color}">${c.label}</span></span></div>
+      <div class="nv-row"><span class="nv-label">Priority</span><span class="nv-val" style="color:${priorityColors[note.priority]}">${note.priority?.toUpperCase()||'MEDIUM'}</span></div>
+      <div class="nv-row"><span class="nv-label">Created</span><span class="nv-val">${new Date(note.created).toLocaleString()}</span></div>
+      ${note.lat?`<div class="nv-row"><span class="nv-label">GPS</span><span class="nv-val">${parseFloat(note.lat).toFixed(5)}, ${parseFloat(note.lon).toFixed(5)}</span></div>`:''}
+      ${note.alt?`<div class="nv-row"><span class="nv-label">Altitude</span><span class="nv-val">${note.alt}m</span></div>`:''}
+      ${note.tags?.length?`<div class="nv-row"><span class="nv-label">Tags</span><span class="nv-val">${note.tags.join(', ')}</span></div>`:''}
+      <div class="nv-body">${PM.esc(note.body||'')}</div>
+    </div>`;
+}
+
+function openInMaps(lat, lon) {
+  window.open(`https://maps.google.com/?q=${lat},${lon}`, '_blank');
+}
+
+function editNote(id) {
+  selectedId = id;
+  const note = notes.find(n=>n.id===id);
+  if (note) showNoteForm(note);
+}
+
+function deleteNote(id) {
+  if (!confirm('Delete this note?')) return;
+  notes = notes.filter(n=>n.id!==id);
+  save();
+  selectedId = null;
+  renderList();
+  document.getElementById('rightPanel').innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:.65rem">Note deleted</div>';
+}
+
+function cancelEdit() {
+  if (selectedId) {
+    const note = notes.find(n=>n.id===selectedId);
+    if (note) viewNote(note);
+  } else {
+    document.getElementById('rightPanel').innerHTML = '<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--text-dim)">Click + NOTE to create a new entry</div>';
+  }
+}
+
+function setFilter(f) {
+  filterCat = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderList();
+}
+
+function renderList() {
+  const search = document.getElementById('searchInput')?.value.toLowerCase() || '';
+  let filtered = notes;
+  if (filterCat !== 'all') filtered = filtered.filter(n=>n.category===filterCat);
+  if (search) filtered = filtered.filter(n=>
+    (n.title+n.body+(n.tags||[]).join('')).toLowerCase().includes(search));
+
+  filtered.sort((a,b) => {
+    const pri = {urgent:0,high:1,medium:2,low:3};
+    return (pri[a.priority]||2) - (pri[b.priority]||2) || b.modified - a.modified;
+  });
+
+  document.getElementById('noteCount').textContent = `${filtered.length}/${notes.length}`;
+  const priorityColors = {low:'var(--text-dim)',medium:'var(--gold)',high:'var(--accent2)',urgent:'var(--accent4)'};
+
+  document.getElementById('noteList').innerHTML = filtered.map(n => {
+    const c = cat(n.category);
+    return `<div class="note-item ${selectedId===n.id?'selected':''}" onclick="selectNote('${n.id}')">
+      <div class="note-title">
+        <span class="cat-badge" style="background:${c.color}22;color:${c.color};border:1px solid ${c.color}">${c.label}</span>
+        <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${PM.esc(n.title)}</span>
+        <span style="color:${priorityColors[n.priority]||'var(--gold)'};font-size:.55rem">●</span>
+      </div>
+      <div class="note-meta">
+        <span>${new Date(n.created).toLocaleDateString()}</span>
+        ${n.lat?`<span>📍 ${parseFloat(n.lat).toFixed(3)}</span>`:''}
+        ${n.tags?.length?`<span>${n.tags.slice(0,2).join(', ')}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function selectNote(id) {
+  selectedId = id;
+  editMode = false;
+  renderList();
+  const note = notes.find(n=>n.id===id);
+  if (note) viewNote(note);
+}
+
+function exportCSV() {
+  const headers = 'ID,Title,Category,Priority,Created,Lat,Lon,Alt,Tags,Body';
+  const rows = notes.map(n =>
+    [n.id,`"${n.title}"`,n.category,n.priority,new Date(n.created).toISOString(),
+     n.lat,n.lon,n.alt,`"${(n.tags||[]).join(';')}"`,`"${(n.body||'').replace(/"/g,'""')}"`].join(',')
+  );
+  const blob = new Blob([[headers,...rows].join('\n')], {type:'text/csv'});
+  const a = document.createElement('a'); a.download='field_notes.csv'; a.href=URL.createObjectURL(blob); a.click();
+}
+
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(notes,null,2)], {type:'application/json'});
+  const a = document.createElement('a'); a.download='field_notes.json'; a.href=URL.createObjectURL(blob); a.click();
+}
+
+// Init
+window.addEventListener('load', async () => {
+  renderList();
+  try { await beam.connect(); } catch {}
+  // Fallback GPS
+  navigator.geolocation?.watchPosition(pos => {
+    if (!currentGPS.lat) {
+      currentGPS = {lat:pos.coords.latitude, lon:pos.coords.longitude, alt:pos.coords.altitude};
+      updateGPSDisplay();
+    }
+  });
+});
+</script>
+</body></html>

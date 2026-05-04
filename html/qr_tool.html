@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — qr_tool.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  QR code scanner (camera) + generator (canvas)
+  Dependencies: jsQR (CDN), qrcode-generator (CDN)
+  Works on Android Chrome, Linux Chromium, and WebView APK.
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // QR TOOL</title>
+<link rel="stylesheet" href="pm_shared.css">
+<style>
+.qr-layout{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 52px);overflow:hidden;}
+.qr-panel{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.qr-panel:last-child{border-right:none;}
+.qr-panel-title{padding:10px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:2px;color:var(--text-dim);display:flex;align-items:center;gap:8px;}
+.qr-panel-body{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;align-items:center;}
+/* Scanner */
+.video-wrap{width:100%;max-width:380px;position:relative;border:1px solid var(--panel-border);}
+#scanVideo{width:100%;display:block;background:#000;}
+.scan-overlay{position:absolute;inset:0;pointer-events:none;}
+.scan-crosshair{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60%;height:60%;border:2px solid var(--accent);box-shadow:0 0 0 9999px rgba(0,0,0,.4);}
+.scan-line{position:absolute;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);animation:scanLine 2s linear infinite;}
+@keyframes scanLine{0%{top:20%}100%{top:80%}}
+.result-box{width:100%;max-width:380px;background:var(--bg3);border:1px solid var(--panel-border);padding:12px;min-height:80px;}
+.result-label{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px;}
+.result-text{font-size:.68rem;color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;word-break:break-all;line-height:1.7;}
+.result-type{font-family:Orbitron,monospace;font-size:.48rem;padding:2px 8px;border-radius:2px;margin-bottom:6px;display:inline-block;}
+.scan-actions{display:flex;gap:6px;flex-wrap:wrap;width:100%;max-width:380px;}
+/* Generator */
+.qr-form{width:100%;max-width:380px;display:flex;flex-direction:column;gap:10px;}
+.qr-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.68rem;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;}
+.qr-input:focus{border-color:var(--accent);}
+.qr-label{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:3px;}
+.qr-textarea{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.66rem;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;resize:vertical;min-height:80px;line-height:1.6;}
+.qr-textarea:focus{border-color:var(--accent);}
+.qr-canvas-wrap{width:100%;max-width:380px;display:flex;justify-content:center;background:var(--bg3);border:1px solid var(--panel-border);padding:16px;}
+#qrCanvas{image-rendering:pixelated;}
+.template-row{display:flex;gap:5px;flex-wrap:wrap;width:100%;max-width:380px;}
+.tpl-btn{padding:5px 9px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.48rem;cursor:pointer;letter-spacing:1px;transition:all .15s;}
+.tpl-btn:hover{border-color:var(--accent);color:var(--accent);}
+.qr-size-row{display:flex;align-items:center;gap:10px;}
+.err-lvl-row{display:flex;gap:6px;}
+.err-btn{padding:4px 10px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.48rem;cursor:pointer;}
+.err-btn.active{background:rgba(0,212,255,.12);border-color:var(--accent);color:var(--accent);}
+/* History */
+.history-panel{width:100%;max-width:380px;}
+.history-item{padding:8px 10px;border-bottom:1px solid rgba(28,46,58,.3);font-size:.63rem;color:var(--text-bright);cursor:pointer;display:flex;gap:8px;align-items:flex-start;}
+.history-item:hover{background:rgba(0,212,255,.04);}
+.history-text{flex:1;font-family:Share\ Tech\ Mono,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.history-meta{font-size:.52rem;color:var(--text-dim);flex-shrink:0;}
+@media(max-width:600px){.qr-layout{grid-template-columns:1fr;}height:auto;overflow-y:auto;}
+</style>
+</head><body>
+<header class="pm-header">
+  <div class="pm-logo">⬛ <em>QR TOOL</em></div>
+  <div class="pm-hdr-right">
+    <button class="pm-refresh" id="cameraToggle" onclick="toggleCamera()">START CAMERA</button>
+  </div>
+</header>
+<div class="qr-layout">
+
+  <!-- LEFT: Scanner -->
+  <div class="qr-panel">
+    <div class="qr-panel-title">📷 SCANNER</div>
+    <div class="qr-panel-body">
+      <div class="video-wrap" id="videoWrap" style="display:none">
+        <video id="scanVideo" autoplay muted playsinline></video>
+        <div class="scan-overlay">
+          <div class="scan-crosshair"></div>
+          <div class="scan-line"></div>
+        </div>
+      </div>
+      <canvas id="scanCanvas" style="display:none"></canvas>
+      <div id="noCamera" style="text-align:center;color:var(--text-dim);font-size:.62rem;padding:20px;width:100%;max-width:380px">
+        <div style="font-size:3rem;opacity:.3;margin-bottom:12px">📷</div>
+        Press START CAMERA to begin scanning.<br><br>
+        Or upload an image containing a QR code:
+        <div style="margin-top:10px">
+          <label class="pm-btn" style="cursor:pointer;display:inline-block">UPLOAD IMAGE<input type="file" accept="image/*" style="display:none" onchange="scanImage(this)"></label>
+        </div>
+      </div>
+      <div class="result-box" id="resultBox">
+        <div class="result-label">SCAN RESULT</div>
+        <div class="result-text" id="resultText" style="color:var(--text-dim)">Waiting for QR code...</div>
+      </div>
+      <div class="scan-actions" id="scanActions" style="display:none">
+        <button class="pm-btn accent" onclick="copyResult()">COPY</button>
+        <button class="pm-btn" onclick="openResult()">OPEN URL</button>
+        <button class="pm-btn" style="border-color:var(--accent3);color:var(--accent3)" onclick="loadResultToGen()">LOAD TO GEN</button>
+        <button class="pm-btn" onclick="saveToHistory()">SAVE</button>
+      </div>
+      <div class="history-panel" id="historyPanel" style="display:none">
+        <div class="pm-sh">SCAN HISTORY</div>
+        <div id="historyList"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Generator -->
+  <div class="qr-panel">
+    <div class="qr-panel-title">⬛ GENERATOR</div>
+    <div class="qr-panel-body">
+      <div class="qr-form">
+        <div>
+          <div class="qr-label">CONTENT TYPE</div>
+          <div class="template-row">
+            <button class="tpl-btn" onclick="setTemplate('text')">TEXT</button>
+            <button class="tpl-btn" onclick="setTemplate('url')">URL</button>
+            <button class="tpl-btn" onclick="setTemplate('wifi')">WIFI</button>
+            <button class="tpl-btn" onclick="setTemplate('email')">EMAIL</button>
+            <button class="tpl-btn" onclick="setTemplate('sms')">SMS</button>
+            <button class="tpl-btn" onclick="setTemplate('contact')">CONTACT</button>
+            <button class="tpl-btn" onclick="setTemplate('mesh')">MESH NODE</button>
+            <button class="tpl-btn" onclick="setTemplate('ssh')">SSH</button>
+          </div>
+        </div>
+        <div id="templateFields"></div>
+        <div>
+          <div class="qr-label">QR CONTENT</div>
+          <textarea class="qr-textarea" id="qrContent" placeholder="Enter text or use a template above..." oninput="generateQR()"></textarea>
+        </div>
+        <div class="qr-size-row">
+          <div class="qr-label">SIZE</div>
+          <input type="range" id="qrSize" min="100" max="400" value="240" oninput="generateQR()" style="flex:1;accent-color:var(--accent)">
+          <span id="qrSizeLabel" style="font-size:.6rem;color:var(--text-dim);font-family:Share\ Tech\ Mono,monospace;width:40px">240</span>
+        </div>
+        <div class="qr-size-row">
+          <div class="qr-label">ERROR CORRECTION</div>
+          <div class="err-lvl-row">
+            <button class="err-btn" data-lvl="L" onclick="setECC(this,'L')">L</button>
+            <button class="err-btn active" data-lvl="M" onclick="setECC(this,'M')">M</button>
+            <button class="err-btn" data-lvl="Q" onclick="setECC(this,'Q')">Q</button>
+            <button class="err-btn" data-lvl="H" onclick="setECC(this,'H')">H</button>
+          </div>
+        </div>
+      </div>
+      <div class="qr-canvas-wrap" id="qrWrap" style="display:none">
+        <canvas id="qrCanvas"></canvas>
+      </div>
+      <div id="qrEmpty" style="text-align:center;color:var(--text-dim);font-size:.62rem;padding:20px;width:100%;max-width:380px;border:1px dashed var(--panel-border)">
+        QR code will appear here
+      </div>
+      <div id="genActions" style="display:none;width:100%;max-width:380px">
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="pm-btn accent" onclick="downloadQR()">DOWNLOAD PNG</button>
+          <button class="pm-btn" onclick="copyQRtoClipboard()">COPY IMAGE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- jsQR for scanning -->
+<script src="lib/jsQR.js"></script>
+<!-- qrcodejs for generation -->
+<script>
+// Minimal QR encoder using qrcode-generator (self-contained, no CDN needed for generation)
+// We'll use a compact built-in approach via canvas + qrcode-generator CDN
+</script>
+<script src="lib/qrcode.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// QR TOOL — Scanner + Generator
+// Scanner: jsQR (WASM-free, pure JS canvas analysis)
+// Generator: qrcodejs canvas rendering
+// Storage: pm_qr_history (last 20 scan results)
+// ═══════════════════════════════════════════════════════════════════
+
+const HISTORY_KEY = 'pm_qr_history';
+let scanResult = null;
+let cameraActive = false;
+let videoStream = null;
+let scanLoop = null;
+let eccLevel = 'M';
+let qrObj = null;
+
+// ── Scanner ───────────────────────────────────────────────────────
+async function toggleCamera() {
+  if (cameraActive) { stopCamera(); return; }
+  try {
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment', width: {ideal:640}, height: {ideal:480} }
+    });
+    const video = document.getElementById('scanVideo');
+    video.srcObject = videoStream;
+    await video.play();
+    document.getElementById('videoWrap').style.display = 'block';
+    document.getElementById('noCamera').style.display = 'none';
+    document.getElementById('cameraToggle').textContent = 'STOP CAMERA';
+    cameraActive = true;
+    startScanLoop();
+  } catch(e) {
+    alert('Camera access denied or not available.\nOn Android: use Chrome.\nOn Linux: allow camera in Chromium site settings.');
+  }
+}
+
+function stopCamera() {
+  if (scanLoop) cancelAnimationFrame(scanLoop);
+  if (videoStream) videoStream.getTracks().forEach(t=>t.stop());
+  videoStream = null; cameraActive = false;
+  document.getElementById('videoWrap').style.display = 'none';
+  document.getElementById('noCamera').style.display = 'block';
+  document.getElementById('cameraToggle').textContent = 'START CAMERA';
+}
+
+function startScanLoop() {
+  const video  = document.getElementById('scanVideo');
+  const canvas = document.getElementById('scanCanvas');
+  const ctx    = canvas.getContext('2d');
+  let lastScan = 0;
+
+  function tick() {
+    if (!cameraActive) return;
+    scanLoop = requestAnimationFrame(tick);
+    if (!video.readyState) return;
+    const now = Date.now();
+    if (now - lastScan < 200) return; // 5 fps scan — saves battery
+    lastScan = now;
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    ctx.drawImage(video, 0, 0);
+    const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(img.data, img.width, img.height, { inversionAttempts:'dontInvert' });
+    if (code) displayResult(code.data, true);
+  }
+  tick();
+}
+
+function scanImage(input) {
+  const file = input.files[0]; if (!file) return;
+  const img = new Image();
+  img.onload = () => {
+    const canvas = document.getElementById('scanCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = img.width; canvas.height = img.height;
+    ctx.drawImage(img, 0, 0);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const code = jsQR(imageData.data, imageData.width, imageData.height);
+    if (code) displayResult(code.data, false);
+    else { document.getElementById('resultText').textContent = 'No QR code found in image.'; document.getElementById('resultText').style.color = 'var(--accent4)'; }
+  };
+  img.src = URL.createObjectURL(file);
+  input.value = '';
+}
+
+function displayResult(data, fromCamera) {
+  scanResult = data;
+  if (fromCamera) stopCamera();
+  const type = detectType(data);
+  const el = document.getElementById('resultText');
+  el.style.color = 'var(--accent3)';
+  el.innerHTML = `<span class="result-type" style="background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid rgba(0,255,136,.3)">${type}</span><br>${esc(data)}`;
+  document.getElementById('scanActions').style.display = 'flex';
+  renderHistory();
+}
+
+function detectType(s) {
+  if (/^https?:\/\//i.test(s)) return 'URL';
+  if (/^WIFI:/i.test(s)) return 'WIFI';
+  if (/^mailto:/i.test(s)) return 'EMAIL';
+  if (/^smsto:|^sms:/i.test(s)) return 'SMS';
+  if (/^BEGIN:VCARD/i.test(s)) return 'CONTACT';
+  if (/^BEGIN:VEVENT/i.test(s)) return 'EVENT';
+  if (/^geo:/i.test(s)) return 'LOCATION';
+  if (/^tel:/i.test(s)) return 'PHONE';
+  return 'TEXT';
+}
+
+function copyResult() { if (scanResult) navigator.clipboard.writeText(scanResult).catch(()=>{}); }
+function openResult() { if (scanResult && /^https?:\/\//i.test(scanResult)) window.open(scanResult, '_blank'); }
+function loadResultToGen() { if (scanResult) { document.getElementById('qrContent').value = scanResult; generateQR(); } }
+function saveToHistory() {
+  if (!scanResult) return;
+  let h = JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
+  h = [{text:scanResult, ts:Date.now(), type:detectType(scanResult)}, ...h.filter(x=>x.text!==scanResult)].slice(0,20);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(h));
+  renderHistory();
+}
+
+function renderHistory() {
+  const h = JSON.parse(localStorage.getItem(HISTORY_KEY)||'[]');
+  if (!h.length) return;
+  document.getElementById('historyPanel').style.display = 'block';
+  document.getElementById('historyList').innerHTML = h.map(item =>
+    `<div class="history-item" onclick="loadHistory('${esc(item.text.replace(/'/g,"\\'"))}')">
+      <div class="history-text">${esc(item.text)}</div>
+      <div class="history-meta">${item.type} · ${new Date(item.ts).toLocaleDateString()}</div>
+    </div>`
+  ).join('');
+}
+
+function loadHistory(text) {
+  document.getElementById('qrContent').value = text;
+  generateQR();
+}
+
+// ── Generator ─────────────────────────────────────────────────────
+const TEMPLATES = {
+  text:    { fields:[], prefix: '' },
+  url:     { fields:[{id:'url',label:'URL',placeholder:'https://...'}], build: d => d.url },
+  wifi:    { fields:[
+    {id:'ssid',label:'SSID (Network Name)',placeholder:'MyNetwork'},
+    {id:'pass',label:'Password',placeholder:'password'},
+    {id:'enc', label:'Encryption',placeholder:'WPA', type:'select', opts:['WPA','WEP','nopass']}
+  ], build: d => `WIFI:T:${d.enc||'WPA'};S:${d.ssid};P:${d.pass};;` },
+  email:   { fields:[
+    {id:'to',label:'To',placeholder:'user@example.com'},
+    {id:'subject',label:'Subject',placeholder:'Subject'},
+    {id:'body',label:'Body',placeholder:'Message...'}
+  ], build: d => `mailto:${d.to}?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}` },
+  sms:     { fields:[
+    {id:'num',label:'Phone Number',placeholder:'+1 555...'},
+    {id:'msg',label:'Message',placeholder:'SMS text...'}
+  ], build: d => `smsto:${d.num}:${d.msg}` },
+  contact: { fields:[
+    {id:'name',label:'Name',placeholder:'Full Name'},
+    {id:'phone',label:'Phone',placeholder:'+1 555...'},
+    {id:'email',label:'Email',placeholder:'user@...'},
+    {id:'note',label:'Note',placeholder:'callsign / mesh node / etc'}
+  ], build: d => `BEGIN:VCARD\nVERSION:3.0\nN:${d.name}\nTEL:${d.phone}\nEMAIL:${d.email}\nNOTE:${d.note}\nEND:VCARD` },
+  mesh:    { fields:[
+    {id:'nodeId',label:'Mesh Node ID',placeholder:'node-abc123'},
+    {id:'callsign',label:'Callsign (optional)',placeholder:'KN6XXX'},
+    {id:'channel',label:'Channel',placeholder:'0'}
+  ], build: d => `PM-MESH:nodeId=${d.nodeId};callsign=${d.callsign};ch=${d.channel||'0'}` },
+  ssh:     { fields:[
+    {id:'host',label:'Host / IP',placeholder:'192.168.1.100'},
+    {id:'user',label:'Username',placeholder:'root'},
+    {id:'port',label:'Port',placeholder:'22'}
+  ], build: d => `ssh://${d.user||'root'}@${d.host}:${d.port||22}` }
+};
+
+function setTemplate(type) {
+  document.querySelectorAll('.tpl-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  const tpl = TEMPLATES[type] || TEMPLATES.text;
+  const wrap = document.getElementById('templateFields');
+  if (!tpl.fields || !tpl.fields.length) { wrap.innerHTML=''; return; }
+  wrap.innerHTML = tpl.fields.map(f => {
+    if (f.type === 'select') return `<div><div class="qr-label">${f.label}</div><select class="qr-input" id="tpl_${f.id}" onchange="buildFromTemplate('${type}')"><option value="">${f.placeholder}</option>${(f.opts||[]).map(o=>`<option>${o}</option>`).join('')}</select></div>`;
+    return `<div><div class="qr-label">${f.label}</div><input class="qr-input" id="tpl_${f.id}" placeholder="${f.placeholder}" oninput="buildFromTemplate('${type}')"></div>`;
+  }).join('');
+}
+
+function buildFromTemplate(type) {
+  const tpl = TEMPLATES[type];
+  if (!tpl?.build) return;
+  const d = {};
+  (tpl.fields||[]).forEach(f => { const el = document.getElementById('tpl_'+f.id); d[f.id] = el ? el.value : ''; });
+  document.getElementById('qrContent').value = tpl.build(d);
+  generateQR();
+}
+
+function setECC(btn, lvl) {
+  eccLevel = lvl;
+  document.querySelectorAll('.err-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  generateQR();
+}
+
+function generateQR() {
+  const text = document.getElementById('qrContent').value.trim();
+  const size = parseInt(document.getElementById('qrSize').value);
+  document.getElementById('qrSizeLabel').textContent = size;
+
+  const wrap = document.getElementById('qrWrap');
+  const empty = document.getElementById('qrEmpty');
+  const actions = document.getElementById('genActions');
+
+  if (!text) { wrap.style.display='none'; empty.style.display='block'; actions.style.display='none'; if(qrObj){qrObj=null;} return; }
+
+  wrap.style.display = 'flex';
+  empty.style.display = 'none';
+  actions.style.display = 'block';
+
+  const canvas = document.getElementById('qrCanvas');
+  canvas.width = size; canvas.height = size;
+
+  // Use QRCode library
+  try {
+    if (qrObj) { qrObj.clear(); qrObj = null; }
+    // QRCode writes to a div, then we copy to canvas
+    const tempDiv = document.createElement('div');
+    qrObj = new QRCode(tempDiv, {
+      text, width: size, height: size,
+      colorDark: '#00d4ff', colorLight: '#050a0e',
+      correctLevel: QRCode.CorrectLevel[eccLevel] || QRCode.CorrectLevel.M
+    });
+    // Give it a tick to render
+    setTimeout(() => {
+      const img = tempDiv.querySelector('img') || tempDiv.querySelector('canvas');
+      if (img) {
+        const ctx = canvas.getContext('2d');
+        const drawImg = new Image();
+        drawImg.onload = () => ctx.drawImage(drawImg, 0, 0, size, size);
+        drawImg.src = img.src || (img.toDataURL ? img.toDataURL() : '');
+      }
+    }, 50);
+  } catch(e) {
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#050a0e'; ctx.fillRect(0,0,size,size);
+    ctx.fillStyle = '#00d4ff'; ctx.font = '12px monospace';
+    ctx.fillText('QR generation error', 10, size/2);
+  }
+}
+
+function downloadQR() {
+  const canvas = document.getElementById('qrCanvas');
+  const text = document.getElementById('qrContent').value.trim();
+  const slug = text.substr(0,20).replace(/[^a-z0-9]/gi,'_');
+  const a = document.createElement('a');
+  a.download = `pm_qr_${slug}.png`;
+  a.href = canvas.toDataURL('image/png');
+  a.click();
+}
+
+function copyQRtoClipboard() {
+  const canvas = document.getElementById('qrCanvas');
+  canvas.toBlob(blob => {
+    try { navigator.clipboard.write([new ClipboardItem({'image/png': blob})]); }
+    catch(e) { alert('Clipboard image copy not supported in this browser. Use Download instead.'); }
+  });
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// Init
+renderHistory();
+// Default to URL template
+document.querySelector('.tpl-btn')?.classList.add('active');
+</script>
+</body></html>

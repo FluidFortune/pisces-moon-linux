@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — habits.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // HABITS</title>
+<style>
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;--accent4:#ff3366;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--accent3);letter-spacing:3px;}
+.main{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+.panel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--panel-border);}
+.panel:last-child{border-right:none;}
+.ph{padding:9px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);font-family:Orbitron,monospace;font-size:.58rem;letter-spacing:2px;color:var(--text-dim);display:flex;justify-content:space-between;align-items:center;}
+.list{flex:1;overflow-y:auto;}
+.add-row{padding:8px 10px;border-top:1px solid var(--panel-border);display:flex;gap:6px;}
+.h-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:6px 8px;outline:none;flex:1;}
+.h-input:focus{border-color:var(--accent3);}
+.add-btn{padding:6px 12px;background:transparent;border:1px solid var(--accent3);color:var(--accent3);font-family:Orbitron,monospace;font-size:.52rem;cursor:pointer;letter-spacing:1px;}
+.add-btn:hover{background:rgba(0,255,136,.1);}
+/* Habit items */
+.habit-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.3);display:flex;gap:10px;align-items:center;}
+.habit-check{width:32px;height:32px;border:2px solid var(--panel-border);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:1.1rem;flex-shrink:0;transition:all .2s;}
+.habit-check.done{border-color:var(--accent3);background:rgba(0,255,136,.1);}
+.habit-check.skipped{border-color:var(--text-dim);background:rgba(42,88,112,.2);}
+.habit-info{flex:1;min-width:0;}
+.habit-name{font-size:.7rem;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.habit-streak{font-size:.55rem;margin-top:3px;display:flex;gap:8px;}
+.streak-fire{color:var(--gold);}
+.streak-val{color:var(--gold);font-family:Orbitron,monospace;}
+.habit-del{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:.9rem;padding:4px;flex-shrink:0;}
+.habit-del:hover{color:var(--accent4);}
+.heat-row{display:flex;gap:2px;flex-wrap:nowrap;overflow:hidden;}
+.heat-cell{width:8px;height:8px;border-radius:1px;flex-shrink:0;}
+/* Task items */
+.task-item{padding:9px 12px;border-bottom:1px solid rgba(28,46,58,.3);display:flex;gap:8px;align-items:flex-start;}
+.task-cb{width:18px;height:18px;border:2px solid var(--panel-border);cursor:pointer;flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:all .2s;}
+.task-cb.done{border-color:var(--accent3);background:rgba(0,255,136,.1);color:var(--accent3);}
+.task-text{flex:1;font-size:.68rem;color:var(--text-bright);line-height:1.5;}
+.task-text.done{text-decoration:line-through;color:var(--text-dim);}
+.task-meta{font-size:.52rem;color:var(--text-dim);margin-top:3px;}
+.task-del{background:transparent;border:none;color:var(--text-dim);cursor:pointer;font-size:.85rem;padding:2px;}
+.task-del:hover{color:var(--accent4);}
+.pri-btn{padding:3px 7px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.44rem;cursor:pointer;}
+.pri-btn.p1{border-color:var(--accent4);color:var(--accent4);}
+.pri-btn.p2{border-color:var(--gold);color:var(--gold);}
+.pri-btn.p3{border-color:var(--text-dim);color:var(--text-dim);}
+.stats-bar{padding:6px 12px;border-top:1px solid var(--panel-border);display:flex;gap:16px;font-size:.55rem;color:var(--text-dim);}
+.stat-val{color:var(--accent3);font-family:Orbitron,monospace;}
+</style>
+</head><body>
+<header>
+  <div class="logo">✅ HABITS + TASKS</div>
+  <div style="font-family:Orbitron,monospace;font-size:.65rem;color:var(--text-dim)" id="dateDisplay"></div>
+</header>
+<div class="main">
+  <!-- Habits -->
+  <div class="panel">
+    <div class="ph">
+      <span>DAILY HABITS</span>
+      <span id="habitStats" style="color:var(--accent3)"></span>
+    </div>
+    <div class="list" id="habitList"></div>
+    <div class="add-row">
+      <input class="h-input" id="habitInput" placeholder="New habit..." onkeydown="if(event.key==='Enter')addHabit()">
+      <button class="add-btn" onclick="addHabit()">+ ADD</button>
+    </div>
+    <div class="stats-bar" id="streakBar"></div>
+  </div>
+
+  <!-- Tasks -->
+  <div class="panel">
+    <div class="ph">
+      <span>TASKS</span>
+      <span id="taskStats" style="color:var(--accent)"></span>
+    </div>
+    <div class="list" id="taskList"></div>
+    <div class="add-row">
+      <input class="h-input" id="taskInput" placeholder="New task..." onkeydown="if(event.key==='Enter')addTask()">
+      <select class="h-input" id="taskPri" style="flex:.5;cursor:pointer">
+        <option value="1">!! HIGH</option>
+        <option value="2" selected>! MED</option>
+        <option value="3">LOW</option>
+      </select>
+      <button class="add-btn" onclick="addTask()">+ ADD</button>
+    </div>
+    <div class="stats-bar" id="taskBar"></div>
+  </div>
+</div>
+
+<script>
+const STORE = 'pm_habits';
+const today = new Date().toISOString().split('T')[0];
+
+let habits = [];
+let tasks = [];
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE)||'{}');
+    habits = d.habits || [];
+    tasks = d.tasks || [];
+    // Auto-rollover: archive done tasks older than 7 days
+    const cutoff = Date.now() - 7*24*3600*1000;
+    tasks = tasks.filter(t => !t.done || t.doneTs > cutoff);
+  } catch {}
+}
+
+function save() { localStorage.setItem(STORE, JSON.stringify({habits, tasks})); }
+function uid() { return Date.now().toString(36) + Math.random().toString(36).substr(2,4); }
+
+// ── Habits ────────────────────────────────────────────────────────
+function addHabit() {
+  const name = document.getElementById('habitInput').value.trim();
+  if (!name) return;
+  habits.push({ id:uid(), name, history:{}, created:today });
+  document.getElementById('habitInput').value = '';
+  save(); renderHabits();
+}
+
+function toggleHabit(id) {
+  const h = habits.find(x=>x.id===id);
+  if (!h) return;
+  if (!h.history[today]) h.history[today] = 'done';
+  else if (h.history[today]==='done') h.history[today]='skip';
+  else delete h.history[today];
+  save(); renderHabits();
+}
+
+function deleteHabit(id) {
+  habits = habits.filter(x=>x.id!==id);
+  save(); renderHabits();
+}
+
+function streak(h) {
+  let s = 0, d = new Date();
+  while (true) {
+    const key = d.toISOString().split('T')[0];
+    if (key === today && !h.history[key]) break;
+    if (h.history[key] === 'done') s++;
+    else if (h.history[key] === 'skip') {} // skip doesn't break streak
+    else if (key !== today) break;
+    d.setDate(d.getDate()-1);
+    if (s > 365) break;
+  }
+  return s;
+}
+
+function heatMap(h) {
+  const cells = [];
+  for (let i=27; i>=0; i--) {
+    const d = new Date(); d.setDate(d.getDate()-i);
+    const key = d.toISOString().split('T')[0];
+    const st = h.history[key];
+    const color = st==='done'?'var(--accent3)':st==='skip'?'var(--panel-border)':'#0c1620';
+    cells.push(`<div class="heat-cell" style="background:${color}" title="${key}"></div>`);
+  }
+  return cells.join('');
+}
+
+function renderHabits() {
+  const done = habits.filter(h=>h.history[today]==='done').length;
+  document.getElementById('habitStats').textContent = `${done}/${habits.length}`;
+  const el = document.getElementById('habitList');
+  if (!habits.length) { el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:.62rem">No habits yet.<br>Add daily routines to track.</div>`; return; }
+  el.innerHTML = habits.map(h => {
+    const st = h.history[today];
+    const s = streak(h);
+    return `<div class="habit-item">
+      <div class="habit-check${st==='done'?' done':st==='skip'?' skipped':''}" onclick="toggleHabit('${h.id}')">
+        ${st==='done'?'✓':st==='skip'?'—':''}
+      </div>
+      <div class="habit-info">
+        <div class="habit-name">${esc(h.name)}</div>
+        <div class="habit-streak">
+          <span class="streak-fire">🔥</span><span class="streak-val">${s}</span>
+          <span style="color:var(--text-dim)">day streak</span>
+        </div>
+        <div class="heat-row">${heatMap(h)}</div>
+      </div>
+      <button class="habit-del" onclick="deleteHabit('${h.id}')">✕</button>
+    </div>`;
+  }).join('');
+
+  // Streak leader
+  const best = habits.reduce((b,h)=>{ const s=streak(h); return s>b.s?{s,name:h.name}:b; }, {s:0,name:''});
+  document.getElementById('streakBar').innerHTML = best.s ?
+    `<span>BEST STREAK:</span> <span class="stat-val">🔥 ${best.s}</span> <span>${esc(best.name)}</span>` : '';
+}
+
+// ── Tasks ─────────────────────────────────────────────────────────
+function addTask() {
+  const text = document.getElementById('taskInput').value.trim();
+  const pri = parseInt(document.getElementById('taskPri').value);
+  if (!text) return;
+  tasks.unshift({ id:uid(), text, pri, done:false, created:today, doneTs:0 });
+  document.getElementById('taskInput').value = '';
+  save(); renderTasks();
+}
+
+function toggleTask(id) {
+  const t = tasks.find(x=>x.id===id);
+  if (!t) return;
+  t.done = !t.done;
+  t.doneTs = t.done ? Date.now() : 0;
+  save(); renderTasks();
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(x=>x.id!==id);
+  save(); renderTasks();
+}
+
+function renderTasks() {
+  const pending = tasks.filter(t=>!t.done).length;
+  const done = tasks.filter(t=>t.done).length;
+  document.getElementById('taskStats').textContent = `${pending} pending`;
+
+  const sorted = [...tasks].sort((a,b) => {
+    if (a.done !== b.done) return a.done ? 1 : -1;
+    return a.pri - b.pri;
+  });
+
+  const el = document.getElementById('taskList');
+  if (!tasks.length) { el.innerHTML=`<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:.62rem">No tasks.<br>Add todos and mission objectives.</div>`; return; }
+
+  const PRIcolor = ['','var(--accent4)','var(--gold)','var(--text-dim)'];
+  const PRIlabel = ['','HIGH','MED','LOW'];
+
+  el.innerHTML = sorted.map(t =>
+    `<div class="task-item">
+      <div class="task-cb${t.done?' done':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</div>
+      <div style="flex:1;min-width:0">
+        <div class="task-text${t.done?' done':''}">${esc(t.text)}</div>
+        <div class="task-meta" style="display:flex;gap:8px;align-items:center">
+          <span style="color:${PRIcolor[t.pri]};font-family:Orbitron,monospace;font-size:.46rem">${PRIlabel[t.pri]}</span>
+          <span>${t.created}</span>
+          ${t.done?`<span style="color:var(--accent3)">✓ done</span>`:''}
+        </div>
+      </div>
+      <button class="task-del" onclick="deleteTask('${t.id}')">✕</button>
+    </div>`
+  ).join('');
+
+  document.getElementById('taskBar').innerHTML =
+    `<span>DONE:</span> <span class="stat-val">${done}</span> <span>/ ${tasks.length} total</span>`;
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Date display
+document.getElementById('dateDisplay').textContent = new Date().toLocaleDateString([], {weekday:'short',year:'numeric',month:'short',day:'numeric'});
+
+load();
+renderHabits();
+renderTasks();
+</script>
+</body></html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — tides.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  NOAA CO-OPS Tides & Currents API — free, no key required
+  Default station: 9410230 La Jolla CA (near Oceanside)
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // TIDES</title>
+<style>
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;--accent4:#ff3366;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--accent);letter-spacing:3px;}
+.toolbar{padding:8px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.t-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:6px 10px;outline:none;}
+.t-input:focus{border-color:var(--accent);}
+.pm-btn{padding:6px 14px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.52rem;cursor:pointer;letter-spacing:1px;}
+.pm-btn:hover,.pm-btn.primary{border-color:var(--accent);color:var(--accent);}
+.pm-btn.active{background:rgba(0,212,255,.1);border-color:var(--accent);color:var(--accent);}
+.main{flex:1;display:grid;grid-template-columns:260px 1fr;overflow:hidden;}
+.left-panel{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.right-panel{display:flex;flex-direction:column;overflow:hidden;}
+.ph{padding:10px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);font-family:Orbitron,monospace;font-size:.58rem;letter-spacing:2px;color:var(--text-dim);}
+.tide-now{padding:14px;border-bottom:1px solid var(--panel-border);}
+.tide-level{font-family:Orbitron,monospace;font-size:2rem;color:var(--accent);letter-spacing:2px;}
+.tide-unit{font-size:.65rem;color:var(--text-dim);}
+.tide-state{font-family:Orbitron,monospace;font-size:.7rem;margin-top:4px;}
+.next-event{font-size:.62rem;color:var(--text-dim);margin-top:6px;line-height:1.7;}
+.extremes-list{flex:1;overflow-y:auto;}
+.extreme-item{padding:9px 14px;border-bottom:1px solid rgba(28,46,58,.4);display:flex;justify-content:space-between;align-items:center;}
+.ext-time{font-size:.65rem;color:var(--text-bright);}
+.ext-height{font-family:Orbitron,monospace;font-size:.8rem;}
+.ext-type{font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;padding:2px 6px;border-radius:2px;}
+.high{color:var(--accent3);} .low{color:var(--accent4);}
+.type-high{background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.3);color:var(--accent3);}
+.type-low{background:rgba(255,51,102,.1);border:1px solid rgba(255,51,102,.3);color:var(--accent4);}
+canvas#tideChart{width:100%;display:block;}
+.chart-wrap{flex:1;padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;}
+.station-row{display:flex;justify-content:space-between;font-size:.58rem;color:var(--text-dim);}
+.day-tabs{display:flex;gap:0;overflow-x:auto;}
+.day-tab{padding:5px 10px;font-size:.52rem;font-family:Orbitron,monospace;letter-spacing:1px;cursor:pointer;border:1px solid var(--panel-border);background:transparent;color:var(--text-dim);white-space:nowrap;margin-right:-1px;}
+.day-tab:hover,.day-tab.active{background:var(--bg3);color:var(--accent);border-color:var(--accent);}
+.loading{text-align:center;padding:30px;color:var(--text-dim);font-size:.65rem;}
+.status-msg{font-size:.58rem;color:var(--text-dim);font-family:Orbitron,monospace;letter-spacing:1px;}
+</style>
+</head><body>
+<header>
+  <div class="logo">🌊 TIDES</div>
+  <div class="status-msg" id="statusMsg">LOADING...</div>
+</header>
+<div class="toolbar">
+  <input class="t-input" id="stationInput" value="9410230" placeholder="NOAA Station ID" style="width:100px">
+  <button class="pm-btn primary" onclick="loadStation()">LOAD STATION</button>
+  <button class="pm-btn" onclick="nearbyStation()">📍 NEAREST</button>
+  <div style="font-size:.58rem;color:var(--text-dim)" id="stationName">La Jolla, CA</div>
+</div>
+<div class="main">
+  <div class="left-panel">
+    <div class="tide-now" id="tideNow">
+      <div style="font-size:.58rem;color:var(--text-dim);font-family:Orbitron,monospace;letter-spacing:2px;margin-bottom:8px">CURRENT CONDITIONS</div>
+      <div class="tide-level" id="currentLevel">--.-<span class="tide-unit"> ft</span></div>
+      <div class="tide-state" id="tideState" style="color:var(--text-dim)">---</div>
+      <div class="next-event" id="nextEvent">---</div>
+    </div>
+    <div class="ph">7-DAY EXTREMES</div>
+    <div class="extremes-list" id="extremesList"><div class="loading">Loading...</div></div>
+  </div>
+  <div class="right-panel">
+    <div style="padding:8px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2)">
+      <div class="day-tabs" id="dayTabs"></div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="tideChart" height="200"></canvas>
+      <div class="station-row">
+        <span id="chartDateLabel"></span>
+        <span>NOAA CO-OPS · MLLW Datum</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// TIDES — NOAA CO-OPS API v1
+// Endpoint: tidesandcurrents.noaa.gov/api/datagetter
+// Products: predictions (6-min interval), hi_lo (extremes)
+// Datum: MLLW, Units: feet, Time Zone: local
+// ═══════════════════════════════════════════════════════════════════
+
+const API = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter';
+const STORE = 'pm_tides';
+
+let station = { id:'9410230', name:'La Jolla, CA' };
+let predictions = {}; // keyed by YYYYMMDD → [{t,v}]
+let extremes = [];
+let activeDay = 0;
+let chartData = [];
+
+function dateStr(offset=0) {
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  return d.toISOString().split('T')[0].replace(/-/g,'');
+}
+function dateFmt(offset=0) {
+  const d = new Date(); d.setDate(d.getDate() + offset);
+  return d.toLocaleDateString([], {weekday:'short', month:'short', day:'numeric'});
+}
+function parseTime(t) {
+  // "2026-05-03 06:23" → hours float
+  const parts = t.split(' ');
+  const tp = parts[1] ? parts[1].split(':') : parts[0].split(':');
+  return parseInt(tp[0]) + parseInt(tp[1])/60;
+}
+function fmtTime(t) {
+  const parts = t.split(' ');
+  if (parts.length === 2) {
+    const tp = parts[1].split(':');
+    const h = parseInt(tp[0]), m = parseInt(tp[1]);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    return `${h%12||12}:${m.toString().padStart(2,'0')} ${ampm}`;
+  }
+  return t;
+}
+
+async function fetchPredictions(stationId, begin, end) {
+  const url = `${API}?product=predictions&application=piscesmoon&begin_date=${begin}&end_date=${end}&datum=MLLW&station=${stationId}&time_zone=lst_ldt&interval=6&units=english&format=json`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.predictions || [];
+}
+
+async function fetchExtremes(stationId, begin, end) {
+  const url = `${API}?product=predictions&application=piscesmoon&begin_date=${begin}&end_date=${end}&datum=MLLW&station=${stationId}&time_zone=lst_ldt&interval=hilo&units=english&format=json`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.predictions || [];
+}
+
+async function fetchStationName(stationId) {
+  try {
+    const url = `https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/stations/${stationId}.json`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.stations?.[0]?.name + ', ' + data.stations?.[0]?.state || '';
+  } catch { return ''; }
+}
+
+async function loadStation() {
+  const id = document.getElementById('stationInput').value.trim();
+  if (!id) return;
+  station.id = id;
+  setStatus('LOADING...');
+  try {
+    const name = await fetchStationName(id);
+    station.name = name || id;
+    document.getElementById('stationName').textContent = station.name;
+    await loadAllData();
+    localStorage.setItem(STORE, JSON.stringify(station));
+  } catch(e) {
+    setStatus('ERROR: ' + e.message);
+  }
+}
+
+async function loadAllData() {
+  const begin = dateStr(0);
+  const end   = dateStr(6);
+  setStatus('FETCHING 7 DAYS...');
+
+  try {
+    const [preds, exts] = await Promise.all([
+      fetchPredictions(station.id, begin, end),
+      fetchExtremes(station.id, begin, end)
+    ]);
+
+    // Bucket predictions by day
+    predictions = {};
+    for (const p of preds) {
+      const day = p.t.split(' ')[0].replace(/-/g,'');
+      if (!predictions[day]) predictions[day] = [];
+      predictions[day].push({ t: p.t, v: parseFloat(p.v) });
+    }
+
+    extremes = exts.map(e => ({ t: e.t, v: parseFloat(e.v), type: e.type }));
+
+    renderExtremes();
+    buildDayTabs();
+    renderDay(0);
+    updateCurrent();
+    setStatus('STATION ' + station.id);
+  } catch(e) {
+    setStatus('OFFLINE — SHOWING CACHED');
+    renderOffline();
+  }
+}
+
+function buildDayTabs() {
+  const tabs = document.getElementById('dayTabs');
+  tabs.innerHTML = Array.from({length:7},(_,i) =>
+    `<button class="day-tab${i===0?' active':''}" onclick="switchDay(${i},this)">${dateFmt(i)}</button>`
+  ).join('');
+}
+
+function switchDay(i, btn) {
+  activeDay = i;
+  document.querySelectorAll('.day-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderDay(i);
+}
+
+function renderDay(offset) {
+  const key = dateStr(offset);
+  const data = predictions[key] || [];
+  document.getElementById('chartDateLabel').textContent = dateFmt(offset);
+  if (!data.length) {
+    const ctx = document.getElementById('tideChart').getContext('2d');
+    ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height);
+    return;
+  }
+  drawChart(data, offset);
+}
+
+function drawChart(data, dayOffset) {
+  const canvas = document.getElementById('tideChart');
+  const wrap = canvas.parentElement;
+  canvas.width  = wrap.clientWidth - 28;
+  canvas.height = 200;
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const PAD = { top:20, bottom:30, left:44, right:12 };
+  const w = W - PAD.left - PAD.right;
+  const h = H - PAD.top - PAD.bottom;
+
+  const vals = data.map(d=>d.v);
+  const minV = Math.min(...vals) - 0.3;
+  const maxV = Math.max(...vals) + 0.3;
+  const range = maxV - minV;
+
+  const now = new Date();
+  const nowH = (dayOffset === 0) ? now.getHours() + now.getMinutes()/60 : -1;
+
+  ctx.fillStyle = '#0c1620';
+  ctx.fillRect(0, 0, W, H);
+
+  // Grid lines
+  ctx.strokeStyle = '#1a3a50'; ctx.lineWidth = 1;
+  for (let i=0; i<=4; i++) {
+    const y = PAD.top + h - (i/4)*h;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W-PAD.right, y); ctx.stroke();
+    const v = minV + (i/4)*range;
+    ctx.fillStyle = '#2a5870'; ctx.font = '.52rem Share Tech Mono,monospace';
+    ctx.textAlign = 'right'; ctx.fillText(v.toFixed(1), PAD.left-4, y+4);
+  }
+  // Hour labels
+  for (let hh=0; hh<=24; hh+=6) {
+    const x = PAD.left + (hh/24)*w;
+    ctx.fillStyle = '#2a5870'; ctx.font = '.5rem Share Tech Mono,monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(hh+':00', x, H-8);
+  }
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0, PAD.top, 0, PAD.top+h);
+  grad.addColorStop(0, 'rgba(0,212,255,.25)');
+  grad.addColorStop(1, 'rgba(0,212,255,.02)');
+
+  ctx.beginPath();
+  data.forEach((d, i) => {
+    const x = PAD.left + (parseTime(d.t)/24)*w;
+    const y = PAD.top + h - ((d.v-minV)/range)*h;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.lineTo(PAD.left+w, PAD.top+h); ctx.lineTo(PAD.left, PAD.top+h); ctx.closePath();
+  ctx.fillStyle = grad; ctx.fill();
+
+  // Wave line
+  ctx.beginPath(); ctx.strokeStyle = '#00d4ff'; ctx.lineWidth = 2;
+  data.forEach((d, i) => {
+    const x = PAD.left + (parseTime(d.t)/24)*w;
+    const y = PAD.top + h - ((d.v-minV)/range)*h;
+    i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+  });
+  ctx.stroke();
+
+  // Now line
+  if (nowH >= 0 && nowH <= 24) {
+    const nx = PAD.left + (nowH/24)*w;
+    ctx.beginPath(); ctx.strokeStyle = '#ff3366'; ctx.lineWidth = 1; ctx.setLineDash([4,3]);
+    ctx.moveTo(nx, PAD.top); ctx.lineTo(nx, PAD.top+h); ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ff3366'; ctx.font = 'bold .52rem Share Tech Mono,monospace';
+    ctx.textAlign = 'center'; ctx.fillText('NOW', nx, PAD.top-6);
+  }
+
+  // Mark extremes for this day
+  const key = dateStr(dayOffset);
+  const dayExts = extremes.filter(e => e.t.split(' ')[0].replace(/-/g,'') === key);
+  for (const e of dayExts) {
+    const x = PAD.left + (parseTime(e.t)/24)*w;
+    const y = PAD.top + h - ((e.v-minV)/range)*h;
+    ctx.beginPath(); ctx.arc(x, y, 5, 0, Math.PI*2);
+    ctx.fillStyle = e.type === 'H' ? '#00ff88' : '#ff3366'; ctx.fill();
+    ctx.fillStyle = e.type === 'H' ? '#00ff88' : '#ff3366';
+    ctx.font = '.55rem Orbitron,monospace'; ctx.textAlign = 'center';
+    ctx.fillText(e.v.toFixed(1), x, y + (e.type==='H'?-10:14));
+  }
+}
+
+function renderExtremes() {
+  const el = document.getElementById('extremesList');
+  if (!extremes.length) { el.innerHTML = '<div class="loading">No data</div>'; return; }
+  el.innerHTML = extremes.map(e => {
+    const isH = e.type === 'H';
+    return `<div class="extreme-item">
+      <div>
+        <div class="ext-time">${e.t.split(' ')[0]} ${fmtTime(e.t)}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="ext-height ${isH?'high':'low'}">${e.v.toFixed(2)} ft</div>
+        <div class="ext-type ${isH?'type-high':'type-low'}">${isH?'HIGH':'LOW'}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateCurrent() {
+  const key = dateStr(0);
+  const data = predictions[key];
+  if (!data) return;
+
+  const now = new Date();
+  const nowH = now.getHours() + now.getMinutes()/60;
+  // Find nearest prediction point
+  let nearest = data[0];
+  let minDiff = Infinity;
+  for (const d of data) {
+    const diff = Math.abs(parseTime(d.t) - nowH);
+    if (diff < minDiff) { minDiff = diff; nearest = d; }
+  }
+
+  document.getElementById('currentLevel').innerHTML =
+    `${nearest.v.toFixed(2)}<span class="tide-unit"> ft</span>`;
+
+  // Determine rising or falling
+  const idx = data.indexOf(nearest);
+  const rising = idx > 0 ? nearest.v > data[idx-1].v : true;
+  const stateEl = document.getElementById('tideState');
+  stateEl.textContent = rising ? '↑ RISING' : '↓ FALLING';
+  stateEl.style.color = rising ? 'var(--accent3)' : 'var(--accent4)';
+
+  // Next extreme
+  const today = dateStr(0);
+  const upcoming = extremes.filter(e => {
+    const eDate = e.t.split(' ')[0].replace(/-/g,'');
+    return eDate === today && parseTime(e.t) > nowH;
+  });
+  if (upcoming.length) {
+    const next = upcoming[0];
+    const hoursAway = parseTime(next.t) - nowH;
+    const mins = Math.round(hoursAway * 60);
+    document.getElementById('nextEvent').innerHTML =
+      `Next: <span style="color:${next.type==='H'?'var(--accent3)':'var(--accent4)'}">${next.type==='H'?'HIGH':'LOW'} TIDE</span><br>${fmtTime(next.t)} (${mins}min away)<br>${next.v.toFixed(2)} ft`;
+  }
+
+  setInterval(updateCurrent, 60000);
+}
+
+async function nearbyStation() {
+  if (!navigator.geolocation) { alert('GPS not available'); return; }
+  setStatus('FINDING NEAREST...');
+  navigator.geolocation.getCurrentPosition(async pos => {
+    try {
+      const lat = pos.coords.latitude, lon = pos.coords.longitude;
+      const url = `https://api.tidesandcurrents.noaa.gov/mdapi/prod/webapi/tidepredstations.json?q=${lat},${lon}&radius=50&units=english`;
+      const res = await fetch(url);
+      const data = await res.json();
+      const st = data.stationList?.[0];
+      if (!st) { setStatus('NO STATION FOUND WITHIN 50MI'); return; }
+      station.id = st.stationId;
+      station.name = st.etidesStnName + ', ' + st.state;
+      document.getElementById('stationInput').value = station.id;
+      document.getElementById('stationName').textContent = station.name;
+      await loadAllData();
+    } catch(e) { setStatus('ERROR: ' + e.message); }
+  }, () => setStatus('GPS DENIED'));
+}
+
+function renderOffline() {
+  document.getElementById('extremesList').innerHTML =
+    '<div class="loading">Connect to internet for tide data.<br><br>NOAA CO-OPS provides free tide predictions for US coastal stations.</div>';
+  setStatus('OFFLINE');
+}
+
+function setStatus(msg) { document.getElementById('statusMsg').textContent = msg; }
+
+// Resize chart on window resize
+window.addEventListener('resize', () => { if (activeDay >= 0) renderDay(activeDay); });
+
+// Init
+try {
+  const saved = JSON.parse(localStorage.getItem(STORE)||'{}');
+  if (saved.id) { station = saved; document.getElementById('stationInput').value = saved.id; document.getElementById('stationName').textContent = saved.name||''; }
+} catch {}
+loadAllData();
+</script>
+</body></html>

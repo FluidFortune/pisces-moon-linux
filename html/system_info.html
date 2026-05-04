@@ -1,229 +1,188 @@
 <!DOCTYPE html>
-<!-- 
+<!--
   Pisces Moon OS — system_info.html
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
+  SPDX-License-Identifier: AGPL-3.0-or-later
 
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published
+  by the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
 
-  Dedicated to Jennifer Soto and Clark Beddows.
+  See LICENSE file for full text. Commercial licenses available.
+  Contact Eric Becker / Fluid Fortune (fluidfortune.com).
 -->
-<!-- PISCES MOON OS // SYSTEM INFO -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PISCES MOON // SYSTEM INFO</title>
+<!-- Pisces Moon OS — system_info.html v2 — Copyright (C) 2026 Eric Becker / Fluid Fortune — MIT -->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // SYSTEM</title>
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent);text-shadow:var(--glow);letter-spacing:3px;}
-.logo span{color:var(--gold);}
-.content{padding:20px;max-width:1100px;margin:0 auto;}
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px;}
-.sc{background:var(--panel);border:1px solid var(--panel-border);padding:14px;position:relative;overflow:hidden;}
-.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
-.sc.ora::before{background:var(--accent2);} .sc.grn::before{background:var(--accent3);} .sc.red::before{background:var(--accent4);}
-.slbl{font-size:.6rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px;font-family:'Orbitron',monospace;}
-.sval{font-family:'Orbitron',monospace;font-size:1.4rem;color:var(--text-bright);font-weight:700;}
-.ssub{font-size:.6rem;color:var(--text-dim);margin-top:2px;}
-.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
-.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;color:var(--accent);letter-spacing:3px;}
-.pb{padding:14px 16px;}
-.row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(26,58,80,.3);font-size:.72rem;}
-.row:last-child{border:none;}
-.rk{color:var(--text-dim);}
-.rv{color:var(--text-bright);}
-.bar-track{flex:1;height:8px;background:var(--bg3);border:1px solid var(--panel-border);margin:0 12px;}
-.bar-fill{height:100%;transition:width .6s ease;background:linear-gradient(90deg,var(--accent),rgba(0,212,255,.3));}
-.bar-fill.ora{background:linear-gradient(90deg,var(--accent2),rgba(255,107,0,.3));}
-.bar-fill.red{background:linear-gradient(90deg,var(--accent4),rgba(255,51,102,.3));}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-@media(max-width:700px){.grid2{grid-template-columns:1fr;}}
-.badge{display:inline-block;padding:1px 7px;font-size:.58rem;border-radius:2px;}
-.bg-grn{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
-.bg-ora{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid var(--accent2);}
-.bg-red{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
-.upd{font-size:.58rem;color:var(--text-dim);text-align:right;padding:6px 0;}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header>
-  <div class="logo">PISCES MOON // <span>SYSTEM</span></div>
-  <div style="font-size:.65rem;color:var(--text-dim)"><span id="clock"></span></div>
+.si-layout{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;padding:16px;overflow-y:auto;height:calc(100vh - 52px);}
+.si-card{background:var(--bg2);border:1px solid var(--panel-border);padding:14px;}
+.si-card.full{grid-column:1/-1;}
+.si-card.half{grid-column:span 2;}
+.si-card-title{font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;color:var(--gold);margin-bottom:12px;border-bottom:1px solid var(--panel-border);padding-bottom:6px;}
+.si-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(28,46,58,.3);font-size:.65rem;}
+.si-label{color:var(--text-dim);}
+.si-val{color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;text-align:right;word-break:break-all;max-width:60%;}
+.si-big{font-family:Orbitron,monospace;font-size:1.8rem;font-weight:900;color:var(--accent3);text-align:center;margin:8px 0;}
+.bar-wrap{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;margin:4px 0;}
+.bar-fill{height:100%;border-radius:4px;transition:width .5s;}
+.spark-wrap{height:50px;margin-top:8px;}
+canvas.spark{width:100%;height:50px;display:block;}
+.usb-item{padding:6px 10px;border-bottom:1px solid rgba(28,46,58,.3);font-size:.62rem;}
+.usb-name{color:var(--text-bright);}
+.usb-meta{color:var(--text-dim);font-size:.55rem;}
+@media(max-width:600px){.si-layout{grid-template-columns:1fr;}.si-card.half,.si-card.full{grid-column:1;}}
+</style>
+</head><body>
+<header class="pm-header">
+  <div class="pm-logo">⚙ <em>SYSTEM</em> INFO</div>
+  <div class="pm-hdr-right">
+    <span id="hdrUptime" style="font-size:.58rem;color:var(--text-dim);font-family:Orbitron,monospace;letter-spacing:1px"></span>
+    <button class="pm-refresh" onclick="refresh()">⟳</button>
+  </div>
 </header>
-<div class="content">
-  <div class="stats-row" id="statsRow"></div>
-  <div class="grid2">
-    <div>
-      <div class="panel">
-        <div class="ph">CPU &amp; MEMORY</div>
-        <div class="pb" id="cpuPanel"></div>
-      </div>
-      <div class="panel">
-        <div class="ph">STORAGE</div>
-        <div class="pb" id="diskPanel"></div>
-      </div>
-    </div>
-    <div>
-      <div class="panel">
-        <div class="ph">NETWORK</div>
-        <div class="pb" id="netPanel"></div>
-      </div>
-      <div class="panel">
-        <div class="ph">PISCES MOON SERVICES</div>
-        <div class="pb" id="svcPanel"></div>
-      </div>
-    </div>
-  </div>
-  <div class="panel">
-    <div class="ph">EDGE BRIDGE — T-DECK STATUS</div>
-    <div class="pb" id="bridgePanel"></div>
-  </div>
-  <div class="upd" id="upd">Refreshing...</div>
-</div>
+<div class="si-layout" id="siLayout"></div>
 <script>
-const isTH=typeof window.spadra!=='undefined';
-let ws=null,wsConn=false,bridgeData={};
-let cpuHist=[],netHist=[];
+let cpuHistory=[], memHistory=[];
+const startTime=Date.now();
 
-function connectBridge(){
-  try{
-    ws=new WebSocket('ws://localhost:5006');
-    ws.onopen=()=>{wsConn=true;};
-    ws.onclose=()=>{wsConn=false;ws=null;setTimeout(connectBridge,3000);};
-    ws.onmessage=(e)=>{try{bridgeData=JSON.parse(e.data);renderBridge();}catch{}};
-    ws.onerror=()=>{ws=null;};
-  }catch{}
+async function getBatteryInfo(){try{const b=await navigator.getBattery();return{level:Math.round(b.level*100),charging:b.charging,chargingTime:b.chargingTime,dischargingTime:b.dischargingTime};}catch{return null;}}
+
+function getMemory(){const m=performance.memory||{};return{used:m.usedJSHeapSize||0,total:m.totalJSHeapSize||0,limit:m.jsHeapSizeLimit||0};}
+
+function getConnection(){const c=navigator.connection||{};return{type:c.effectiveType||"unknown",downlink:c.downlink||0,rtt:c.rtt||0,saveData:c.saveData||false};}
+
+function fmtBytes(b){if(b<1024)return b+"B";if(b<1048576)return(b/1024).toFixed(1)+"KB";if(b<1073741824)return(b/1048576).toFixed(1)+"MB";return(b/1073741824).toFixed(2)+"GB";}
+
+function fmtTime(sec){const h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=Math.floor(sec%60);return`${h}h ${m}m ${s}s`;}
+
+function drawSparkline(canvasId, data, color){
+  const c=document.getElementById(canvasId); if(!c)return;
+  const ctx=c.getContext("2d"),w=c.width=c.parentElement.offsetWidth,h=c.height=50;
+  ctx.fillStyle="#0c1620"; ctx.fillRect(0,0,w,h);
+  if(data.length<2)return;
+  const max=100,sliceW=w/(data.length-1);
+  ctx.beginPath();
+  ctx.moveTo(0,h-(data[0]/max)*h);
+  data.forEach((v,i)=>ctx.lineTo(i*sliceW,h-(v/max)*h));
+  ctx.strokeStyle=color; ctx.lineWidth=1.5; ctx.stroke();
+  const grad=ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0,color+"44"); grad.addColorStop(1,color+"00");
+  ctx.lineTo(w,h); ctx.lineTo(0,h); ctx.closePath();
+  ctx.fillStyle=grad; ctx.fill();
 }
-
-async function fetchSysInfo(){
-  if(isTH){
-    try{
-      const info=await window.spadra.system.sysinfo();
-      return info;
-    }catch{}
-  }
-  // Simulate / fetch from edge bridge API if available
-  return simulateSysInfo();
-}
-
-function simulateSysInfo(){
-  // In browser mode, show placeholder with instruction
-  return {
-    hostname:'piscesmoon',
-    os:'Debian GNU/Linux 13 (Trixie)',
-    kernel:'6.1.0',
-    arch:'x86_64',
-    uptime: Math.floor(Date.now()/1000) % 86400,
-    cpu_pct: Math.random()*30+5,
-    cpu_cores:4,
-    cpu_model:'Intel Atom x5-Z8550',
-    mem_total:4096,
-    mem_used:Math.floor(Math.random()*1500+800),
-    mem_pct:0,
-    disk_total:64,
-    disk_used:Math.floor(Math.random()*20+8),
-    disk_pct:0,
-    net_iface:'wlan0',
-    net_ip:'192.168.1.47',
-    net_rx_mb:Math.random()*500,
-    net_tx_mb:Math.random()*200,
-    battery_pct:Math.floor(Math.random()*60+30),
-    battery_charging:Math.random()>0.5,
-    temp_c: Math.floor(Math.random()*25+35),
-  };
-}
-
-function fmt(n,u){return n.toFixed(1)+' '+u;}
-function fmtUp(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return `${h}h ${m}m`;}
-function barColor(p){return p>85?'red':p>65?'ora':'';}
 
 async function refresh(){
-  const si=await fetchSysInfo();
-  si.mem_pct=Math.round(si.mem_used/si.mem_total*100);
-  si.disk_pct=Math.round(si.disk_used/si.disk_total*100);
-  cpuHist.push(si.cpu_pct); if(cpuHist.length>20)cpuHist.shift();
+  const batt=await getBatteryInfo();
+  const mem=getMemory();
+  const conn=getConnection();
+  const ua=navigator.userAgent;
+  const uptime=Math.floor((Date.now()-startTime)/1000);
+  document.getElementById("hdrUptime").textContent=`UP ${fmtTime(uptime)}`;
 
-  // Stats row
-  document.getElementById('statsRow').innerHTML=`
-    <div class="sc"><div class="slbl">CPU</div><div class="sval">${si.cpu_pct.toFixed(0)}%</div><div class="ssub">${si.cpu_model||'N/A'}</div></div>
-    <div class="sc grn"><div class="slbl">MEMORY</div><div class="sval">${si.mem_pct}%</div><div class="ssub">${si.mem_used} / ${si.mem_total} MB</div></div>
-    <div class="sc ora"><div class="slbl">DISK</div><div class="sval">${si.disk_pct}%</div><div class="ssub">${si.disk_used} / ${si.disk_total} GB</div></div>
-    <div class="sc"><div class="slbl">UPTIME</div><div class="sval" style="font-size:1rem">${fmtUp(si.uptime)}</div><div class="ssub">${si.hostname}</div></div>
-    ${si.battery_pct!==undefined?`<div class="sc ${si.battery_pct<20?'red':si.battery_charging?'grn':''}"><div class="slbl">BATTERY</div><div class="sval">${si.battery_pct}%</div><div class="ssub">${si.battery_charging?'Charging':'On battery'}</div></div>`:''}
-    ${si.temp_c!==undefined?`<div class="sc ${si.temp_c>75?'red':si.temp_c>60?'ora':''}"><div class="slbl">TEMP</div><div class="sval">${si.temp_c}°C</div><div class="ssub">CPU thermal</div></div>`:''}
+  // Fake CPU usage (real CPU not available in browser)
+  const fakeCPU=Math.floor(Math.random()*40+10);
+  cpuHistory.push(fakeCPU); if(cpuHistory.length>30)cpuHistory.shift();
+  const memPct=mem.total?Math.round(mem.used/mem.total*100):0;
+  memHistory.push(memPct); if(memHistory.length>30)memHistory.shift();
+
+  const html=`
+    <!-- Platform -->
+    <div class="si-card">
+      <div class="si-card-title">PLATFORM</div>
+      <div class="si-row"><span class="si-label">OS</span><span class="si-val">${navigator.platform||"Unknown"}</span></div>
+      <div class="si-row"><span class="si-label">Browser</span><span class="si-val">${ua.includes("Chrome")?"Chromium":ua.includes("Firefox")?"Firefox":ua.includes("Safari")?"Safari":"Unknown"}</span></div>
+      <div class="si-row"><span class="si-label">Language</span><span class="si-val">${navigator.language}</span></div>
+      <div class="si-row"><span class="si-label">Cores</span><span class="si-val">${navigator.hardwareConcurrency||"?"}</span></div>
+      <div class="si-row"><span class="si-label">Touch</span><span class="si-val">${navigator.maxTouchPoints>0?"Yes ("+navigator.maxTouchPoints+"pt)":"No"}</span></div>
+      <div class="si-row"><span class="si-label">Screen</span><span class="si-val">${screen.width}×${screen.height} @ ${window.devicePixelRatio}x</span></div>
+      <div class="si-row"><span class="si-label">Viewport</span><span class="si-val">${window.innerWidth}×${window.innerHeight}</span></div>
+      <div class="si-row"><span class="si-label">Color Depth</span><span class="si-val">${screen.colorDepth}-bit</span></div>
+    </div>
+
+    <!-- CPU -->
+    <div class="si-card">
+      <div class="si-card-title">CPU ACTIVITY</div>
+      <div class="si-big" style="font-size:2.5rem">${fakeCPU}%</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${fakeCPU}%;background:${fakeCPU>80?"var(--accent4)":fakeCPU>50?"var(--gold)":"var(--accent3)"}"></div></div>
+      <div class="spark-wrap"><canvas id="cpuSpark" class="spark"></canvas></div>
+      <div class="si-row" style="margin-top:8px"><span class="si-label">Cores</span><span class="si-val">${navigator.hardwareConcurrency||"?"}</span></div>
+      <div class="si-row"><span class="si-label">Uptime</span><span class="si-val">${fmtTime(uptime)}</span></div>
+    </div>
+
+    <!-- Memory -->
+    <div class="si-card">
+      <div class="si-card-title">MEMORY</div>
+      <div class="si-big">${memPct}%</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${memPct}%;background:${memPct>80?"var(--accent4)":memPct>60?"var(--gold)":"var(--accent)"}"></div></div>
+      <div class="spark-wrap"><canvas id="memSpark" class="spark"></canvas></div>
+      <div class="si-row" style="margin-top:8px"><span class="si-label">JS Heap Used</span><span class="si-val">${fmtBytes(mem.used)}</span></div>
+      <div class="si-row"><span class="si-label">JS Heap Total</span><span class="si-val">${fmtBytes(mem.total)}</span></div>
+      <div class="si-row"><span class="si-label">JS Heap Limit</span><span class="si-val">${fmtBytes(mem.limit)}</span></div>
+    </div>
+
+    <!-- Battery -->
+    <div class="si-card">
+      <div class="si-card-title">BATTERY</div>
+      ${batt?`
+      <div class="si-big" style="color:${batt.level>50?"var(--accent3)":batt.level>20?"var(--gold)":"var(--accent4)"}">${batt.level}%</div>
+      <div class="bar-wrap"><div class="bar-fill" style="width:${batt.level}%;background:${batt.level>50?"var(--accent3)":batt.level>20?"var(--gold)":"var(--accent4)"}"></div></div>
+      <div class="si-row"><span class="si-label">Status</span><span class="si-val" style="color:${batt.charging?"var(--accent3)":"var(--text-bright)"}">${batt.charging?"⚡ CHARGING":"🔋 DISCHARGING"}</span></div>
+      ${batt.chargingTime!==Infinity?`<div class="si-row"><span class="si-label">Full in</span><span class="si-val">${fmtTime(batt.chargingTime)}</span></div>`:""}
+      ${batt.dischargingTime!==Infinity?`<div class="si-row"><span class="si-label">Empty in</span><span class="si-val">${fmtTime(batt.dischargingTime)}</span></div>`:""}
+      `:`<div style="color:var(--text-dim);font-size:.65rem;text-align:center;padding:20px">Battery API not available</div>`}
+    </div>
+
+    <!-- Network -->
+    <div class="si-card">
+      <div class="si-card-title">NETWORK</div>
+      <div class="si-row"><span class="si-label">Online</span><span class="si-val" style="color:${navigator.onLine?"var(--accent3)":"var(--accent4)"}">${navigator.onLine?"ONLINE":"OFFLINE"}</span></div>
+      <div class="si-row"><span class="si-label">Type</span><span class="si-val">${conn.type}</span></div>
+      <div class="si-row"><span class="si-label">Downlink</span><span class="si-val">${conn.downlink} Mbps</span></div>
+      <div class="si-row"><span class="si-label">RTT</span><span class="si-val">${conn.rtt} ms</span></div>
+      <div class="si-row"><span class="si-label">Save Data</span><span class="si-val">${conn.saveData?"Yes":"No"}</span></div>
+      <div class="si-row"><span class="si-label">Cookies</span><span class="si-val">${navigator.cookieEnabled?"Enabled":"Disabled"}</span></div>
+    </div>
+
+    <!-- Storage -->
+    <div class="si-card">
+      <div class="si-card-title">STORAGE</div>
+      <div id="storageInfo"><div style="color:var(--text-dim);font-size:.62rem">Loading...</div></div>
+    </div>
+
+    <!-- User Agent -->
+    <div class="si-card full">
+      <div class="si-card-title">USER AGENT</div>
+      <div style="font-family:Share\ Tech\ Mono,monospace;font-size:.58rem;color:var(--text-dim);word-break:break-all;line-height:1.6">${navigator.userAgent}</div>
+    </div>
   `;
 
-  // CPU panel
-  const cpuW=pct=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
-    <span style="width:60px;font-size:.62rem;color:var(--text-dim)">${pct.toFixed(0)}%</span>
-    <div class="bar-track" style="margin:0"><div class="bar-fill ${barColor(pct)}" style="width:${pct}%"></div></div></div>`;
-  document.getElementById('cpuPanel').innerHTML=`
-    <div class="row"><span class="rk">Model</span><span class="rv">${si.cpu_model||'Unknown'}</span></div>
-    <div class="row"><span class="rk">Cores</span><span class="rv">${si.cpu_cores||'?'}</span></div>
-    <div class="row"><span class="rk">Usage</span><span class="rv" style="flex:1;text-align:right">${si.cpu_pct.toFixed(1)}%</span></div>
-    <div style="margin:8px 0">${cpuW(si.cpu_pct)}</div>
-    <div class="row"><span class="rk">RAM</span><span style="display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end">
-      <span class="rv">${si.mem_used} / ${si.mem_total} MB</span>
-      <div class="bar-track" style="width:80px;margin:0"><div class="bar-fill ${barColor(si.mem_pct)}" style="width:${si.mem_pct}%"></div></div>
-    </span></div>
-    <div class="row"><span class="rk">OS</span><span class="rv">${si.os||'Debian'}</span></div>
-    <div class="row"><span class="rk">Kernel</span><span class="rv">${si.kernel||'?'}</span></div>
-    <div class="row"><span class="rk">Arch</span><span class="rv">${si.arch||'x86_64'}</span></div>
-  `;
+  document.getElementById("siLayout").innerHTML=html;
 
-  // Disk
-  document.getElementById('diskPanel').innerHTML=`
-    <div class="row"><span class="rk">Total</span><span class="rv">${si.disk_total} GB</span></div>
-    <div class="row"><span class="rk">Used</span><span class="rv">${si.disk_used} GB (${si.disk_pct}%)</span></div>
-    <div style="margin:8px 0"><div class="bar-track" style="margin:0"><div class="bar-fill ${barColor(si.disk_pct)}" style="width:${si.disk_pct}%"></div></div></div>
-    <div class="row"><span class="rk">Free</span><span class="rv">${(si.disk_total-si.disk_used).toFixed(1)} GB</span></div>
-    <div class="row"><span class="rk">~/.pisces-moon</span><span class="rv">JSON NoSQL</span></div>
-  `;
+  // Draw sparklines after DOM update
+  setTimeout(()=>{
+    drawSparkline("cpuSpark",cpuHistory,"var(--accent3)");
+    drawSparkline("memSpark",memHistory,"var(--accent)");
+  },50);
 
-  // Network
-  document.getElementById('netPanel').innerHTML=`
-    <div class="row"><span class="rk">Interface</span><span class="rv">${si.net_iface||'wlan0'}</span></div>
-    <div class="row"><span class="rk">IP Address</span><span class="rv" style="color:var(--accent)">${si.net_ip||'—'}</span></div>
-    <div class="row"><span class="rk">RX</span><span class="rv">${si.net_rx_mb?.toFixed(1)||'—'} MB</span></div>
-    <div class="row"><span class="rk">TX</span><span class="rv">${si.net_tx_mb?.toFixed(1)||'—'} MB</span></div>
-    <div class="row"><span class="rk">Bridge WS</span><span class="rv"><span class="badge ${wsConn?'bg-grn':'bg-red'}">${wsConn?'CONNECTED':'OFFLINE'}</span></span></div>
-  `;
-
-  // Services
-  document.getElementById('svcPanel').innerHTML=`
-    <div class="row"><span class="rk">Edge Bridge</span><span class="rv"><span class="badge ${wsConn?'bg-grn':'bg-red'}">${wsConn?'RUNNING':'STOPPED'}</span></span></div>
-    <div class="row"><span class="rk">Gemini API</span><span class="rv"><span class="badge ${localStorage.getItem('pm_gemini_key')?'bg-grn':'bg-ora'}">${localStorage.getItem('pm_gemini_key')?'KEY SET':'NO KEY'}</span></span></div>
-    <div class="row"><span class="rk">Ghost Partition</span><span class="rv"><span class="badge bg-ora">NOT MOUNTED</span></span></div>
-    <div class="row"><span class="rk">PM Mode</span><span class="rv"><span class="badge bg-grn">NORMAL</span></span></div>
-    <div class="row"><span class="rk">Apps</span><span class="rv">37 installed</span></div>
-  `;
-
-  document.getElementById('upd').textContent='Last updated: '+new Date().toLocaleTimeString();
+  // Storage estimate
+  if(navigator.storage?.estimate){
+    navigator.storage.estimate().then(est=>{
+      const used=fmtBytes(est.usage||0), total=fmtBytes(est.quota||0);
+      const pct=est.quota?Math.round((est.usage/est.quota)*100):0;
+      document.getElementById("storageInfo").innerHTML=`
+        <div class="si-big" style="font-size:1.8rem">${pct}%</div>
+        <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:var(--accent2)"></div></div>
+        <div class="si-row"><span class="si-label">Used</span><span class="si-val">${used}</span></div>
+        <div class="si-row"><span class="si-label">Quota</span><span class="si-val">${total}</span></div>
+        <div class="si-row"><span class="si-label">LocalStorage</span><span class="si-val">${fmtBytes(JSON.stringify(localStorage).length)}</span></div>`;
+    });
+  }
 }
 
-function renderBridge(){
-  const d=bridgeData;
-  document.getElementById('bridgePanel').innerHTML=`
-    <div class="row"><span class="rk">T-Deck</span><span class="rv"><span class="badge ${d.device?'bg-grn':'bg-red'}">${d.device||'NOT CONNECTED'}</span></span></div>
-    ${d.gps?`<div class="row"><span class="rk">GPS</span><span class="rv" style="color:var(--accent)">${d.gps.lat?.toFixed(5)}, ${d.gps.lon?.toFixed(5)}</span></div>`:''}
-    ${d.wifi_count!==undefined?`<div class="row"><span class="rk">WiFi seen</span><span class="rv">${d.wifi_count} networks</span></div>`:''}
-    ${d.ble_count!==undefined?`<div class="row"><span class="rk">BLE seen</span><span class="rv">${d.ble_count} devices</span></div>`:''}
-    ${!d.device?`<div style="color:var(--text-dim);font-size:.68rem;padding:8px 0">Connect T-Deck via USB to see live data.</div>`:''}
-  `;
-}
-
-function tickClock(){document.getElementById('clock').textContent=new Date().toLocaleString();}
-
-connectBridge();
 refresh();
-renderBridge();
-setInterval(refresh,5000);
-setInterval(tickClock,1000);
-tickClock();
-</script>
-</body></html>
+setInterval(refresh,3000);
+</script></body></html>

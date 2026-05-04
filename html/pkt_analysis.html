@@ -1,415 +1,641 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — pkt_analysis.html
+<!--
+  Pisces Moon OS — pkt_analysis.html v2
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  NOTE: High bandwidth — WebSocket/USB only.
 -->
-<!-- PISCES MOON OS // OFFLINE PACKET ANALYSIS -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PISCES MOON // OFFLINE PKT ANALYSIS</title>
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // PACKET ANALYSIS</title>
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent);letter-spacing:3px;}
-.logo span{color:var(--accent3);}
-.main{display:grid;grid-template-columns:320px 1fr;flex:1;overflow:hidden;}
-.file-panel{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
-.analysis-panel{display:flex;flex-direction:column;overflow:hidden;}
-.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.6rem;color:var(--accent);letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;background:var(--bg2);}
-.ph .sub{color:var(--text-dim);font-size:.55rem;}
-.drop-zone{border:1px dashed var(--panel-border);margin:12px;padding:20px;text-align:center;cursor:pointer;transition:all .2s;color:var(--text-dim);font-size:.65rem;line-height:2;}
-.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.04);}
-.drop-zone input{display:none;}
-.file-list{flex:1;overflow-y:auto;}
-.file-row{padding:10px 16px;border-bottom:1px solid rgba(26,58,80,.3);cursor:pointer;transition:background .15s;display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;}
-.file-row:hover{background:rgba(0,212,255,.03);}
-.file-row.selected{background:rgba(0,212,255,.07);border-left:2px solid var(--accent);}
-.file-name{font-size:.65rem;color:var(--text-bright);}
-.file-meta{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
-.file-type{font-family:'Orbitron',monospace;font-size:.52rem;padding:2px 6px;border-radius:2px;}
-.ft-json{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.3);}
-.ft-csv{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid rgba(0,255,136,.3);}
-.ft-pcap{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid rgba(255,107,0,.3);}
-.btn{padding:7px 16px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
-.btn:hover{background:var(--accent);color:var(--bg);}
-.btn.green{border-color:var(--accent3);color:var(--accent3);}
-.btn.green:hover{background:var(--accent3);color:var(--bg);}
-.btn.sm{padding:4px 10px;font-size:.6rem;}
-.btn:disabled{opacity:.3;cursor:not-allowed;}
-.ctrl-bar{padding:10px 16px;border-bottom:1px solid var(--panel-border);display:flex;gap:8px;align-items:center;background:var(--bg2);flex-shrink:0;}
-.progress-wrap{padding:20px 24px;display:none;}
-.progress-wrap.show{display:block;}
-.prog-label{font-size:.65rem;color:var(--text-dim);margin-bottom:8px;}
-.prog-bar{height:6px;background:var(--bg3);border-radius:2px;}
-.prog-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .4s;}
-/* Findings */
-.summary-row{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--panel-border);flex-shrink:0;}
-.sum-cell{padding:10px 16px;border-right:1px solid var(--panel-border);text-align:center;}
-.sum-cell:last-child{border-right:none;}
-.sum-num{font-family:'Orbitron',monospace;font-size:1.4rem;font-weight:700;}
-.sum-lbl{font-size:.52rem;letter-spacing:2px;color:var(--text-dim);font-family:'Orbitron',monospace;margin-top:2px;}
-.findings-list{flex:1;overflow-y:auto;}
-.finding-row{padding:10px 16px;border-bottom:1px solid rgba(26,58,80,.3);display:grid;grid-template-columns:auto auto 1fr;gap:10px;align-items:start;}
-.sev-badge{font-family:'Orbitron',monospace;font-size:.55rem;padding:3px 8px;border-radius:2px;white-space:nowrap;align-self:start;margin-top:1px;}
-.sev-crit{background:rgba(255,51,102,.15);color:var(--accent4);border:1px solid rgba(255,51,102,.4);}
-.sev-warn{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid rgba(255,204,0,.3);}
-.sev-info{background:rgba(0,212,255,.08);color:var(--accent);border:1px solid rgba(0,212,255,.2);}
-.rule-tag{font-family:'Orbitron',monospace;font-size:.52rem;color:var(--text-dim);white-space:nowrap;padding-top:3px;}
-.find-msg{font-size:.63rem;color:var(--text);line-height:1.5;}
-.find-msg .detail{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
-.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-dim);}
-.empty-icon{font-family:'Orbitron',monospace;font-size:2rem;color:rgba(0,212,255,.12);letter-spacing:4px;}
-.empty-msg{font-size:.65rem;text-align:center;line-height:2;}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header>
-  <div class="logo"><span>OFFLINE</span> PKT ANALYSIS</div>
-  <span style="font-size:.62rem;color:var(--text-dim)">Pisces Moon OS // CYBER Suite</span>
+.pa-layout { display:grid; grid-template-columns:1fr 320px; grid-template-rows:auto auto 1fr auto; height:calc(100vh - 52px); overflow:hidden; }
+.pa-stats { grid-column:1/-1; display:flex; border-bottom:1px solid var(--panel-border); background:var(--bg2); }
+.pa-stat { flex:1; padding:8px 12px; border-right:1px solid var(--panel-border); text-align:center; }
+.pa-stat:last-child { border-right:none; }
+.pa-stat-label { font-family:Orbitron,monospace; font-size:.45rem; letter-spacing:2px; color:var(--text-dim); }
+.pa-stat-value { font-family:Orbitron,monospace; font-size:1rem; color:var(--text-bright); font-weight:700; }
+
+/* Controls */
+.pa-controls { grid-column:1/-1; display:flex; gap:8px; padding:8px 12px; background:var(--bg2); border-bottom:1px solid var(--panel-border); flex-wrap:wrap; align-items:center; }
+.pa-btn { padding:5px 12px; background:transparent; border:1px solid var(--panel-border); color:var(--text-dim); font-family:Share\ Tech\ Mono,monospace; font-size:.6rem; cursor:pointer; transition:all .15s; }
+.pa-btn:hover { border-color:var(--accent); color:var(--accent); }
+.pa-btn.active { border-color:var(--accent); color:var(--accent); background:rgba(0,212,255,.1); }
+.pa-filter { background:var(--bg3); border:1px solid var(--panel-border); color:var(--text); font-family:Share\ Tech\ Mono,monospace; font-size:.62rem; padding:4px 10px; width:200px; }
+.pa-filter:focus { border-color:var(--accent); outline:none; }
+
+/* Packet list */
+.pa-packets { overflow-y:auto; border-right:1px solid var(--panel-border); font-family:Share\ Tech\ Mono,monospace; }
+.pa-pkt { display:grid; grid-template-columns:50px 80px 120px 120px 60px 60px 1fr; padding:4px 8px; border-bottom:1px solid rgba(28,46,58,.3); cursor:pointer; font-size:.6rem; transition:background .1s; }
+.pa-pkt:hover { background:rgba(0,212,255,.03); }
+.pa-pkt.selected { background:rgba(0,212,255,.08); }
+.pa-pkt .num { color:var(--text-dim); }
+.pa-pkt .time { color:var(--text-dim); }
+.pa-pkt .src,.pa-pkt .dst { color:var(--text); }
+.pa-pkt .proto { font-weight:bold; }
+.pa-pkt .len { color:var(--text-dim); text-align:right; }
+.pa-pkt .info { color:var(--text-dim); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pa-pkt-header { background:var(--bg2); position:sticky; top:0; z-index:5; color:var(--text-dim); border-bottom:2px solid var(--panel-border); }
+
+/* Packet detail */
+.pa-detail { overflow-y:auto; }
+.pa-detail-section { border-bottom:1px solid var(--panel-border); }
+.pa-detail-section-header { padding:8px 12px; font-family:Orbitron,monospace; font-size:.52rem; letter-spacing:2px; cursor:pointer; display:flex; justify-content:space-between; }
+.pa-detail-section-header:hover { background:rgba(0,212,255,.04); }
+.pa-detail-section-header .layer-name { }
+.pa-detail-section-header.eth { color:var(--gold); }
+.pa-detail-section-header.ip  { color:var(--accent); }
+.pa-detail-section-header.tcp { color:var(--accent3); }
+.pa-detail-section-header.udp { color:var(--accent2); }
+.pa-detail-section-header.app { color:var(--accent4); }
+.pa-detail-field { padding:3px 24px; font-size:.62rem; display:flex; justify-content:space-between; border-bottom:1px solid rgba(28,46,58,.2); }
+.pa-detail-field .field-name { color:var(--text-dim); }
+.pa-detail-field .field-value { color:var(--text-bright); font-family:Share\ Tech\ Mono,monospace; }
+.pa-hex { padding:8px 12px; font-family:Share\ Tech\ Mono,monospace; font-size:.58rem; color:var(--text-dim); word-break:break-all; line-height:1.6; }
+.pa-hex span.hex-byte { color:var(--text); }
+.pa-hex span.hex-ascii { color:var(--accent3); }
+
+/* Bottom: charts + talkers */
+.pa-bottom { grid-column:1/-1; border-top:1px solid var(--panel-border); display:grid; grid-template-columns:1fr 1fr 1fr 240px; height:160px; overflow:hidden; }
+.pa-bottom-section { border-right:1px solid var(--panel-border); padding:6px 8px; overflow:hidden; }
+.pa-bottom-section:last-child { border-right:none; }
+.pa-bottom-title { font-family:Orbitron,monospace; font-size:.5rem; letter-spacing:2px; color:var(--gold); margin-bottom:4px; }
+canvas { display:block; }
+.pa-talker { display:flex; justify-content:space-between; padding:3px 0; font-size:.6rem; border-bottom:1px solid rgba(28,46,58,.3); }
+.pa-talker .ip { color:var(--text); font-family:Share\ Tech\ Mono,monospace; }
+.pa-talker .bytes { color:var(--accent); }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">🔬 <em>PACKET</em> ANALYSIS</div>
+    <div class="pm-hdr-right">
+        <div class="pm-live-badge" id="liveBadge" style="opacity:.3">
+            <div class="pm-live-dot"></div>CAPTURING
+        </div>
+        <span class="pm-last-update" id="lastUpdate"></span>
+    </div>
 </header>
 
-<div class="main">
-  <!-- File panel -->
-  <div class="file-panel">
-    <div class="ph">SESSION LOGS <span class="sub" id="fileCount">0 files</span></div>
-    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()"
-      ondragover="event.preventDefault();this.classList.add('drag')"
-      ondragleave="this.classList.remove('drag')"
-      ondrop="handleDrop(event)">
-      <input type="file" id="fileInput" multiple accept=".json,.csv,.pcap,.cap" onchange="handleFiles(this.files)">
-      ⬆ DROP FILES HERE<br>
-      <span style="font-size:.58rem">beacon_*.json · pkt_*.csv · probe_*.json · *.pcap</span><br>
-      <span style="font-size:.58rem;color:rgba(0,212,255,.4)">or click to browse</span>
-    </div>
-    <div class="file-list" id="fileList">
-      <div style="padding:12px 16px;font-size:.6rem;color:var(--text-dim)">No files loaded.<br>Drop logs from ~/.pisces-moon/cyber_logs/</div>
-    </div>
-    <div style="padding:10px 16px;border-top:1px solid var(--panel-border);display:flex;gap:6px">
-      <button class="btn sm green" onclick="loadDemo()">LOAD DEMO</button>
-      <button class="btn sm" onclick="clearFiles()">CLEAR</button>
-    </div>
-  </div>
-
-  <!-- Analysis panel -->
-  <div class="analysis-panel">
-    <div class="ctrl-bar">
-      <button class="btn" id="analyzeBtn" onclick="analyzeSelected()" disabled>▶ ANALYZE</button>
-      <button class="btn sm" onclick="exportReport()" id="exportBtn" disabled style="border-color:var(--accent3);color:var(--accent3)">EXPORT REPORT</button>
-      <span style="font-size:.6rem;color:var(--text-dim);margin-left:auto" id="analyzeStatus">Select a file to analyze</span>
+<div class="pa-layout">
+    <div class="pa-stats">
+        <div class="pa-stat"><div class="pa-stat-label">CAPTURED</div><div class="pa-stat-value" id="statTotal">0</div></div>
+        <div class="pa-stat"><div class="pa-stat-label">TCP</div><div class="pa-stat-value" style="color:var(--accent3)" id="statTCP">0</div></div>
+        <div class="pa-stat"><div class="pa-stat-label">UDP</div><div class="pa-stat-value" style="color:var(--accent2)" id="statUDP">0</div></div>
+        <div class="pa-stat"><div class="pa-stat-label">DNS</div><div class="pa-stat-value" style="color:var(--gold)" id="statDNS">0</div></div>
+        <div class="pa-stat"><div class="pa-stat-label">HTTP</div><div class="pa-stat-value" id="statHTTP">0</div></div>
+        <div class="pa-stat"><div class="pa-stat-label">PKTS/SEC</div><div class="pa-stat-value" id="statRate">0</div></div>
+        <div class="pa-stat"><div class="pa-stat-label">BYTES</div><div class="pa-stat-value" id="statBytes">0</div></div>
+        <div class="pa-stat"><div class="pa-stat-label">ANOMALIES</div><div class="pa-stat-value" style="color:var(--accent4)" id="statAnom">0</div></div>
     </div>
 
-    <div class="progress-wrap" id="progressWrap">
-      <div class="prog-label" id="progLabel">Parsing session data...</div>
-      <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    <div class="pa-controls">
+        <button class="pa-btn active" id="btnCapture" onclick="toggleCapture()">⬤ CAPTURE</button>
+        <button class="pa-btn" onclick="clearPackets()">CLEAR</button>
+        <button class="pa-btn" onclick="saveNow()">💾 SAVE PCAP</button>
+        <span style="font-size:.55rem;color:var(--text-dim);font-family:Orbitron,monospace;letter-spacing:1px">FILTER:</span>
+        <input class="pa-filter" id="filterInput" placeholder="tcp, udp, dns, http, ip=192.168.1.1 ..." oninput="applyFilter()">
+        <button class="pa-btn" onclick="clearFilter()">✕</button>
+        <span style="font-size:.55rem;color:var(--text-dim);font-family:Orbitron,monospace;letter-spacing:1px">VIEW:</span>
+        <button class="pa-btn active" id="btnList" onclick="setView('list')">LIST</button>
+        <button class="pa-btn" id="btnConv" onclick="setView('conversations')">CONVERSATIONS</button>
+        <button class="pa-btn" id="btnAnomaly" onclick="setView('anomalies')">ANOMALIES</button>
+        <span id="filterStatus" style="font-size:.58rem;color:var(--accent3)"></span>
     </div>
 
-    <div id="resultsArea" style="flex:1;display:flex;flex-direction:column;overflow:hidden">
-      <div class="empty-state">
-        <div class="empty-icon">ANALYSIS</div>
-        <div class="empty-msg">Drop session log files on the left<br>then select one and press ANALYZE.<br><br>Detects: Evil Twin · Deauth Flood<br>Enc Downgrade · Hidden Beacon<br>Channel Anomaly · Probe Pattern</div>
-      </div>
+    <div class="pa-packets" id="packetPane">
+        <div class="pa-pkt pa-pkt-header">
+            <span class="num">#</span>
+            <span class="time">TIME</span>
+            <span class="src">SOURCE</span>
+            <span class="dst">DEST</span>
+            <span class="proto">PROTO</span>
+            <span class="len">LEN</span>
+            <span class="info">INFO</span>
+        </div>
+        <div id="packetList"></div>
     </div>
-  </div>
+
+    <div class="pa-detail" id="detailPane">
+        <div style="padding:20px;text-align:center;color:var(--text-dim);font-size:.65rem">
+            Select a packet to inspect
+        </div>
+    </div>
+
+    <div class="pa-bottom">
+        <div class="pa-bottom-section">
+            <div class="pa-bottom-title">PROTOCOL DIST</div>
+            <canvas id="chart-proto" width="100%" height="130"></canvas>
+        </div>
+        <div class="pa-bottom-section">
+            <div class="pa-bottom-title">TRAFFIC RATE</div>
+            <canvas id="chart-rate" width="100%" height="130"></canvas>
+        </div>
+        <div class="pa-bottom-section">
+            <div class="pa-bottom-title">PACKET SIZES</div>
+            <canvas id="chart-sizes" width="100%" height="130"></canvas>
+        </div>
+        <div class="pa-bottom-section">
+            <div class="pa-bottom-title">TOP TALKERS</div>
+            <div id="topTalkers"></div>
+        </div>
+    </div>
 </div>
 
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_transport.js"></script>
 <script>
-// ── State ────────────────────────────────────────────────────────────────
-let loadedFiles = [];
-let selectedFileIdx = null;
-let findings = [];
+// ═══════════════════════════════════════════════════════════════════
+// PACKET ANALYSIS — Full protocol decoder, conversations, anomalies
+// ═══════════════════════════════════════════════════════════════════
 
-const SEV_CRIT = 2, SEV_WARN = 1, SEV_INFO = 0;
+const PROTO_COLORS = {
+    TCP:  '#00ff88', UDP:  '#ff6b00', DNS:  '#f4a820',
+    HTTP: '#00d4ff', HTTPS:'#9b59b6', ARP:  '#e74c3c',
+    ICMP: '#1abc9c', DHCP: '#e67e22', MQTT: '#ff3366',
+    MDNS: '#f39c12', NTP:  '#3498db', OTHER:'#7ab8d4',
+};
 
-const SENSITIVE = ['corp','vpn','internal','employee','staff','office','admin','secure','private','iot','camera','mgmt','infrastructure','prod','dev','enterprise','cisco'];
-function isSensitive(s){ const l=s.toLowerCase(); return SENSITIVE.some(k=>l.includes(k)); }
-function isStdChannel(ch){ return [1,6,11,13,36,40,44,48].includes(ch); }
+const packets      = [];          // all captured
+let filtered       = [];          // after filter
+let selectedIdx    = null;
+let capturing      = true;
+let filterStr      = '';
+let viewMode       = 'list';
+let protoChart, rateChart, sizeChart;
+let rateSpark;
+let conversations  = new Map();   // src:dst → {bytes, packets}
+let anomalies      = [];
+let talkers        = new Map();   // ip → bytes
+let pktRate        = 0;
+let lastRateCheck  = Date.now();
+let pktsSinceCheck = 0;
 
-// ── File handling ────────────────────────────────────────────────────────
-function handleDrop(e) {
-  e.preventDefault();
-  document.getElementById('dropZone').classList.remove('drag');
-  handleFiles(e.dataTransfer.files);
+// Known ports → protocol names
+const WELL_KNOWN = {
+    53:'DNS', 80:'HTTP', 443:'HTTPS', 22:'SSH', 23:'TELNET',
+    25:'SMTP', 110:'POP3', 143:'IMAP', 67:'DHCP', 68:'DHCP',
+    1883:'MQTT', 5353:'mDNS', 123:'NTP', 161:'SNMP',
+    21:'FTP', 3389:'RDP', 5900:'VNC', 8080:'HTTP-ALT',
+};
+
+function protoFromPorts(sport, dport) {
+    return WELL_KNOWN[dport] || WELL_KNOWN[sport] || null;
 }
 
-function handleFiles(fileList) {
-  for (const f of fileList) {
-    if (!loadedFiles.find(x=>x.name===f.name)) {
-      loadedFiles.push({name:f.name, file:f, size:f.size, type:detectType(f.name)});
+// ── Transport ─────────────────────────────────────────────────────
+const beam = new PMTransport({
+    onMessage: handleData,
+    onStatus: (s) => {
+        document.getElementById('liveBadge').style.opacity = s.state==='connected'?'1':'0.3';
+        document.getElementById('lastUpdate').textContent = s.message;
     }
-  }
-  renderFileList();
-}
+});
 
-function detectType(name) {
-  if (name.endsWith('.json')) return 'json';
-  if (name.endsWith('.csv'))  return 'csv';
-  if (name.endsWith('.pcap') || name.endsWith('.cap')) return 'pcap';
-  return 'json';
-}
-
-function renderFileList() {
-  document.getElementById('fileCount').textContent = loadedFiles.length + ' files';
-  const list = document.getElementById('fileList');
-  if (loadedFiles.length === 0) {
-    list.innerHTML = '<div style="padding:12px 16px;font-size:.6rem;color:var(--text-dim)">No files loaded.</div>';
-    return;
-  }
-  list.innerHTML = loadedFiles.map((f,i) => `
-    <div class="file-row ${selectedFileIdx===i?'selected':''}" onclick="selectFile(${i})">
-      <div>
-        <div class="file-name">${esc(f.name)}</div>
-        <div class="file-meta">${formatSize(f.size)}</div>
-      </div>
-      <span class="file-type ft-${f.type}">${f.type.toUpperCase()}</span>
-    </div>`).join('');
-}
-
-function selectFile(i) {
-  selectedFileIdx = i;
-  renderFileList();
-  document.getElementById('analyzeBtn').disabled = false;
-  document.getElementById('analyzeStatus').textContent = 'Ready: ' + loadedFiles[i].name;
-}
-
-function clearFiles() {
-  loadedFiles = []; selectedFileIdx = null; findings = [];
-  renderFileList();
-  document.getElementById('analyzeBtn').disabled = true;
-  document.getElementById('exportBtn').disabled = true;
-  document.getElementById('analyzeStatus').textContent = 'Select a file to analyze';
-  document.getElementById('resultsArea').innerHTML = '<div class="empty-state"><div class="empty-icon">ANALYSIS</div><div class="empty-msg">Drop files and analyze.</div></div>';
-}
-
-function formatSize(b) {
-  if (b < 1024) return b + ' B';
-  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
-  return (b/1048576).toFixed(1) + ' MB';
-}
-
-// ── Analysis engine ───────────────────────────────────────────────────────
-async function analyzeSelected() {
-  if (selectedFileIdx === null) return;
-  const f = loadedFiles[selectedFileIdx];
-  findings = [];
-
-  showProgress('Reading file...', 10);
-  const text = await readFile(f.file);
-  showProgress('Parsing data...', 30);
-  await sleep(200);
-
-  if (f.type === 'json') await analyzeJSON(text, f.name);
-  else if (f.type === 'csv') analyzeCSV(text, f.name);
-  else if (f.type === 'pcap') findings.push({sev:SEV_INFO, rule:'PCAP', msg:'PCAP binary analysis requires tshark backend. Use: tshark -r file.pcap -T json | pipe to JSON analysis.', detail:''});
-
-  showProgress('Complete.', 100);
-  await sleep(300);
-  hideProgress();
-  renderResults(f.name);
-  document.getElementById('exportBtn').disabled = false;
-}
-
-async function analyzeJSON(text, fname) {
-  let data;
-  try { data = JSON.parse(text); } catch(e) {
-    findings.push({sev:SEV_WARN, rule:'PARSE', msg:'JSON parse error: '+e.message, detail:''});
-    return;
-  }
-
-  showProgress('Checking for Evil Twin...', 40);
-  await sleep(150);
-
-  // ── APs ──────────────────────────────────────────────────────────────
-  const aps = data.aps || data.networks || [];
-  const apMap = {}; // ssid → [{bssid,channel,enc}]
-
-  for (const ap of aps) {
-    const ssid    = ap.ssid || ap.SSID || '';
-    const bssid   = ap.bssid || ap.BSSID || '';
-    const channel = ap.channel || ap.Channel || 0;
-    const enc     = ap.enc !== undefined ? ap.enc : (ap.encryption !== 'OPEN');
-    const hidden  = ap.hidden || false;
-    const beacons = ap.beacons || 0;
-
-    if (!apMap[ssid]) apMap[ssid] = [];
-    apMap[ssid].push({bssid, channel, enc});
-
-    if (hidden && beacons > 500)
-      findings.push({sev:SEV_WARN, rule:'HIDDEN AP', msg:`Hidden AP ${bssid} — ${beacons} beacons (high rate)`, detail:'High beacon rate on hidden SSID may indicate spoofing.'});
-
-    if (channel > 0 && !isStdChannel(channel))
-      findings.push({sev:SEV_INFO, rule:'CH ANOMALY', msg:`AP ${bssid} on non-standard CH${channel}`, detail:`SSID: ${ssid}`});
-  }
-
-  showProgress('Checking for Evil Twin / Enc Downgrade...', 60);
-  await sleep(150);
-
-  for (const ssid of Object.keys(apMap)) {
-    if (!ssid) continue;
-    const entries = apMap[ssid];
-    for (let i=0; i<entries.length; i++) {
-      for (let j=i+1; j<entries.length; j++) {
-        if (entries[i].bssid === entries[j].bssid) continue;
-        if (Math.abs(entries[i].channel - entries[j].channel) > 2)
-          findings.push({sev:SEV_CRIT, rule:'EVIL TWIN', msg:`"${ssid}" seen on CH${entries[i].channel}+CH${entries[j].channel} with different BSSIDs`, detail:`${entries[i].bssid} vs ${entries[j].bssid}`});
-        if (entries[i].enc !== entries[j].enc)
-          findings.push({sev:SEV_CRIT, rule:'ENC DNGRD', msg:`"${ssid}" seen as both ENCRYPTED and OPEN`, detail:'Possible encryption stripping attack.'});
-      }
+function handleData(msg) {
+    if (!capturing) return;
+    if (msg.type === 'PKT_CAPTURE' || msg.type === 'PKT') {
+        ingestPacket(msg);
     }
-  }
+}
 
-  showProgress('Checking deauth frames...', 75);
-  await sleep(150);
+// ── Packet ingestion ──────────────────────────────────────────────
+let pktNum = 0;
+function ingestPacket(raw) {
+    pktNum++;
+    pktsSinceCheck++;
 
-  // ── Deauths ───────────────────────────────────────────────────────────
-  const deauths = data.deauths || [];
-  for (const d of deauths) {
-    const count = d.count || 0; const src = d.src || d.source || '??';
-    if (count > 10)
-      findings.push({sev: count>50?SEV_CRIT:SEV_WARN, rule:'DEAUTH FLD', msg:`${src} sent ${count} deauth/disassoc frames`, detail: count>50?'CRITICAL: Active deauth attack likely.':'Elevated deauth count — may be normal or targeted.'});
-  }
+    const pkt = {
+        num:       pktNum,
+        ts:        raw.ts || Date.now() / 1000,
+        src_mac:   raw.src_mac || '',
+        dst_mac:   raw.dst_mac || '',
+        src_ip:    raw.src_ip  || '',
+        dst_ip:    raw.dst_ip  || '',
+        src_port:  raw.src_port || 0,
+        dst_port:  raw.dst_port || 0,
+        proto:     raw.proto   || 'OTHER',
+        app_proto: raw.app_proto || protoFromPorts(raw.src_port, raw.dst_port) || raw.proto || 'OTHER',
+        length:    raw.length  || raw.len || 0,
+        flags:     raw.flags   || '',
+        payload:   raw.payload || raw.payload_hex || '',
+        info:      raw.info    || buildInfo(raw),
+    };
 
-  // ── Probes ────────────────────────────────────────────────────────────
-  const probes = data.probes || data.devices || [];
-  for (const p of probes) {
-    const pssids = p.ssids || (p.ssid ? [p.ssid] : []);
-    for (const s of pssids) {
-      if (isSensitive(s))
-        findings.push({sev:SEV_WARN, rule:'PROBE PTTRN', msg:`Sensitive probe: "${s}"`, detail:`Source: ${p.src||p.mac||'unknown'}`});
+    packets.push(pkt);
+    if (packets.length > 5000) packets.shift(); // Rolling 5000 packet buffer
+
+    // Track conversations
+    const convKey = `${pkt.src_ip}:${pkt.src_port}↔${pkt.dst_ip}:${pkt.dst_port}`;
+    const conv    = conversations.get(convKey) || {
+        src: pkt.src_ip, dst: pkt.dst_ip,
+        sport: pkt.src_port, dport: pkt.dst_port,
+        proto: pkt.app_proto, bytes: 0, packets: 0, start: Date.now()
+    };
+    conv.bytes   += pkt.length;
+    conv.packets++;
+    conversations.set(convKey, conv);
+
+    // Track talkers
+    if (pkt.src_ip) talkers.set(pkt.src_ip, (talkers.get(pkt.src_ip)||0) + pkt.length);
+    if (pkt.dst_ip) talkers.set(pkt.dst_ip, (talkers.get(pkt.dst_ip)||0) + pkt.length);
+
+    // Anomaly detection
+    detectAnomaly(pkt);
+
+    // Update stats
+    updateStats(pkt);
+    applyFilter();
+
+    // Charts update every 20 packets
+    if (pktNum % 20 === 0) updateCharts();
+}
+
+function buildInfo(raw) {
+    if (raw.proto === 'DNS')   return `Query: ${raw.domain||'?'}`;
+    if (raw.proto === 'HTTP')  return `${raw.method||'GET'} ${raw.url||'/'}`;
+    if (raw.proto === 'ARP')   return `Who has ${raw.target_ip||'?'}?`;
+    if (raw.proto === 'ICMP')  return `${raw.icmp_type||'Echo'} id=${raw.icmp_id||0}`;
+    if (raw.proto === 'DHCP')  return `${raw.dhcp_type||'Request'} ${raw.requested_ip||''}`;
+    return raw.flags ? `Flags: ${raw.flags}` : '';
+}
+
+// ── Anomaly detection ─────────────────────────────────────────────
+const portScanTracker = new Map(); // src_ip → Set of dst_ports
+function detectAnomaly(pkt) {
+    // Port scan detection — many different ports from one source
+    if (pkt.src_ip) {
+        const ports = portScanTracker.get(pkt.src_ip) || new Set();
+        ports.add(pkt.dst_port);
+        portScanTracker.set(pkt.src_ip, ports);
+        if (ports.size > 20 && ports.size % 10 === 0) {
+            anomalies.unshift({
+                type: 'PORT SCAN',
+                src: pkt.src_ip,
+                detail: `${pkt.src_ip} probing ${ports.size} ports`,
+                ts: Date.now(),
+            });
+        }
     }
-  }
 
-  if (findings.length === 0)
-    findings.push({sev:SEV_INFO, rule:'CLEAN', msg:'No anomalies detected in this session.', detail:''});
-}
-
-function analyzeCSV(text, fname) {
-  const lines = text.trim().split('\n');
-  if (lines.length < 2) { findings.push({sev:SEV_WARN, rule:'EMPTY', msg:'CSV file has no data rows.', detail:''}); return; }
-
-  const deauthSrcs = {};
-  let totalFrames=0, deauthTotal=0, dataTotal=0;
-
-  for (let i=1; i<lines.length; i++) {
-    const cols = lines[i].split(',');
-    if (cols.length < 3) continue;
-    totalFrames++;
-    const type = (cols[1]||'').trim().toUpperCase();
-    const src  = (cols[2]||'').trim();
-
-    if (type==='DEAUTH'||type==='DISASSOC') {
-      deauthTotal++;
-      deauthSrcs[src] = (deauthSrcs[src]||0)+1;
+    // ARP storm
+    const recentArp = packets.slice(-50).filter(p => p.proto === 'ARP').length;
+    if (recentArp > 20) {
+        anomalies.unshift({
+            type: 'ARP STORM', src: pkt.src_ip,
+            detail: `${recentArp} ARP packets in last 50`, ts: Date.now()
+        });
     }
-    if (type.startsWith('DATA')||type.startsWith('QOS')) dataTotal++;
-  }
 
-  findings.push({sev:SEV_INFO, rule:'SUMMARY', msg:`${totalFrames} frames — Deauth: ${deauthTotal} — Data: ${dataTotal}`, detail:''});
+    // Telnet / unencrypted services
+    if ([23, 21, 80].includes(pkt.dst_port) || [23, 21, 80].includes(pkt.src_port)) {
+        const name = WELL_KNOWN[pkt.dst_port] || WELL_KNOWN[pkt.src_port];
+        if (!anomalies.find(a => a.detail.includes(name))) {
+            anomalies.unshift({
+                type: 'INSECURE PROTO',
+                src: pkt.src_ip,
+                detail: `${name} traffic detected (unencrypted)`,
+                ts: Date.now(),
+            });
+        }
+    }
 
-  for (const [mac, count] of Object.entries(deauthSrcs)) {
-    if (count > 10)
-      findings.push({sev:count>50?SEV_CRIT:SEV_WARN, rule:'DEAUTH FLD', msg:`${mac} sent ${count} deauth frames`, detail:''});
-  }
-
-  const ratio = totalFrames>0 ? deauthTotal/totalFrames : 0;
-  if (ratio > 0.05)
-    findings.push({sev:SEV_WARN, rule:'HIGH DEAUTH', msg:`${(ratio*100).toFixed(1)}% of frames are deauth/disassoc (>5% is suspicious)`, detail:''});
-
-  if (findings.length <= 1)
-    findings.push({sev:SEV_INFO, rule:'CLEAN', msg:'No anomalies detected in CSV session.', detail:''});
+    if (anomalies.length > 50) anomalies.length = 50;
+    document.getElementById('statAnom').textContent = anomalies.length;
 }
 
-// ── Render results ────────────────────────────────────────────────────────
-function renderResults(fname) {
-  const area = document.getElementById('resultsArea');
-  const crit = findings.filter(f=>f.sev===SEV_CRIT).length;
-  const warn = findings.filter(f=>f.sev===SEV_WARN).length;
-  const info = findings.filter(f=>f.sev===SEV_INFO).length;
+// ── Stats ─────────────────────────────────────────────────────────
+const protoCounts = {TCP:0, UDP:0, DNS:0, HTTP:0, HTTPS:0, OTHER:0};
+let totalBytes = 0;
+function updateStats(pkt) {
+    const proto = pkt.app_proto;
+    if (protoCounts[proto] !== undefined) protoCounts[proto]++;
+    else protoCounts.OTHER++;
+    totalBytes += pkt.length;
 
-  document.getElementById('analyzeStatus').textContent = `${findings.length} findings — ${crit} CRITICAL`;
+    // Packet rate
+    const now = Date.now();
+    if (now - lastRateCheck > 1000) {
+        pktRate        = pktsSinceCheck;
+        pktsSinceCheck = 0;
+        lastRateCheck  = now;
+        document.getElementById('statRate').textContent = pktRate;
+    }
 
-  area.innerHTML = `
-    <div class="summary-row">
-      <div class="sum-cell"><div class="sum-num" style="color:var(--accent4)">${crit}</div><div class="sum-lbl">CRITICAL</div></div>
-      <div class="sum-cell"><div class="sum-num" style="color:var(--warn)">${warn}</div><div class="sum-lbl">WARNING</div></div>
-      <div class="sum-cell"><div class="sum-num" style="color:var(--accent)">${info}</div><div class="sum-lbl">INFO</div></div>
-      <div class="sum-cell"><div class="sum-num" style="color:var(--text-bright)">${findings.length}</div><div class="sum-lbl">TOTAL</div></div>
-    </div>
-    <div class="findings-list">
-      ${findings.map(f=>`
-        <div class="finding-row">
-          <span class="sev-badge ${f.sev===SEV_CRIT?'sev-crit':f.sev===SEV_WARN?'sev-warn':'sev-info'}">${f.sev===SEV_CRIT?'CRIT':f.sev===SEV_WARN?'WARN':'INFO'}</span>
-          <span class="rule-tag">${esc(f.rule)}</span>
-          <div class="find-msg">${esc(f.msg)}${f.detail?`<div class="detail">${esc(f.detail)}</div>`:''}</div>
-        </div>`).join('')}
-    </div>`;
+    document.getElementById('statTotal').textContent = packets.length;
+    document.getElementById('statTCP').textContent   = protoCounts.TCP;
+    document.getElementById('statUDP').textContent   = protoCounts.UDP;
+    document.getElementById('statDNS').textContent   = protoCounts.DNS;
+    document.getElementById('statHTTP').textContent  = protoCounts.HTTP;
+    document.getElementById('statBytes').textContent = formatBytes(totalBytes);
 }
 
-// ── Progress ──────────────────────────────────────────────────────────────
-function showProgress(label, pct) {
-  document.getElementById('progressWrap').classList.add('show');
-  document.getElementById('progLabel').textContent = label;
-  document.getElementById('progFill').style.width = pct+'%';
-}
-function hideProgress() { document.getElementById('progressWrap').classList.remove('show'); }
-
-// ── Demo ──────────────────────────────────────────────────────────────────
-function loadDemo() {
-  const demoJSON = JSON.stringify({
-    aps: [
-      {ssid:'HomeNet',bssid:'AA:BB:CC:11:22:33',channel:6,enc:true,hidden:false,beacons:120},
-      {ssid:'HomeNet',bssid:'DD:EE:FF:44:55:66',channel:1,enc:true,hidden:false,beacons:340},
-      {ssid:'CafeWifi',bssid:'11:22:33:AA:BB:CC',channel:11,enc:false,hidden:false,beacons:80},
-      {ssid:'CafeWifi',bssid:'44:55:66:DD:EE:FF',channel:11,enc:true,hidden:false,beacons:90},
-      {ssid:'HiddenNet',bssid:'77:88:99:00:AA:BB',channel:3,enc:true,hidden:true,beacons:1200},
-      {ssid:'CorpVPN',bssid:'CC:DD:EE:11:22:33',channel:14,enc:true,hidden:false,beacons:60},
-    ],
-    deauths:[
-      {src:'DE:AD:BE:EF:00:01',count:87},
-      {src:'DE:AD:BE:EF:00:02',count:5},
-    ],
-    probes:[
-      {mac:'A4:C3:F0:11:22:33',ssids:['CorpVPN','AdminNet','HomeNet']},
-      {mac:'E8:9F:80:44:55:66',ssids:['xfinitywifi','Starbucks']},
-    ]
-  });
-  const blob = new Blob([demoJSON],{type:'application/json'});
-  const file = new File([blob], 'beacon_demo_session.json', {type:'application/json'});
-  loadedFiles.push({name:file.name, file, size:file.size, type:'json'});
-  renderFileList();
-  selectFile(loadedFiles.length-1);
+function formatBytes(b) {
+    if (b < 1024)       return `${b}B`;
+    if (b < 1048576)    return `${(b/1024).toFixed(1)}K`;
+    return `${(b/1048576).toFixed(1)}M`;
 }
 
-// ── Export ────────────────────────────────────────────────────────────────
-function exportReport() {
-  const fname = selectedFileIdx!==null ? loadedFiles[selectedFileIdx].name : 'session';
-  const lines = [
-    'PISCES MOON OS — OFFLINE PACKET ANALYSIS REPORT',
-    `Source: ${fname}`,
-    `Date: ${new Date().toISOString()}`,
-    `Findings: ${findings.length}`,
-    '',
-    ...findings.map(f=>`[${f.sev===SEV_CRIT?'CRIT':f.sev===SEV_WARN?'WARN':'INFO'}] ${f.rule.padEnd(14)} ${f.msg}${f.detail?' | '+f.detail:''}`)
-  ];
-  const blob = new Blob([lines.join('\n')],{type:'text/plain'});
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `analysis_${Date.now()}.txt`;
-  a.click();
+// ── Filter ────────────────────────────────────────────────────────
+function applyFilter() {
+    const f = filterStr.toLowerCase().trim();
+
+    if (!f) {
+        filtered = packets;
+    } else {
+        filtered = packets.filter(p => {
+            if (f === 'tcp')   return p.proto === 'TCP';
+            if (f === 'udp')   return p.proto === 'UDP';
+            if (f === 'dns')   return p.app_proto === 'DNS';
+            if (f === 'http')  return p.app_proto === 'HTTP' || p.app_proto === 'HTTPS';
+            if (f === 'arp')   return p.proto === 'ARP';
+            if (f === 'icmp')  return p.proto === 'ICMP';
+            if (f.startsWith('ip=')) {
+                const ip = f.split('=')[1];
+                return p.src_ip.includes(ip) || p.dst_ip.includes(ip);
+            }
+            if (f.startsWith('port=')) {
+                const port = parseInt(f.split('=')[1]);
+                return p.src_port === port || p.dst_port === port;
+            }
+            // General text search
+            return JSON.stringify(p).toLowerCase().includes(f);
+        });
+    }
+
+    document.getElementById('filterStatus').textContent =
+        f ? `${filtered.length}/${packets.length} shown` : '';
+
+    renderPacketList();
 }
 
-// ── Utils ─────────────────────────────────────────────────────────────────
-function readFile(f) { return new Promise(r=>{ const fr=new FileReader(); fr.onload=e=>r(e.target.result); fr.readAsText(f); }); }
-function sleep(ms) { return new Promise(r=>setTimeout(r,ms)); }
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function clearFilter() {
+    filterStr = '';
+    document.getElementById('filterInput').value = '';
+    applyFilter();
+}
+
+// ── Packet list ───────────────────────────────────────────────────
+function renderPacketList() {
+    const pane = document.getElementById('packetPane');
+    const list = document.getElementById('packetList');
+
+    if (viewMode === 'conversations') {
+        renderConversations();
+        return;
+    }
+    if (viewMode === 'anomalies') {
+        renderAnomalies();
+        return;
+    }
+
+    // Show last 200 filtered packets (performance)
+    const visible = filtered.slice(-200);
+    list.innerHTML = visible.map(p => {
+        const color = PROTO_COLORS[p.app_proto] || PROTO_COLORS.OTHER;
+        return `
+        <div class="pa-pkt ${selectedIdx===p.num?'selected':''}"
+             onclick="selectPacket(${p.num})">
+            <span class="num">${p.num}</span>
+            <span class="time">${formatTime(p.ts)}</span>
+            <span class="src">${PM.esc(p.src_ip||p.src_mac||'').substring(0,15)}</span>
+            <span class="dst">${PM.esc(p.dst_ip||p.dst_mac||'').substring(0,15)}</span>
+            <span class="proto" style="color:${color}">${PM.esc(p.app_proto)}</span>
+            <span class="len">${p.length}</span>
+            <span class="info">${PM.esc(p.info||'')}</span>
+        </div>`;
+    }).join('');
+
+    // Auto-scroll if at bottom
+    if (pane.scrollTop + pane.clientHeight >= pane.scrollHeight - 50) {
+        list.scrollTop = list.scrollHeight;
+    }
+}
+
+function formatTime(ts) {
+    const d = new Date(ts * 1000);
+    return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}.${String(d.getMilliseconds()).padStart(3,'0')}`;
+}
+
+function selectPacket(num) {
+    selectedIdx = num;
+    const pkt   = packets.find(p => p.num === num);
+    if (!pkt) return;
+
+    renderPacketList();
+    renderPacketDetail(pkt);
+}
+
+// ── Packet detail ─────────────────────────────────────────────────
+function renderPacketDetail(pkt) {
+    const detail = document.getElementById('detailPane');
+
+    const layer = (cls, title, fields) => `
+        <div class="pa-detail-section">
+            <div class="pa-detail-section-header ${cls}">
+                <span>▼ ${title}</span>
+                <span style="color:var(--text-dim);font-size:.5rem">${pkt.length} bytes</span>
+            </div>
+            ${fields.map(([k,v]) => v ? `
+                <div class="pa-detail-field">
+                    <span class="field-name">${k}</span>
+                    <span class="field-value">${PM.esc(String(v))}</span>
+                </div>` : '').join('')}
+        </div>`;
+
+    let html = '';
+
+    // Ethernet
+    if (pkt.src_mac || pkt.dst_mac) {
+        html += layer('eth', 'ETHERNET', [
+            ['Source MAC',       pkt.src_mac],
+            ['Destination MAC',  pkt.dst_mac],
+        ]);
+    }
+
+    // IP
+    if (pkt.src_ip) {
+        html += layer('ip', 'INTERNET PROTOCOL', [
+            ['Source IP',      pkt.src_ip],
+            ['Destination IP', pkt.dst_ip],
+            ['Protocol',       pkt.proto],
+            ['Length',         pkt.length],
+        ]);
+    }
+
+    // Transport
+    if (pkt.src_port) {
+        html += layer(pkt.proto==='TCP'?'tcp':'udp',
+            `${pkt.proto} (${pkt.src_port} → ${pkt.dst_port})`, [
+            ['Source Port',       pkt.src_port + (WELL_KNOWN[pkt.src_port]?' ('+WELL_KNOWN[pkt.src_port]+')':'')],
+            ['Destination Port',  pkt.dst_port + (WELL_KNOWN[pkt.dst_port]?' ('+WELL_KNOWN[pkt.dst_port]+')':'')],
+            ['Flags',             pkt.flags],
+        ]);
+    }
+
+    // Application layer
+    if (pkt.app_proto !== pkt.proto) {
+        const appFields = [];
+        if (pkt.app_proto === 'DNS')   appFields.push(['Domain', pkt.domain], ['Query Type', pkt.query_type]);
+        if (pkt.app_proto === 'HTTP')  appFields.push(['Method', pkt.method], ['URL', pkt.url], ['Host', pkt.host]);
+        if (pkt.app_proto === 'DHCP')  appFields.push(['Type', pkt.dhcp_type], ['Requested IP', pkt.requested_ip]);
+        if (pkt.app_proto === 'MQTT')  appFields.push(['Topic', pkt.topic], ['QoS', pkt.qos]);
+        if (appFields.length > 0) {
+            html += layer('app', pkt.app_proto, appFields);
+        }
+    }
+
+    // Payload hex
+    if (pkt.payload) {
+        const hex  = pkt.payload;
+        const bytes = hex.match(/.{1,2}/g) || [];
+        const hexStr  = bytes.map(b => `<span class="hex-byte">${b} </span>`).join('');
+        const asciiStr = bytes.map(b => {
+            const code = parseInt(b, 16);
+            return `<span class="hex-ascii">${code >= 32 && code < 127 ? String.fromCharCode(code) : '.'}</span>`;
+        }).join('');
+        html += `<div class="pa-detail-section">
+            <div class="pa-detail-section-header app">▼ PAYLOAD (${bytes.length} bytes)</div>
+            <div class="pa-hex">${hexStr}<br><br>${asciiStr}</div>
+        </div>`;
+    }
+
+    detail.innerHTML = html || '<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:.65rem">No decoded fields available</div>';
+}
+
+// ── Conversations view ────────────────────────────────────────────
+function renderConversations() {
+    const list = document.getElementById('packetList');
+    const convArr = Array.from(conversations.values())
+        .sort((a,b) => b.bytes - a.bytes).slice(0, 50);
+
+    list.innerHTML = `
+        <div style="display:grid;grid-template-columns:120px 120px 70px 70px 70px 1fr;padding:4px 8px;background:var(--bg2);font-size:.58rem;color:var(--text-dim);border-bottom:2px solid var(--panel-border)">
+            <span>SOURCE</span><span>DESTINATION</span><span>PROTO</span><span>PKTS</span><span>BYTES</span><span>DURATION</span>
+        </div>
+        ${convArr.map(c => `
+        <div style="display:grid;grid-template-columns:120px 120px 70px 70px 70px 1fr;padding:4px 8px;font-size:.6rem;border-bottom:1px solid rgba(28,46,58,.3)">
+            <span style="color:var(--text-bright);font-family:monospace">${c.src}:${c.sport}</span>
+            <span style="color:var(--text-bright);font-family:monospace">${c.dst}:${c.dport}</span>
+            <span style="color:${PROTO_COLORS[c.proto]||PMViz.C.text}">${c.proto}</span>
+            <span style="color:var(--text-dim)">${c.packets}</span>
+            <span style="color:var(--accent)">${formatBytes(c.bytes)}</span>
+            <span style="color:var(--text-dim)">${((Date.now()-c.start)/1000).toFixed(1)}s</span>
+        </div>`).join('')}`;
+}
+
+// ── Anomaly view ──────────────────────────────────────────────────
+function renderAnomalies() {
+    const list = document.getElementById('packetList');
+    list.innerHTML = anomalies.length === 0
+        ? '<div style="padding:30px;text-align:center;color:var(--accent3)">✓ No anomalies detected</div>'
+        : anomalies.map(a => `
+            <div style="padding:10px 12px;border-bottom:1px solid rgba(255,51,102,.15)">
+                <div style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:1px;color:var(--accent4)">${a.type}</div>
+                <div style="font-size:.65rem;color:var(--text);margin:4px 0">${a.detail}</div>
+                <div style="font-size:.55rem;color:var(--text-dim)">${new Date(a.ts).toLocaleTimeString()}</div>
+            </div>`).join('');
+}
+
+// ── Charts ────────────────────────────────────────────────────────
+function initCharts() {
+    const pw = document.querySelector('.pa-bottom-section').offsetWidth - 16;
+    ['chart-proto','chart-rate','chart-sizes'].forEach(id => {
+        const c = document.getElementById(id);
+        c.width = pw;
+        c.height = 130;
+    });
+
+    protoChart = new PMViz.DonutChart('chart-proto');
+    rateChart  = new PMViz.Sparkline('chart-rate', {color:PMViz.C.accent, maxPts:60});
+    sizeChart  = new PMViz.BarChart('chart-sizes', {horizontal:false, colorFn:()=>PMViz.C.gold});
+}
+
+function updateCharts() {
+    // Protocol donut
+    protoChart.update(
+        Object.entries(protoCounts)
+            .filter(([,v])=>v>0)
+            .map(([label,value])=>({label,value,color:PROTO_COLORS[label]}))
+    );
+
+    // Rate sparkline
+    rateChart.push(pktRate);
+
+    // Packet size distribution
+    const sizeRanges = {'<64':0,'64-256':0,'256-512':0,'512-1024':0,'>1024':0};
+    packets.slice(-200).forEach(p => {
+        if      (p.length < 64)   sizeRanges['<64']++;
+        else if (p.length < 256)  sizeRanges['64-256']++;
+        else if (p.length < 512)  sizeRanges['256-512']++;
+        else if (p.length < 1024) sizeRanges['512-1024']++;
+        else                      sizeRanges['>1024']++;
+    });
+    sizeChart.update(Object.entries(sizeRanges).map(([label,value])=>({label,value})));
+
+    // Top talkers
+    const top = Array.from(talkers.entries())
+        .sort((a,b)=>b[1]-a[1]).slice(0,6);
+    document.getElementById('topTalkers').innerHTML = top.map(([ip,bytes]) => `
+        <div class="pa-talker">
+            <span class="ip">${ip}</span>
+            <span class="bytes">${formatBytes(bytes)}</span>
+        </div>`).join('');
+}
+
+// ── Controls ──────────────────────────────────────────────────────
+function toggleCapture() {
+    capturing = !capturing;
+    const btn = document.getElementById('btnCapture');
+    btn.className  = 'pa-btn' + (capturing?' active':'');
+    btn.textContent= capturing ? '⬤ CAPTURE' : '◯ PAUSED';
+    document.getElementById('liveBadge').style.opacity = capturing?'1':'0.3';
+    if (beam.connected) {
+        beam.send({type: capturing?'CMD_PKT_SNIFF':'CMD_STOP_ALL', src:'app', cmd_id:'pa1'});
+    }
+}
+
+function clearPackets() {
+    packets.length = 0;
+    filtered.length = 0;
+    pktNum = 0;
+    conversations.clear();
+    talkers.clear();
+    anomalies.length = 0;
+    Object.keys(protoCounts).forEach(k => protoCounts[k] = 0);
+    totalBytes = 0;
+    renderPacketList();
+    updateCharts();
+}
+
+function setView(v) {
+    viewMode = v;
+    document.getElementById('btnList').className  = 'pa-btn' + (v==='list'?' active':'');
+    document.getElementById('btnConv').className  = 'pa-btn' + (v==='conversations'?' active':'');
+    document.getElementById('btnAnomaly').className = 'pa-btn' + (v==='anomalies'?' active':'');
+    renderPacketList();
+}
+
+function saveNow() {
+    PMViz.Storage.save('pkt_analysis', packets.slice(-1000), 'json');
+}
+
+window.addEventListener('load', async () => {
+    initCharts();
+    applyFilter();
+    document.getElementById('filterInput').addEventListener('input', (e) => {
+        filterStr = e.target.value;
+        applyFilter();
+    });
+    try { await beam.connect(); }
+    catch(e) { console.log('No hardware — demo mode'); }
+    if (beam.connected) {
+        beam.send({type:'CMD_PKT_SNIFF', src:'app', cmd_id:'pa0'});
+    }
+    setInterval(updateCharts, 2000);
+});
 </script>
 </body></html>

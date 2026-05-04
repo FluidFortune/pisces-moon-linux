@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — punky.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Launcher tile for Punky blog editor — fluidfortune.com
+-->
+<html lang="en"><head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PUNKY // BLOG EDITOR</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--pb:#1a3a50;--ac:#00d4ff;--g:#00ff88;--r:#ff3366;--w:#ffcc00;--go:#f4a820;--tx:#7ab8d4;--tb:#c8e8f5;--td:#2a5870;}
+html,body{height:100%;background:var(--bg);color:var(--tx);font-family:"Share Tech Mono",monospace;}
+body{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:0;}
+
+/* Splash screen */
+#splash{display:flex;flex-direction:column;align-items:center;gap:20px;width:100%;max-width:420px;}
+.app-icon{font-size:4rem;filter:drop-shadow(0 0 20px rgba(244,168,32,0.4));}
+.app-name{font-family:"Orbitron",monospace;font-weight:900;font-size:2rem;color:var(--go);letter-spacing:6px;}
+.app-tagline{font-size:.7rem;color:var(--td);letter-spacing:3px;text-align:center;}
+.app-desc{font-size:.68rem;color:var(--tx);text-align:center;line-height:1.8;max-width:320px;border:1px solid var(--pb);padding:14px;background:var(--bg2);}
+.launch-btn{
+  width:100%;padding:16px;
+  background:transparent;border:2px solid var(--go);
+  color:var(--go);font-family:"Orbitron",monospace;
+  font-size:.8rem;letter-spacing:4px;cursor:pointer;
+  transition:all .2s;margin-top:8px;
+}
+.launch-btn:hover{background:rgba(244,168,32,.1);box-shadow:0 0 20px rgba(244,168,32,.2);}
+.launch-btn:active{transform:scale(.98);}
+.meta-row{display:flex;gap:20px;font-size:.58rem;color:var(--td);}
+.meta-item{display:flex;align-items:center;gap:5px;}
+.meta-dot{width:6px;height:6px;border-radius:50%;}
+.status-live{background:var(--g);}
+.status-net{background:var(--ac);}
+.divider{width:100%;height:1px;background:var(--pb);margin:4px 0;}
+.alt-row{display:flex;gap:10px;width:100%;}
+.alt-btn{flex:1;padding:9px;background:transparent;border:1px solid var(--pb);color:var(--td);font-family:"Orbitron",monospace;font-size:.48rem;letter-spacing:2px;cursor:pointer;transition:all .15s;text-align:center;}
+.alt-btn:hover{border-color:var(--ac);color:var(--ac);}
+
+/* Iframe mode */
+#frame-mode{display:none;flex-direction:column;height:100vh;width:100%;}
+#frame-bar{background:var(--bg2);border-bottom:1px solid var(--pb);padding:6px 12px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+#frame-bar .app-label{font-family:"Orbitron",monospace;font-size:.6rem;color:var(--go);letter-spacing:3px;flex:1;}
+#frame-bar .bar-btn{padding:5px 12px;background:transparent;border:1px solid var(--pb);color:var(--td);font-family:"Orbitron",monospace;font-size:.48rem;letter-spacing:1px;cursor:pointer;transition:all .15s;}
+#frame-bar .bar-btn:hover{border-color:var(--r);color:var(--r);}
+#app-frame{flex:1;border:none;width:100%;background:var(--bg);}
+</style>
+</head><body>
+
+<div id="splash">
+  <div class="app-icon">✍️</div>
+  <div class="app-name">PUNKY</div>
+  <div class="app-tagline">BLOG EDITOR // FLUID FORTUNE</div>
+  <div class="divider"></div>
+  <div class="app-desc">
+    Markdown blog editor with GitHub Pages publishing. Write posts, manage categories, publish directly to your GitHub repo. Local draft save included.
+  </div>
+  <div class="meta-row">
+    <div class="meta-item"><div class="meta-dot status-live"></div>LIVE APP</div>
+    <div class="meta-item"><div class="meta-dot status-net"></div>REQUIRES NETWORK</div>
+    <div class="meta-item"><div class="meta-dot" style="background:var(--go)"></div>v0.1.0-alpha</div>
+  </div>
+  <button class="launch-btn" onclick="launchInline()">▶ LAUNCH PUNKY</button>
+  <div class="alt-row">
+    <button class="alt-btn" onclick="launchExternal()">⎋ OPEN IN BROWSER</button>
+    <button class="alt-btn" onclick="launchGitHub()">⌥ VIEW SOURCE</button>
+  </div>
+</div>
+
+<div id="frame-mode">
+  <div id="frame-bar">
+    <span class="app-label">✍️ PUNKY // BLOG EDITOR</span>
+    <button class="bar-btn" onclick="reloadFrame()">↺ RELOAD</button>
+    <button class="bar-btn" onclick="exitFrame()">✕ CLOSE</button>
+  </div>
+  <iframe id="app-frame" src="" allow="clipboard-read; clipboard-write"></iframe>
+</div>
+
+<script>
+const APP_URL = 'http://punky.fluidfortune.com';
+const SRC_URL = 'https://github.com/FluidFortune/punky';
+
+function launchInline() {
+  document.getElementById('splash').style.display = 'none';
+  const fm = document.getElementById('frame-mode');
+  fm.style.display = 'flex';
+  document.getElementById('app-frame').src = APP_URL;
+  document.body.style.padding = '0';
+  document.body.style.justifyContent = 'flex-start';
+}
+function launchExternal() { window.open(APP_URL, '_blank'); }
+function launchGitHub() { window.open(SRC_URL, '_blank'); }
+function reloadFrame() { document.getElementById('app-frame').src = APP_URL; }
+function exitFrame() {
+  document.getElementById('frame-mode').style.display = 'none';
+  document.getElementById('splash').style.display = 'flex';
+  document.getElementById('app-frame').src = '';
+  document.body.style.padding = '24px';
+  document.body.style.justifyContent = 'center';
+}
+</script>
+</body></html>

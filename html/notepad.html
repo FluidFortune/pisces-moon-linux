@@ -1,216 +1,491 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — notepad.html
+<!--
+  Pisces Moon OS — notepad.html v3
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
 -->
-<!-- PISCES MOON OS // NOTEPAD -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PISCES MOON // NOTEPAD</title>
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // NOTEPAD v3</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
+:root{
+  --bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;
+  --panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;
+  --accent4:#ff3366;--gold:#f4a820;
+  --text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.1) 2px,rgba(0,0,0,.1) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--accent3);text-shadow:0 0 20px rgba(0,255,136,.3);letter-spacing:3px;}
-.logo span{color:var(--gold);}
-.toolbar{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:6px 16px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex-shrink:0;}
-.btn{display:inline-block;padding:5px 12px;background:transparent;border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.62rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-.btn:hover{border-color:var(--accent3);color:var(--accent3);}
-.btn.active{border-color:var(--accent3);color:var(--accent3);background:rgba(0,255,136,.08);}
-.sep{width:1px;height:20px;background:var(--panel-border);}
-.file-name{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:5px 10px;width:200px;outline:none;}
-.file-name:focus{border-color:var(--accent3);}
-.editor-wrap{display:flex;flex:1;overflow:hidden;}
-.line-nums{background:var(--bg2);border-right:1px solid var(--panel-border);padding:12px 8px;color:var(--text-dim);font-size:.72rem;line-height:1.6;text-align:right;min-width:40px;overflow:hidden;user-select:none;flex-shrink:0;}
-.editor{flex:1;background:var(--bg);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.78rem;padding:12px 16px;border:none;outline:none;resize:none;line-height:1.6;tab-size:2;}
-.statusbar{background:var(--bg2);border-top:1px solid var(--panel-border);padding:4px 16px;display:flex;justify-content:space-between;font-size:.6rem;color:var(--text-dim);flex-shrink:0;}
-.files-sidebar{width:180px;background:var(--bg2);border-right:1px solid var(--panel-border);display:flex;flex-direction:column;flex-shrink:0;}
-.fshead{padding:8px 12px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.56rem;color:var(--accent3);letter-spacing:2px;}
-.flist{flex:1;overflow-y:auto;}
-.fi{padding:7px 12px;cursor:pointer;font-size:.67rem;border-bottom:1px solid rgba(26,58,80,.3);color:var(--text);transition:background .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.fi:hover{background:rgba(0,255,136,.05);}
-.fi.active{background:rgba(0,255,136,.08);border-left:2px solid var(--accent3);color:var(--text-bright);}
-.dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--warn);margin-left:4px;display:none;}
-.dot.show{display:inline-block;}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:6px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--accent3);letter-spacing:3px;}
+.hdr-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.hbtn{padding:4px 11px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;cursor:pointer;transition:all .15s;}
+.hbtn:hover{border-color:var(--accent3);color:var(--accent3);}
+.hbtn.active{border-color:var(--accent3);color:var(--accent3);background:rgba(0,255,136,.08);}
+/* File tabs */
+.tabs{background:var(--bg2);border-bottom:1px solid var(--panel-border);display:flex;overflow-x:auto;flex-shrink:0;}
+.tab{padding:7px 14px;font-size:.6rem;cursor:pointer;border-right:1px solid var(--panel-border);white-space:nowrap;display:flex;align-items:center;gap:6px;transition:background .15s;color:var(--text-dim);}
+.tab:hover{background:rgba(0,255,136,.04);}
+.tab.active{background:var(--bg3);color:var(--text-bright);border-top:2px solid var(--accent3);}
+.tab.modified::after{content:'●';color:var(--gold);margin-left:3px;font-size:.5rem;}
+.tab-close{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:.65rem;padding:0 2px;line-height:1;}
+.tab-close:hover{color:var(--accent4);}
+.tab-add{padding:7px 12px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:.85rem;transition:color .15s;}
+.tab-add:hover{color:var(--accent3);}
+/* Toolbar */
+.toolbar{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:4px 10px;display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;align-items:center;}
+.tbtn{padding:3px 9px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.58rem;cursor:pointer;transition:all .15s;}
+.tbtn:hover{border-color:var(--accent);color:var(--accent);}
+.sep{width:1px;height:16px;background:var(--panel-border);margin:0 2px;}
+/* Find/Replace bar */
+.findbar{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:5px 12px;display:flex;gap:6px;align-items:center;flex-shrink:0;display:none;}
+.findbar.show{display:flex;}
+.fi{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:5px 8px;outline:none;width:180px;}
+.fi:focus{border-color:var(--accent);}
+.fcount{font-size:.55rem;color:var(--text-dim);min-width:60px;}
+/* Main layout */
+.layout{flex:1;display:grid;grid-template-columns:185px 1fr;overflow:hidden;}
+/* File list */
+.file-list{background:var(--bg2);border-right:1px solid var(--panel-border);overflow-y:auto;display:flex;flex-direction:column;}
+.fl-header{padding:6px 10px;font-family:'Orbitron',monospace;font-size:.48rem;letter-spacing:3px;color:var(--text-dim);background:var(--bg);border-bottom:1px solid var(--panel-border);display:flex;align-items:center;justify-content:space-between;}
+.fl-item{padding:9px 12px;border-bottom:1px solid rgba(28,46,58,.3);cursor:pointer;font-size:.62rem;display:flex;align-items:center;gap:6px;transition:background .15s;color:var(--text-dim);}
+.fl-item:hover{background:rgba(0,255,136,.04);}
+.fl-item.active{background:rgba(0,255,136,.08);border-left:2px solid var(--accent3);color:var(--text-bright);}
+.fl-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.fl-del{background:none;border:none;color:transparent;cursor:pointer;font-size:.6rem;padding:0 3px;}
+.fl-item:hover .fl-del{color:var(--text-dim);}
+.fl-del:hover{color:var(--accent4)!important;}
+/* Editor area */
+.editor-wrap{display:flex;flex-direction:column;overflow:hidden;}
+.mode-row{display:flex;gap:0;background:var(--bg2);border-bottom:1px solid var(--panel-border);flex-shrink:0;}
+.mode-btn{padding:5px 14px;font-size:.55rem;font-family:'Orbitron',monospace;letter-spacing:1px;cursor:pointer;border:none;background:transparent;color:var(--text-dim);border-right:1px solid var(--panel-border);transition:all .15s;}
+.mode-btn:hover{color:var(--accent3);}
+.mode-btn.active{background:var(--bg3);color:var(--accent3);}
+.editor-main{flex:1;display:grid;overflow:hidden;}
+.editor-main.split{grid-template-columns:1fr 1fr;}
+textarea#editor{flex:1;background:var(--bg3);border:none;color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.78rem;padding:14px;resize:none;outline:none;line-height:1.85;width:100%;height:100%;overflow-y:auto;}
+.preview{background:var(--bg3);border-left:1px solid var(--panel-border);padding:14px;overflow-y:auto;font-size:.75rem;line-height:1.85;color:var(--text);}
+.preview h1{font-family:'Orbitron',monospace;color:var(--accent4);font-size:1.1rem;margin:12px 0 8px;letter-spacing:2px;}
+.preview h2{font-family:'Orbitron',monospace;color:var(--accent3);font-size:.9rem;margin:10px 0 6px;letter-spacing:1px;}
+.preview h3{font-family:'Orbitron',monospace;color:var(--gold);font-size:.78rem;margin:8px 0 5px;}
+.preview strong{color:var(--text-bright);}
+.preview em{color:var(--text-dim);}
+.preview code{background:var(--bg2);color:var(--accent3);padding:1px 6px;border-radius:2px;font-family:'Share Tech Mono',monospace;}
+.preview pre{background:var(--bg2);border:1px solid var(--panel-border);padding:10px;overflow-x:auto;margin:8px 0;}
+.preview pre code{background:none;padding:0;}
+.preview blockquote{border-left:3px solid var(--accent);padding-left:12px;color:var(--text-dim);margin:8px 0;}
+.preview hr{border:none;border-top:1px solid var(--panel-border);margin:12px 0;}
+.preview ul{padding-left:20px;}
+.preview ol{padding-left:20px;}
+.preview li{margin:3px 0;}
+.preview table{border-collapse:collapse;width:100%;margin:8px 0;}
+.preview th,.preview td{border:1px solid var(--panel-border);padding:5px 8px;font-size:.65rem;}
+.preview th{background:var(--bg2);color:var(--accent3);}
+.preview a{color:var(--accent);}
+/* Status bar */
+.statusbar{background:var(--bg2);border-top:1px solid var(--panel-border);padding:3px 14px;display:flex;gap:16px;font-size:.52rem;color:var(--text-dim);flex-shrink:0;}
+.sb-item{color:var(--text-dim);}
+.sb-item span{color:var(--accent3);}
+</style>
+</head><body>
+
 <header>
-  <div class="logo">PISCES MOON // <span>NOTEPAD</span> <span class="dot" id="dirty">●</span></div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <input class="file-name" id="fileName" placeholder="filename.txt" value="untitled.txt">
+  <div class="logo">📝 NOTEPAD <span style="color:var(--text-dim);font-size:.6rem">v3</span></div>
+  <div class="hdr-right">
+    <button class="hbtn" onclick="newFile()">+ NEW</button>
+    <button class="hbtn" onclick="openFile()">📂 OPEN</button>
+    <button class="hbtn" onclick="saveFile()">💾 SAVE .md</button>
+    <button class="hbtn" onclick="exportTxt()">📄 EXPORT .txt</button>
+    <button class="hbtn" id="findBtn" onclick="toggleFind()">🔍 FIND</button>
   </div>
 </header>
+
+<div class="findbar" id="findbar">
+  <span style="font-size:.55rem;color:var(--text-dim);font-family:'Orbitron',monospace;letter-spacing:1px">FIND</span>
+  <input class="fi" id="findInput" placeholder="Search..." oninput="doFind()" onkeydown="findKey(event)">
+  <span class="fcount" id="findCount"></span>
+  <button class="tbtn" onclick="findNext()">▼ NEXT</button>
+  <button class="tbtn" onclick="findPrev()">▲ PREV</button>
+  <span style="font-size:.55rem;color:var(--text-dim);font-family:'Orbitron',monospace;letter-spacing:1px;margin-left:8px">REPLACE</span>
+  <input class="fi" id="replInput" placeholder="Replace with...">
+  <button class="tbtn" onclick="replaceOne()">REPLACE</button>
+  <button class="tbtn" onclick="replaceAll()">ALL</button>
+  <button class="tbtn" onclick="toggleFind()" style="margin-left:auto">✕ CLOSE</button>
+</div>
+
+<div class="tabs" id="tabBar"></div>
+
 <div class="toolbar">
-  <button class="btn" onclick="newFile()">NEW</button>
-  <button class="btn" onclick="openFile()">OPEN</button>
-  <button class="btn active" onclick="saveFile()">SAVE</button>
-  <button class="btn" onclick="saveAs()">SAVE AS</button>
+  <button class="tbtn" onclick="ins('**','**')"><strong>B</strong></button>
+  <button class="tbtn" onclick="ins('_','_')"><em>I</em></button>
+  <button class="tbtn" onclick="ins('`','`')">code</button>
+  <button class="tbtn" onclick="ins('\n```\n','\n```')">```</button>
   <div class="sep"></div>
-  <button class="btn" onclick="wrapToggle()" id="wrapBtn">WRAP: ON</button>
-  <button class="btn" onclick="document.getElementById('editor').style.fontSize='.9rem'">A+</button>
-  <button class="btn" onclick="document.getElementById('editor').style.fontSize='.7rem'">A-</button>
+  <button class="tbtn" onclick="linePrefix('# ')">H1</button>
+  <button class="tbtn" onclick="linePrefix('## ')">H2</button>
+  <button class="tbtn" onclick="linePrefix('### ')">H3</button>
   <div class="sep"></div>
-  <button class="btn" onclick="findReplace()">FIND</button>
-  <button class="btn" onclick="copyAll()">COPY ALL</button>
+  <button class="tbtn" onclick="linePrefix('- ')">• LIST</button>
+  <button class="tbtn" onclick="linePrefix('> ')">❝ QUOTE</button>
+  <button class="tbtn" onclick="ins('\n---\n','')">─── HR</button>
   <div class="sep"></div>
-  <span id="wordCount" style="font-size:.6rem;color:var(--text-dim)">0 words</span>
+  <button class="tbtn" onclick="ins('[','](url)')">🔗 LINK</button>
+  <button class="tbtn" onclick="insertTable()">⊞ TABLE</button>
+  <button class="tbtn" onclick="insertTimestamp()">🕐 TIMESTAMP</button>
+  <div class="sep"></div>
+  <button class="tbtn" onclick="toggleWordWrap()" id="wrapBtn">⇌ WRAP</button>
 </div>
-<div class="editor-wrap">
-  <div class="files-sidebar">
-    <div class="fshead">FILES</div>
-    <div class="flist" id="flist"></div>
+
+<div class="layout">
+  <div class="file-list" id="fileList">
+    <div class="fl-header">FILES <button onclick="newFile()" style="background:none;border:none;color:var(--accent3);cursor:pointer;font-size:.8rem">+</button></div>
   </div>
-  <div class="line-nums" id="lineNums">1</div>
-  <textarea class="editor" id="editor" spellcheck="false"
-    placeholder="Start typing... CTRL+S to save"
-    oninput="onEdit()" onkeydown="onKey(event)" onscroll="syncScroll()"></textarea>
+  <div class="editor-wrap">
+    <div class="mode-row">
+      <button class="mode-btn active" id="mEdit" onclick="setMode('edit')">EDIT</button>
+      <button class="mode-btn" id="mSplit" onclick="setMode('split')">SPLIT</button>
+      <button class="mode-btn" id="mPreview" onclick="setMode('preview')">PREVIEW</button>
+    </div>
+    <div class="editor-main" id="editorMain">
+      <textarea id="editor" spellcheck="true" oninput="onEdit()" onkeydown="editorKey(event)" onscroll="syncScroll()" onmouseup="updateStatus()" onkeyup="updateStatus()"></textarea>
+      <div class="preview" id="preview" style="display:none"></div>
+    </div>
+    <div class="statusbar">
+      <div class="sb-item">LINE <span id="sbLine">1</span></div>
+      <div class="sb-item">COL <span id="sbCol">1</span></div>
+      <div class="sb-item">CHARS <span id="sbChars">0</span></div>
+      <div class="sb-item">WORDS <span id="sbWords">0</span></div>
+      <div class="sb-item" id="sbSaved" style="color:var(--text-dim)">unsaved</div>
+    </div>
+  </div>
 </div>
-<div class="statusbar">
-  <span id="sb-cursor">Ln 1, Col 1</span>
-  <span id="sb-stats">0 lines · 0 chars</span>
-  <span id="sb-enc">UTF-8</span>
-</div>
-<input type="file" id="fileInput" style="display:none" onchange="loadFile(event)">
+
 <script>
-const SK='pm_notepad_files', FK='pm_notepad_active';
-let files={}, activeFile='untitled.txt', dirty=false, wrap=true;
+// ═══════════════════════════════════════════════════════════════════
+// PISCES MOON NOTEPAD v3
+// ═══════════════════════════════════════════════════════════════════
 
-function init(){
-  try{files=JSON.parse(localStorage.getItem(SK)||'{}');}catch{files={};}
-  activeFile=localStorage.getItem(FK)||'untitled.txt';
-  if(!files[activeFile]) files[activeFile]='';
-  loadIntoEditor(activeFile);
-  renderFileList();
-  updateNums();
+let files = [], activeFile = 0, mode = 'edit', wordWrap = true;
+let findMatches = [], findIdx = 0;
+let saveTimeout = null;
+
+const editor   = document.getElementById('editor');
+const preview  = document.getElementById('preview');
+
+// ── Storage ───────────────────────────────────────────────────────
+function loadFromStorage() {
+  const saved = localStorage.getItem('pm_notepad_files');
+  if (saved) {
+    files = JSON.parse(saved);
+  } else {
+    files = [{name:'Welcome.md', content:`# Welcome to Pisces Moon Notepad v3
+
+## Features
+- **Multi-file** with persistent storage
+- **Markdown preview** (live split or full preview)
+- **Find & Replace** with count
+- **Syntax toolbar** for quick formatting
+- Local-first, zero external dependencies
+
+## Getting Started
+Create a new file with **+ NEW** or open an existing one.
+
+> "Local first, no gatekeepers, you own everything."
+> — Clark Beddows Protocol
+`, modified: false}];
+  }
+  activeFile = 0;
+  renderFiles();
+  loadFile(0);
 }
 
-function save(){localStorage.setItem(SK,JSON.stringify(files));localStorage.setItem(FK,activeFile);}
-
-function newFile(){
-  const name=prompt('File name:','untitled.txt');
-  if(!name)return;
-  files[name]=''; activeFile=name; dirty=false;
-  document.getElementById('fileName').value=name;
-  document.getElementById('editor').value='';
-  save(); renderFileList(); updateAll();
+function saveToStorage() {
+  localStorage.setItem('pm_notepad_files', JSON.stringify(files));
 }
 
-function openFile(){document.getElementById('fileInput').click();}
+// ── File management ───────────────────────────────────────────────
+function newFile() {
+  const name = prompt('File name:', 'Note_' + new Date().toISOString().slice(0,10) + '.md');
+  if (!name) return;
+  files.push({name, content:'', modified:false});
+  saveToStorage();
+  loadFile(files.length - 1);
+}
 
-function loadFile(e){
-  const file=e.target.files[0]; if(!file)return;
-  const r=new FileReader();
-  r.onload=ev=>{
-    files[file.name]=ev.target.result; activeFile=file.name;
-    document.getElementById('fileName').value=file.name;
-    loadIntoEditor(file.name); save(); renderFileList();
+function openFile() {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = '.md,.txt,.js,.py,.sh,.json,.html,.css';
+  inp.onchange = e => {
+    const f = e.target.files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      files.push({name: f.name, content: ev.target.result, modified: false});
+      saveToStorage();
+      loadFile(files.length - 1);
+    };
+    r.readAsText(f);
   };
-  r.readAsText(file);
+  inp.click();
 }
 
-function saveFile(){
-  activeFile=document.getElementById('fileName').value||'untitled.txt';
-  files[activeFile]=document.getElementById('editor').value;
-  dirty=false; document.getElementById('dirty').className='dot';
-  save(); renderFileList();
-  // Trojan Horse write
-  if(typeof window.spadra!=='undefined') window.spadra.fs.write('~/.pisces-moon/notes/'+activeFile, files[activeFile]);
+function deleteFile(i, e) {
+  e.stopPropagation();
+  if (files.length <= 1) { alert('Cannot delete last file.'); return; }
+  if (!confirm(`Delete "${files[i].name}"?`)) return;
+  files.splice(i, 1);
+  activeFile = Math.min(activeFile, files.length - 1);
+  saveToStorage();
+  renderFiles();
+  loadFile(activeFile);
 }
 
-function saveAs(){
-  const name=prompt('Save as:',activeFile); if(!name)return;
-  activeFile=name;
-  document.getElementById('fileName').value=name;
-  saveFile();
+function loadFile(i) {
+  activeFile = i;
+  editor.value = files[i].content;
+  updatePreview();
+  updateStatus();
+  renderFiles();
 }
 
-function loadIntoEditor(name){
-  document.getElementById('editor').value=files[name]||'';
-  document.getElementById('fileName').value=name;
-  dirty=false; document.getElementById('dirty').className='dot';
-  updateAll();
+function renderFiles() {
+  document.getElementById('fileList').innerHTML =
+    `<div class="fl-header">FILES <button onclick="newFile()" style="background:none;border:none;color:var(--accent3);cursor:pointer;font-size:.8rem">+</button></div>` +
+    files.map((f, i) => `
+      <div class="fl-item ${i===activeFile?'active':''}" onclick="loadFile(${i})">
+        <span class="fl-name">${f.name}${f.modified?'●':''}</span>
+        <button class="fl-del" onclick="deleteFile(${i},event)">✕</button>
+      </div>`).join('');
 }
 
-function renderFileList(){
-  document.getElementById('flist').innerHTML=Object.keys(files).map(f=>`
-    <div class="fi ${f===activeFile?'active':''}" onclick="switchFile('${f.replace(/'/g,"\\'")}')">
-      ${f}
-    </div>`).join('');
+// ── Edit events ───────────────────────────────────────────────────
+function onEdit() {
+  files[activeFile].content = editor.value;
+  files[activeFile].modified = true;
+  document.getElementById('sbSaved').textContent = 'unsaved';
+  document.getElementById('sbSaved').style.color = 'var(--gold)';
+  if (mode !== 'edit') updatePreview();
+  renderFiles();
+  clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    saveToStorage();
+    files[activeFile].modified = false;
+    document.getElementById('sbSaved').textContent = 'saved';
+    document.getElementById('sbSaved').style.color = 'var(--accent3)';
+    renderFiles();
+  }, 800);
 }
 
-function switchFile(name){
-  if(dirty&&!confirm('Unsaved changes. Switch anyway?'))return;
-  activeFile=name; loadIntoEditor(name);
+function editorKey(e) {
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 's') { e.preventDefault(); saveFile(); return; }
+    if (e.key === 'f') { e.preventDefault(); toggleFind(); return; }
+  }
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const s = editor.selectionStart, en = editor.selectionEnd;
+    editor.value = editor.value.substring(0,s) + '  ' + editor.value.substring(en);
+    editor.selectionStart = editor.selectionEnd = s + 2;
+    onEdit();
+  }
 }
 
-function wrapToggle(){
-  wrap=!wrap;
-  document.getElementById('editor').style.whiteSpace=wrap?'pre-wrap':'pre';
-  document.getElementById('wrapBtn').textContent='WRAP: '+(wrap?'ON':'OFF');
+function saveFile() {
+  const blob = new Blob([files[activeFile].content], {type:'text/markdown'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = files[activeFile].name;
+  a.click();
 }
 
-function copyAll(){navigator.clipboard.writeText(document.getElementById('editor').value);}
-
-function findReplace(){
-  const q=prompt('Find:'); if(!q)return;
-  const r=prompt('Replace with (blank to just find):','');
-  const ed=document.getElementById('editor');
-  if(r!==null) ed.value=ed.value.replaceAll(q,r);
-  else{const i=ed.value.indexOf(q); if(i>=0){ed.focus();ed.setSelectionRange(i,i+q.length);}}
-  updateAll();
+function exportTxt() {
+  const blob = new Blob([files[activeFile].content], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = files[activeFile].name.replace(/\.[^.]+$/, '') + '.txt';
+  a.click();
 }
 
-function onEdit(){
-  dirty=true; document.getElementById('dirty').className='dot show';
-  const name=document.getElementById('fileName').value||'untitled.txt';
-  if(name!==activeFile){activeFile=name;}
-  files[activeFile]=document.getElementById('editor').value;
-  updateAll();
+// ── Mode ──────────────────────────────────────────────────────────
+function setMode(m) {
+  mode = m;
+  ['mEdit','mSplit','mPreview'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById('m' + m.charAt(0).toUpperCase() + m.slice(1)).classList.add('active');
+  const em = document.getElementById('editorMain');
+  if (m === 'edit') {
+    editor.style.display = ''; preview.style.display = 'none';
+    em.classList.remove('split');
+  } else if (m === 'split') {
+    editor.style.display = ''; preview.style.display = '';
+    em.classList.add('split'); updatePreview();
+  } else {
+    editor.style.display = 'none'; preview.style.display = '';
+    em.classList.remove('split'); updatePreview();
+  }
 }
 
-function onKey(e){
-  if(e.ctrlKey&&e.key==='s'){e.preventDefault();saveFile();}
-  if(e.key==='Tab'){e.preventDefault();const ed=e.target;const s=ed.selectionStart;ed.value=ed.value.slice(0,s)+'  '+ed.value.slice(ed.selectionEnd);ed.selectionStart=ed.selectionEnd=s+2;}
-  setTimeout(updateCursor,0);
+function syncScroll() {
+  if (mode === 'split') {
+    const pct = editor.scrollTop / (editor.scrollHeight - editor.clientHeight);
+    preview.scrollTop = pct * (preview.scrollHeight - preview.clientHeight);
+  }
 }
 
-function updateNums(){
-  const lines=document.getElementById('editor').value.split('\n').length;
-  document.getElementById('lineNums').textContent=Array.from({length:lines},(_,i)=>i+1).join('\n');
+// ── Markdown renderer ─────────────────────────────────────────────
+function renderMarkdown(md) {
+  let h = md
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    // Code blocks
+    .replace(/```(\w*)\n([\s\S]*?)```/g, (_,lang,code)=>`<pre><code class="lang-${lang}">${code}</code></pre>`)
+    // Inline code
+    .replace(/`([^`]+)`/g,'<code>$1</code>')
+    // Headers
+    .replace(/^### (.+)$/gm,'<h3>$1</h3>')
+    .replace(/^## (.+)$/gm,'<h2>$1</h2>')
+    .replace(/^# (.+)$/gm,'<h1>$1</h1>')
+    // Bold, italic
+    .replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>')
+    .replace(/__(.+?)__/g,'<strong>$1</strong>')
+    .replace(/\*(.+?)\*/g,'<em>$1</em>')
+    .replace(/_(.+?)_/g,'<em>$1</em>')
+    // Links
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank">$1</a>')
+    // HR
+    .replace(/^---$/gm,'<hr>')
+    // Blockquote
+    .replace(/^> (.+)$/gm,'<blockquote>$1</blockquote>')
+    // Unordered lists
+    .replace(/^\- (.+)$/gm,'<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/gs,'<ul>$1</ul>')
+    // Ordered lists
+    .replace(/^\d+\. (.+)$/gm,'<li>$1</li>')
+    // Tables (simple)
+    .replace(/^\|(.+)\|$/gm, row => {
+      const cells = row.split('|').filter(c=>c.trim());
+      return '<tr>' + cells.map(c=>`<td>${c.trim()}</td>`).join('') + '</tr>';
+    })
+    .replace(/(<tr>.*<\/tr>)/gs,'<table>$1</table>')
+    // Paragraphs
+    .replace(/\n\n/g,'</p><p>')
+    .replace(/\n/g,'<br>');
+  return '<p>' + h + '</p>';
 }
 
-function syncScroll(){
-  document.getElementById('lineNums').scrollTop=document.getElementById('editor').scrollTop;
+function updatePreview() {
+  if (mode !== 'edit') {
+    preview.innerHTML = renderMarkdown(files[activeFile]?.content || '');
+  }
 }
 
-function updateCursor(){
-  const ed=document.getElementById('editor');
-  const text=ed.value.substring(0,ed.selectionStart);
-  const ln=text.split('\n').length;
-  const col=text.split('\n').pop().length+1;
-  document.getElementById('sb-cursor').textContent=`Ln ${ln}, Col ${col}`;
+// ── Status bar ────────────────────────────────────────────────────
+function updateStatus() {
+  const val = editor.value;
+  const pos = editor.selectionStart;
+  const lines = val.substring(0, pos).split('\n');
+  document.getElementById('sbLine').textContent = lines.length;
+  document.getElementById('sbCol').textContent = lines[lines.length-1].length + 1;
+  document.getElementById('sbChars').textContent = val.length;
+  document.getElementById('sbWords').textContent = val.trim() ? val.trim().split(/\s+/).length : 0;
 }
 
-function updateStats(){
-  const v=document.getElementById('editor').value;
-  const words=v.trim()?v.trim().split(/\s+/).length:0;
-  const lines=v.split('\n').length;
-  document.getElementById('sb-stats').textContent=`${lines} lines · ${v.length} chars`;
-  document.getElementById('wordCount').textContent=words+' words';
+// ── Toolbar helpers ───────────────────────────────────────────────
+function ins(before, after) {
+  const s = editor.selectionStart, e2 = editor.selectionEnd;
+  const selected = editor.value.substring(s, e2);
+  const rep = before + selected + after;
+  editor.value = editor.value.substring(0,s) + rep + editor.value.substring(e2);
+  editor.selectionStart = s + before.length;
+  editor.selectionEnd = s + before.length + selected.length;
+  editor.focus(); onEdit();
 }
 
-function updateAll(){updateNums();syncScroll();updateCursor();updateStats();}
+function linePrefix(prefix) {
+  const s = editor.selectionStart;
+  const lineStart = editor.value.lastIndexOf('\n', s-1) + 1;
+  editor.value = editor.value.substring(0, lineStart) + prefix + editor.value.substring(lineStart);
+  editor.selectionStart = editor.selectionEnd = s + prefix.length;
+  editor.focus(); onEdit();
+}
 
-init();
+function insertTable() {
+  const t = '\n| Column 1 | Column 2 | Column 3 |\n|---|---|---|\n| Cell | Cell | Cell |\n| Cell | Cell | Cell |\n';
+  ins(t, '');
+}
+
+function insertTimestamp() {
+  ins(new Date().toLocaleString(), '');
+}
+
+function toggleWordWrap() {
+  wordWrap = !wordWrap;
+  editor.style.whiteSpace = wordWrap ? 'pre-wrap' : 'pre';
+  document.getElementById('wrapBtn').classList.toggle('active', wordWrap);
+}
+
+// ── Find & Replace ────────────────────────────────────────────────
+function toggleFind() {
+  const bar = document.getElementById('findbar');
+  bar.classList.toggle('show');
+  if (bar.classList.contains('show')) document.getElementById('findInput').focus();
+  else clearHighlights();
+}
+
+function doFind() {
+  const q = document.getElementById('findInput').value;
+  findMatches = [];
+  findIdx = 0;
+  if (!q) { document.getElementById('findCount').textContent=''; return; }
+  const text = editor.value;
+  let idx = 0;
+  while ((idx = text.toLowerCase().indexOf(q.toLowerCase(), idx)) !== -1) {
+    findMatches.push(idx);
+    idx += q.length;
+  }
+  document.getElementById('findCount').textContent = findMatches.length + ' found';
+  if (findMatches.length) scrollToMatch(0);
+}
+
+function scrollToMatch(i) {
+  if (!findMatches.length) return;
+  findIdx = ((i % findMatches.length) + findMatches.length) % findMatches.length;
+  const pos = findMatches[findIdx];
+  const q = document.getElementById('findInput').value;
+  editor.focus();
+  editor.setSelectionRange(pos, pos + q.length);
+  document.getElementById('findCount').textContent = (findIdx+1) + '/' + findMatches.length;
+}
+
+function findNext() { scrollToMatch(findIdx + 1); }
+function findPrev() { scrollToMatch(findIdx - 1); }
+function clearHighlights() { findMatches = []; document.getElementById('findCount').textContent=''; }
+
+function findKey(e) {
+  if (e.key === 'Enter') e.shiftKey ? findPrev() : findNext();
+  if (e.key === 'Escape') toggleFind();
+}
+
+function replaceOne() {
+  if (!findMatches.length) return;
+  const q = document.getElementById('findInput').value;
+  const r = document.getElementById('replInput').value;
+  const pos = findMatches[findIdx];
+  editor.value = editor.value.substring(0, pos) + r + editor.value.substring(pos + q.length);
+  files[activeFile].content = editor.value;
+  onEdit(); doFind();
+}
+
+function replaceAll() {
+  const q = document.getElementById('findInput').value;
+  if (!q) return;
+  const r = document.getElementById('replInput').value;
+  const count = (editor.value.match(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi')) || []).length;
+  editor.value = editor.value.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), r);
+  files[activeFile].content = editor.value;
+  onEdit();
+  document.getElementById('findCount').textContent = count + ' replaced';
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+loadFromStorage();
 </script>
 </body></html>

@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — flashlight.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // FLASHLIGHT</title>
+<style>
+:root{--bg:#050a0e;--panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;--accent4:#ff3366;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;transition:background .15s;}
+body.light-on{background:#ffffff;}
+body.red-on{background:#ff2200;}
+body.green-on{background:#00ff00;}
+body.blue-on{background:#0044ff;}
+header{background:rgba(5,10,14,.9);border-bottom:1px solid var(--panel-border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;transition:opacity .3s;}
+body.light-on header,body.red-on header,body.green-on header,body.blue-on header{opacity:0;pointer-events:none;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--accent3);letter-spacing:3px;}
+.main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;padding:24px;}
+.torch-btn{width:180px;height:180px;border-radius:50%;border:3px solid var(--panel-border);background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-family:'Orbitron',monospace;font-size:.7rem;letter-spacing:2px;color:var(--text-dim);transition:all .2s;user-select:none;-webkit-tap-highlight-color:transparent;}
+.torch-btn:hover{border-color:var(--accent);color:var(--accent);}
+.torch-btn.active{border-color:#fff;background:#fff;color:#000;box-shadow:0 0 60px #fff,0 0 120px rgba(255,255,255,.5);}
+.torch-icon{font-size:3rem;margin-bottom:8px;transition:all .2s;}
+.color-row{display:flex;gap:12px;}
+.col-btn{width:52px;height:52px;border-radius:50%;border:2px solid var(--panel-border);cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:.55rem;font-family:'Orbitron',monospace;color:rgba(0,0,0,.7);font-weight:700;-webkit-tap-highlight-color:transparent;}
+.col-btn:hover{transform:scale(1.1);}
+.col-btn.active{border-width:3px;box-shadow:0 0 20px currentColor;}
+#colWhite{background:#ffffff;border-color:#cccccc;}
+#colRed{background:#ff2200;border-color:#ff2200;color:#fff;}
+#colGreen{background:#00ff00;border-color:#00ff00;}
+#colBlue{background:#0044ff;border-color:#0044ff;color:#fff;}
+#colSOS{background:var(--bg3);border-color:var(--accent4);color:var(--accent4);font-size:.45rem;letter-spacing:1px;}
+.brightness-row{display:flex;align-items:center;gap:12px;width:100%;max-width:300px;}
+.bri-label{font-size:.58rem;color:var(--text-dim);font-family:'Orbitron',monospace;letter-spacing:1px;width:30px;}
+input[type=range].bri{flex:1;accent-color:var(--accent3);height:6px;}
+.bri-val{font-size:.58rem;color:var(--text-dim);width:36px;text-align:right;}
+.sos-label{font-family:'Orbitron',monospace;font-size:.55rem;color:var(--accent4);letter-spacing:2px;min-height:1.2em;}
+</style>
+</head><body id="body">
+<header>
+  <div class="logo">🔦 FLASHLIGHT</div>
+  <div style="font-size:.58rem;color:var(--text-dim)">TAP TO TOGGLE</div>
+</header>
+<div class="main">
+  <div class="torch-btn" id="torchBtn" onclick="toggleTorch()">
+    <div class="torch-icon" id="torchIcon">💡</div>
+    <div id="torchLabel">TAP TO LIGHT</div>
+  </div>
+
+  <div class="color-row">
+    <div class="col-btn active" id="colWhite" onclick="setColor('white')" title="White">W</div>
+    <div class="col-btn" id="colRed" onclick="setColor('red')" title="Red">R</div>
+    <div class="col-btn" id="colGreen" onclick="setColor('green')" title="Green (night vision safe)">G</div>
+    <div class="col-btn" id="colBlue" onclick="setColor('blue')" title="Blue">B</div>
+    <div class="col-btn" id="colSOS" onclick="setColor('sos')" title="SOS strobe">SOS</div>
+  </div>
+
+  <div class="brightness-row" id="briRow">
+    <span class="bri-label">DIM</span>
+    <input type="range" class="bri" id="briSlider" min="10" max="100" value="100" oninput="setBrightness(this.value)">
+    <span class="bri-val" id="briVal">100%</span>
+  </div>
+
+  <div class="sos-label" id="sosLabel"></div>
+</div>
+
+<script>
+let torchOn = false;
+let currentColor = 'white';
+let sosInterval = null;
+let sosState = false;
+
+const COLOR_MAP = {
+  white: { bg:'#ffffff', cls:'light-on', icon:'💡' },
+  red:   { bg:'#ff2200', cls:'red-on',   icon:'🔴' },
+  green: { bg:'#00ff00', cls:'green-on', icon:'🟢' },
+  blue:  { bg:'#0044ff', cls:'blue-on',  icon:'🔵' },
+  sos:   { bg:'#ff2200', cls:'red-on',   icon:'🆘' }
+};
+
+function toggleTorch() {
+  torchOn = !torchOn;
+  if (torchOn) lightOn(); else lightOff();
+}
+
+function lightOn() {
+  torchOn = true;
+  stopSOS();
+  if (currentColor === 'sos') { startSOS(); return; }
+  const c = COLOR_MAP[currentColor];
+  applyLight(c.bg, c.cls);
+  document.getElementById('torchBtn').classList.add('active');
+  document.getElementById('torchIcon').textContent = c.icon;
+  document.getElementById('torchLabel').textContent = 'ON';
+  setBrightness(document.getElementById('briSlider').value);
+  // Try camera torch if available (Android Chrome)
+  tryHardwareTorch(true);
+}
+
+function lightOff() {
+  torchOn = false;
+  stopSOS();
+  const body = document.getElementById('body');
+  body.className = '';
+  body.style.background = '';
+  document.getElementById('torchBtn').classList.remove('active');
+  document.getElementById('torchIcon').textContent = '💡';
+  document.getElementById('torchLabel').textContent = 'TAP TO LIGHT';
+  tryHardwareTorch(false);
+}
+
+function applyLight(color, cls) {
+  const body = document.getElementById('body');
+  body.className = cls;
+  const bri = parseInt(document.getElementById('briSlider').value) / 100;
+  // Apply brightness via opacity overlay not possible directly, use filter
+  body.style.filter = `brightness(${bri})`;
+}
+
+function setBrightness(val) {
+  document.getElementById('briVal').textContent = val + '%';
+  if (torchOn && currentColor !== 'sos') {
+    document.getElementById('body').style.filter = `brightness(${val/100})`;
+  }
+}
+
+function setColor(color) {
+  currentColor = color;
+  document.querySelectorAll('.col-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('col' + color.charAt(0).toUpperCase() + color.slice(1)).classList.add('active');
+  document.getElementById('briRow').style.display = color === 'sos' ? 'none' : 'flex';
+  document.getElementById('sosLabel').textContent = color === 'sos' ? '· · · — — — · · ·  INTERNATIONAL DISTRESS' : '';
+  if (torchOn) lightOn();
+}
+
+// SOS strobe: · · · — — — · · ·
+const SOS_PATTERN = [200,200,200,200,200,200,600,200,600,200,600,200,200,200,200,200,200,600];
+let sosIdx = 0, sosTimeout = null;
+
+function startSOS() {
+  document.getElementById('torchBtn').classList.add('active');
+  document.getElementById('torchIcon').textContent = '🆘';
+  document.getElementById('torchLabel').textContent = 'SOS';
+  sosIdx = 0;
+  runSOS();
+}
+
+function runSOS() {
+  if (!torchOn) return;
+  const body = document.getElementById('body');
+  const on = sosIdx % 2 === 0;
+  body.className = on ? 'red-on' : '';
+  body.style.filter = '';
+  sosTimeout = setTimeout(() => {
+    sosIdx++;
+    if (sosIdx >= SOS_PATTERN.length + 4) { // +4 for pause gap
+      sosIdx = 0;
+      sosTimeout = setTimeout(runSOS, 1000); // 1s gap between SOS
+      return;
+    }
+    const dur = sosIdx < SOS_PATTERN.length ? SOS_PATTERN[sosIdx] : 300;
+    sosTimeout = setTimeout(runSOS, dur);
+  }, SOS_PATTERN[sosIdx] || 300);
+}
+
+function stopSOS() {
+  if (sosTimeout) clearTimeout(sosTimeout);
+  sosTimeout = null;
+}
+
+// Hardware torch (camera flash LED) — Chrome/Android
+let torchTrack = null;
+async function tryHardwareTorch(on) {
+  try {
+    if (on && !torchTrack) {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      torchTrack = stream.getVideoTracks()[0];
+    }
+    if (torchTrack) {
+      const caps = torchTrack.getCapabilities();
+      if (caps.torch) await torchTrack.applyConstraints({ advanced: [{ torch: on }] });
+    }
+    if (!on && torchTrack) { torchTrack.stop(); torchTrack = null; }
+  } catch {}
+}
+
+// Prevent screen sleep
+let wakeLock = null;
+async function keepAwake() {
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch {}
+}
+keepAwake();
+document.addEventListener('visibilitychange', () => { if (!document.hidden) keepAwake(); });
+</script>
+</body></html>

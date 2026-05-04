@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — passgen.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Standalone cryptographically secure password generator.
+  Web Crypto API — zero external deps.
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // PASSGEN</title>
+<style>
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;--accent4:#ff3366;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--accent3);letter-spacing:3px;}
+.main{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+.panel{display:flex;flex-direction:column;overflow:hidden;}
+.panel:first-child{border-right:1px solid var(--panel-border);}
+.ph{padding:10px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);font-family:Orbitron,monospace;font-size:.58rem;letter-spacing:2px;color:var(--text-dim);}
+.pbody{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;}
+/* Output */
+.pass-output{background:var(--bg3);border:2px solid var(--panel-border);padding:14px;font-family:'Share Tech Mono',monospace;font-size:.82rem;color:var(--accent3);word-break:break-all;line-height:1.7;min-height:60px;cursor:pointer;transition:border-color .2s;letter-spacing:.05em;}
+.pass-output:hover{border-color:var(--accent3);}
+.strength-bar{height:6px;background:var(--bg3);border:1px solid var(--panel-border);overflow:hidden;}
+.strength-fill{height:100%;transition:width .3s,background .3s;}
+.strength-label{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;display:flex;justify-content:space-between;margin-top:4px;}
+.btn-row{display:flex;gap:6px;}
+.pg-btn{flex:1;padding:10px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.55rem;cursor:pointer;letter-spacing:1px;transition:all .15s;}
+.pg-btn:hover,.pg-btn.primary{border-color:var(--accent3);color:var(--accent3);}
+.pg-btn.copy{border-color:var(--accent);color:var(--accent);}
+.pg-btn.copy:hover{background:rgba(0,212,255,.1);}
+/* Controls */
+.ctrl-label{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:4px;display:flex;justify-content:space-between;}
+input[type=range]{width:100%;accent-color:var(--accent3);}
+.toggle-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.toggle-btn{padding:8px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.62rem;cursor:pointer;transition:all .15s;text-align:left;}
+.toggle-btn.active{background:rgba(0,255,136,.08);border-color:var(--accent3);color:var(--accent3);}
+.profile-row{display:flex;gap:4px;flex-wrap:wrap;}
+.prof-btn{padding:5px 10px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.48rem;cursor:pointer;letter-spacing:1px;}
+.prof-btn:hover,.prof-btn.active{border-color:var(--gold);color:var(--gold);}
+/* History */
+.hist-item{padding:8px 10px;border-bottom:1px solid rgba(28,46,58,.3);display:flex;gap:8px;align-items:center;cursor:pointer;}
+.hist-item:hover{background:rgba(0,212,255,.03);}
+.hist-pass{flex:1;font-size:.62rem;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.hist-meta{font-size:.52rem;color:var(--text-dim);flex-shrink:0;}
+.hist-copy{padding:2px 7px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.42rem;cursor:pointer;}
+.hist-copy:hover{border-color:var(--accent);color:var(--accent);}
+.sep{height:1px;background:var(--panel-border);margin:4px 0;}
+</style>
+</head><body>
+<header>
+  <div class="logo">🔑 PASS GEN</div>
+  <button onclick="generate()" style="padding:6px 16px;background:var(--accent3);border:none;color:#000;font-family:Orbitron,monospace;font-size:.58rem;cursor:pointer;letter-spacing:2px">⟳ GENERATE</button>
+</header>
+<div class="main">
+  <!-- Left: output + controls -->
+  <div class="panel">
+    <div class="ph">GENERATOR</div>
+    <div class="pbody">
+      <div>
+        <div class="ctrl-label">OUTPUT (click to copy)</div>
+        <div class="pass-output" id="passOut" onclick="copyPass()" title="Click to copy">Click GENERATE</div>
+        <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+        <div class="strength-label"><span id="strengthLabel" style="color:var(--text-dim)">---</span><span id="entropyLabel" style="color:var(--text-dim)">0 bits</span></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="pg-btn primary" onclick="generate()">⟳ NEW</button>
+        <button class="pg-btn copy" onclick="copyPass()">⎘ COPY</button>
+        <button class="pg-btn" onclick="generate5()">× 5</button>
+      </div>
+
+      <div id="batchOut" style="display:none;background:var(--bg3);border:1px solid var(--panel-border);padding:10px;font-size:.62rem;line-height:2;word-break:break-all"></div>
+
+      <div class="sep"></div>
+
+      <div>
+        <div class="ctrl-label"><span>LENGTH</span><span id="lenVal" style="color:var(--accent3)">20</span></div>
+        <input type="range" id="lenSlider" min="4" max="128" value="20" oninput="onLen(this.value)">
+      </div>
+
+      <div>
+        <div class="ctrl-label">CHARACTER SETS</div>
+        <div class="toggle-grid">
+          <button class="toggle-btn active" id="tgl_upper" onclick="toggleSet('upper',this)">A-Z UPPERCASE</button>
+          <button class="toggle-btn active" id="tgl_lower" onclick="toggleSet('lower',this)">a-z lowercase</button>
+          <button class="toggle-btn active" id="tgl_num"   onclick="toggleSet('num',this)">0-9 Numbers</button>
+          <button class="toggle-btn active" id="tgl_sym"   onclick="toggleSet('sym',this)">!@# Symbols</button>
+          <button class="toggle-btn"        id="tgl_ext"   onclick="toggleSet('ext',this)">Extended ±§€£</button>
+          <button class="toggle-btn"        id="tgl_hex"   onclick="toggleSet('hex',this)">0-9 a-f HEX only</button>
+        </div>
+      </div>
+
+      <div>
+        <div class="ctrl-label">EXCLUDE AMBIGUOUS</div>
+        <button class="toggle-btn active" id="tgl_noamb" onclick="toggleSet('noamb',this)" style="width:100%">Exclude Il1O0 (recommended)</button>
+      </div>
+
+      <div>
+        <div class="ctrl-label">PROFILES</div>
+        <div class="profile-row">
+          <button class="prof-btn" onclick="applyProfile('wifi')">WIFI</button>
+          <button class="prof-btn" onclick="applyProfile('pin4')">PIN 4</button>
+          <button class="prof-btn" onclick="applyProfile('pin6')">PIN 6</button>
+          <button class="prof-btn" onclick="applyProfile('api')">API KEY</button>
+          <button class="prof-btn" onclick="applyProfile('passphrase')">PASSPHRASE</button>
+          <button class="prof-btn" onclick="applyProfile('hex32')">HEX 32</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: history -->
+  <div class="panel">
+    <div class="ph">HISTORY <span style="float:right;cursor:pointer;color:var(--accent4)" onclick="clearHist()">CLEAR</span></div>
+    <div id="histList" style="flex:1;overflow-y:auto"></div>
+  </div>
+</div>
+
+<script>
+const SETS = {
+  upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+  lower: 'abcdefghijklmnopqrstuvwxyz',
+  num:   '0123456789',
+  sym:   '!@#$%^&*()-_=+[]{}|;:,.<>?',
+  ext:   '±§€£¥©®™°',
+  hex:   '0123456789abcdef',
+};
+const AMBIG = /[Il1O0]/g;
+const WORDS = ['correct','horse','battery','staple','ocean','signal','phantom','lunar','field','vector','delta','echo','foxtrot','sierra','tango','whiskey','alpha','bravo','cyber','mesh','forge','arc','nova','bolt','frost','hawk','iron','jade','kilo','lime'];
+
+let active = { upper:true, lower:true, num:true, sym:true, ext:false, hex:false, noamb:true };
+let history = [];
+const HIST_KEY = 'pm_passgen_hist';
+
+function loadHist() { try { history = JSON.parse(localStorage.getItem(HIST_KEY)||'[]'); } catch { history=[]; } }
+function saveHist() { localStorage.setItem(HIST_KEY, JSON.stringify(history.slice(0,50))); }
+
+function buildAlphabet() {
+  if (active.hex) return SETS.hex;
+  let alpha = '';
+  if (active.upper) alpha += SETS.upper;
+  if (active.lower) alpha += SETS.lower;
+  if (active.num)   alpha += SETS.num;
+  if (active.sym)   alpha += SETS.sym;
+  if (active.ext)   alpha += SETS.ext;
+  if (active.noamb) alpha = alpha.replace(AMBIG, '');
+  return alpha || SETS.lower + SETS.num;
+}
+
+function genPassword(len) {
+  const alpha = buildAlphabet();
+  const arr = crypto.getRandomValues(new Uint32Array(len));
+  return Array.from(arr, v => alpha[v % alpha.length]).join('');
+}
+
+function genPassphrase() {
+  const arr = crypto.getRandomValues(new Uint8Array(4));
+  return Array.from(arr, v => WORDS[v % WORDS.length]).join('-');
+}
+
+function entropy(pass) {
+  const alpha = buildAlphabet();
+  return Math.round(pass.length * Math.log2(alpha.length || 1));
+}
+
+function strengthInfo(bits) {
+  if (bits < 40) return { label:'WEAK',      color:'#ff3366', pct:15 };
+  if (bits < 60) return { label:'FAIR',      color:'#ff8c00', pct:35 };
+  if (bits < 80) return { label:'GOOD',      color:'#f4a820', pct:60 };
+  if (bits < 100)return { label:'STRONG',    color:'#00ff88', pct:80 };
+  return              { label:'VERY STRONG', color:'#00d4ff', pct:100 };
+}
+
+function generate() {
+  const len = parseInt(document.getElementById('lenSlider').value);
+  const pass = active.hex && len > 64 ? genPassword(64) : genPassword(len);
+  displayPass(pass);
+  addToHist(pass);
+  document.getElementById('batchOut').style.display = 'none';
+}
+
+function generate5() {
+  const len = parseInt(document.getElementById('lenSlider').value);
+  const passes = Array.from({length:5}, () => genPassword(len));
+  displayPass(passes[0]);
+  const el = document.getElementById('batchOut');
+  el.style.display = 'block';
+  el.innerHTML = passes.map((p,i) =>
+    `<div style="display:flex;justify-content:space-between;gap:8px;padding:3px 0;border-bottom:1px solid rgba(28,46,58,.3)">
+      <span style="color:var(--text-dim)">${i+1}.</span>
+      <span style="flex:1;color:var(--accent3)">${p}</span>
+      <button class="hist-copy" onclick="copyText('${p}')">COPY</button>
+    </div>`
+  ).join('');
+  passes.forEach(p => addToHist(p));
+}
+
+function displayPass(pass) {
+  document.getElementById('passOut').textContent = pass;
+  const bits = entropy(pass);
+  const info = strengthInfo(bits);
+  document.getElementById('strengthFill').style.width = info.pct + '%';
+  document.getElementById('strengthFill').style.background = info.color;
+  document.getElementById('strengthLabel').textContent = info.label;
+  document.getElementById('strengthLabel').style.color = info.color;
+  document.getElementById('entropyLabel').textContent = bits + ' bits';
+}
+
+function addToHist(pass) {
+  history.unshift({ pass, ts: Date.now(), len: pass.length });
+  saveHist();
+  renderHist();
+}
+
+function renderHist() {
+  const el = document.getElementById('histList');
+  if (!history.length) { el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:.62rem">No history yet</div>`; return; }
+  el.innerHTML = history.slice(0,50).map((h,i) =>
+    `<div class="hist-item">
+      <div class="hist-pass">${h.pass}</div>
+      <div class="hist-meta">${h.len}c</div>
+      <button class="hist-copy" onclick="copyText('${h.pass.replace(/'/g,"\\'")}')">COPY</button>
+    </div>`
+  ).join('');
+}
+
+function clearHist() {
+  if (!confirm('Clear password history?')) return;
+  history = []; saveHist(); renderHist();
+}
+
+function copyPass() {
+  const pass = document.getElementById('passOut').textContent;
+  if (pass && pass !== 'Click GENERATE') copyText(pass);
+}
+
+function copyText(text) {
+  navigator.clipboard.writeText(text).catch(() => {
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+  });
+  // Flash indicator
+  const el = document.getElementById('passOut');
+  const old = el.style.borderColor;
+  el.style.borderColor = 'var(--accent3)';
+  setTimeout(() => el.style.borderColor = old, 400);
+}
+
+function toggleSet(key, btn) {
+  if (key === 'hex') {
+    active.hex = !active.hex;
+    if (active.hex) {
+      // Disable others visually
+      ['upper','lower','sym','ext'].forEach(k => {
+        active[k] = false;
+        document.getElementById('tgl_'+k).classList.remove('active');
+      });
+      active.num = true;
+      document.getElementById('tgl_num').classList.add('active');
+    }
+  } else {
+    active[key] = !active[key];
+    if (key !== 'noamb') active.hex = false;
+    document.getElementById('tgl_hex').classList.remove('active');
+  }
+  btn.classList.toggle('active', !!active[key]);
+  generate();
+}
+
+function onLen(v) {
+  document.getElementById('lenVal').textContent = v;
+  generate();
+}
+
+const PROFILES = {
+  wifi:       { len:16, sets:{upper:true,lower:true,num:true,sym:false,ext:false,hex:false,noamb:true} },
+  pin4:       { len:4,  sets:{upper:false,lower:false,num:true,sym:false,ext:false,hex:false,noamb:false} },
+  pin6:       { len:6,  sets:{upper:false,lower:false,num:true,sym:false,ext:false,hex:false,noamb:false} },
+  api:        { len:32, sets:{upper:true,lower:true,num:true,sym:false,ext:false,hex:false,noamb:true} },
+  hex32:      { len:32, sets:{upper:false,lower:false,num:true,sym:false,ext:false,hex:true,noamb:false} },
+  passphrase: null,
+};
+
+function applyProfile(name) {
+  document.querySelectorAll('.prof-btn').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+
+  if (name === 'passphrase') {
+    const pass = genPassphrase();
+    displayPass(pass);
+    addToHist(pass);
+    return;
+  }
+  const p = PROFILES[name];
+  if (!p) return;
+  document.getElementById('lenSlider').value = p.len;
+  document.getElementById('lenVal').textContent = p.len;
+  Object.entries(p.sets).forEach(([k,v]) => {
+    active[k] = v;
+    const el = document.getElementById('tgl_'+k);
+    if (el) el.classList.toggle('active', v);
+  });
+  generate();
+}
+
+loadHist();
+renderHist();
+generate();
+</script>
+</body></html>

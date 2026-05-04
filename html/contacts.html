@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — contacts.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Local contact store: name / phone / callsign / mesh node ID
+  Feeds: SOS Beacon, Mesh Messenger, SSH saved hosts
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // CONTACTS</title>
+<link rel="stylesheet" href="pm_shared.css">
+<style>
+.ct-layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 52px);overflow:hidden;}
+.ct-left{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.ct-right{display:flex;flex-direction:column;overflow:hidden;}
+.ct-list{flex:1;overflow-y:auto;}
+.ct-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.4);cursor:pointer;transition:background .15s;display:flex;gap:10px;align-items:center;}
+.ct-item:hover{background:rgba(0,212,255,.04);}
+.ct-item.selected{background:rgba(0,212,255,.08);border-left:2px solid var(--accent);}
+.ct-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Orbitron,monospace;font-size:.75rem;font-weight:700;flex-shrink:0;border:1px solid var(--panel-border);}
+.ct-info{flex:1;min-width:0;}
+.ct-name{font-size:.72rem;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ct-sub{font-size:.56rem;color:var(--text-dim);margin-top:2px;display:flex;gap:8px;}
+.ct-badge{display:inline-block;padding:1px 5px;font-family:Orbitron,monospace;font-size:.42rem;letter-spacing:1px;border-radius:2px;}
+.badge-sar{background:rgba(255,51,102,.15);color:var(--accent4);border:1px solid rgba(255,51,102,.3);}
+.badge-mesh{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid rgba(0,255,136,.25);}
+.badge-ssh{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.25);}
+.badge-emerg{background:rgba(244,168,32,.12);color:var(--gold);border:1px solid rgba(244,168,32,.3);}
+.ct-form{padding:16px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
+.ct-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.68rem;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;}
+.ct-input:focus{border-color:var(--accent);}
+.ct-label{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:3px;}
+.ct-row{display:flex;gap:8px;}
+.ct-group{display:flex;flex-direction:column;flex:1;}
+.ct-detail{padding:16px;flex:1;overflow-y:auto;}
+.detail-header{display:flex;align-items:center;gap:16px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid var(--panel-border);}
+.detail-avatar{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Orbitron,monospace;font-size:1.4rem;font-weight:700;border:2px solid var(--panel-border);}
+.detail-name{font-family:Orbitron,monospace;font-size:1rem;color:var(--text-bright);}
+.detail-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.detail-field{padding:10px 0;border-bottom:1px solid rgba(28,46,58,.4);display:flex;justify-content:space-between;align-items:center;}
+.detail-field-label{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim);}
+.detail-field-val{font-size:.72rem;color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;}
+.detail-actions{margin-top:20px;display:flex;gap:8px;flex-wrap:wrap;}
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;}
+.tag-btn{padding:5px 10px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.5rem;cursor:pointer;letter-spacing:1px;transition:all .15s;}
+.tag-btn:hover{border-color:var(--accent);color:var(--accent);}
+.tag-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.1);}
+.tag-btn.sar.active{border-color:var(--accent4);color:var(--accent4);background:rgba(255,51,102,.1);}
+.tag-btn.mesh.active{border-color:var(--accent3);color:var(--accent3);background:rgba(0,255,136,.1);}
+.tag-btn.emerg.active{border-color:var(--gold);color:var(--gold);background:rgba(244,168,32,.1);}
+.tag-btn.ssh.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.1);}
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-dim);gap:12px;}
+.empty-icon{font-size:3rem;opacity:.3;}
+.empty-text{font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:2px;opacity:.5;}
+.ct-notes{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.66rem;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;min-height:60px;resize:vertical;line-height:1.6;}
+.ct-notes:focus{border-color:var(--accent);}
+.search-wrap{padding:8px 10px;border-bottom:1px solid var(--panel-border);}
+.ct-search{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.65rem;padding:6px 10px;outline:none;width:100%;box-sizing:border-box;}
+.ct-search:focus{border-color:var(--accent);}
+.filter-row{padding:6px 10px;border-bottom:1px solid var(--panel-border);display:flex;gap:4px;flex-wrap:wrap;}
+.filt-btn{padding:3px 8px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.45rem;cursor:pointer;letter-spacing:1px;}
+.filt-btn.active{background:rgba(0,212,255,.1);border-color:var(--accent);color:var(--accent);}
+.import-export{padding:8px 10px;border-top:1px solid var(--panel-border);display:flex;gap:6px;}
+</style>
+</head><body>
+<header class="pm-header">
+  <div class="pm-logo">👤 <em>CONTACTS</em></div>
+  <div class="pm-hdr-right">
+    <span id="contactCount" style="font-size:.6rem;color:var(--text-dim);margin-right:10px"></span>
+    <button class="pm-refresh" onclick="showNewForm()">+ NEW CONTACT</button>
+  </div>
+</header>
+<div class="ct-layout">
+  <!-- Left: list -->
+  <div class="ct-left">
+    <div class="search-wrap">
+      <input class="ct-search" id="searchInput" placeholder="Search contacts..." oninput="renderList()">
+    </div>
+    <div class="filter-row" id="filterRow">
+      <button class="filt-btn active" data-filter="all" onclick="setFilter('all',this)">ALL</button>
+      <button class="filt-btn" data-filter="sar" onclick="setFilter('sar',this)">SAR</button>
+      <button class="filt-btn" data-filter="emerg" onclick="setFilter('emerg',this)">EMERGENCY</button>
+      <button class="filt-btn" data-filter="mesh" onclick="setFilter('mesh',this)">MESH</button>
+      <button class="filt-btn" data-filter="ssh" onclick="setFilter('ssh',this)">SSH</button>
+    </div>
+    <div class="ct-list" id="contactList"></div>
+    <div class="import-export">
+      <button class="pm-btn" style="flex:1;font-size:.55rem" onclick="exportContacts()">EXPORT</button>
+      <label class="pm-btn" style="flex:1;font-size:.55rem;text-align:center;cursor:pointer">IMPORT<input type="file" accept=".json" style="display:none" onchange="importContacts(this)"></label>
+    </div>
+  </div>
+
+  <!-- Right: form or detail -->
+  <div class="ct-right" id="rightPanel">
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-text">SELECT A CONTACT</div>
+      <div style="font-size:.6rem;color:var(--text-dim);text-align:center;max-width:200px;line-height:1.6">
+        Contacts are shared with SOS Beacon,<br>Mesh Messenger, and SSH Client
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// CONTACTS — Local contact store
+// localStorage key: pm_contacts (array of contact objects)
+// Used by: SOS Beacon (emergency contacts), Mesh Messenger (node IDs),
+//          SSH Client (saved hosts)
+// ═══════════════════════════════════════════════════════════════════
+
+const STORE_KEY = 'pm_contacts';
+let contacts = [];
+let selectedId = null;
+let currentFilter = 'all';
+let editMode = false;
+
+// ── CRUD ─────────────────────────────────────────────────────────
+function load() {
+  try { contacts = JSON.parse(localStorage.getItem(STORE_KEY) || '[]'); } catch { contacts = []; }
+  // Seed with example contacts if empty
+  if (!contacts.length) {
+    contacts = [
+      { id: uid(), name: 'Clark Beddows', phone: '', callsign: 'KN6CBP', nodeId: 'cb-node-1', email: '', sshHost: '', sshUser: 'root', sshPort: '22', notes: 'The Phantom operator', tags: ['mesh'], color: '#00d4ff', ts: Date.now() },
+    ];
+    save();
+  }
+}
+function save() { localStorage.setItem(STORE_KEY, JSON.stringify(contacts)); }
+function uid() { return 'ct_' + Date.now().toString(36) + Math.random().toString(36).substr(2,4); }
+
+function upsert(contact) {
+  const idx = contacts.findIndex(c => c.id === contact.id);
+  if (idx >= 0) contacts[idx] = contact;
+  else contacts.push(contact);
+  save();
+  renderList();
+}
+
+function deleteContact(id) {
+  if (!confirm('Delete this contact?')) return;
+  contacts = contacts.filter(c => c.id !== id);
+  save();
+  selectedId = null;
+  renderList();
+  showEmpty();
+}
+
+// ── Rendering ────────────────────────────────────────────────────
+function initials(name) {
+  return name.split(' ').map(w => w[0]||'').join('').toUpperCase().substr(0,2) || '?';
+}
+
+const COLORS = ['#00d4ff','#00ff88','#ff3366','#f4a820','#a78bfa','#fb923c'];
+function colorFor(name) {
+  let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+  return COLORS[h % COLORS.length];
+}
+
+function tagBadge(tag) {
+  const map = { sar: ['SAR','badge-sar'], mesh: ['MESH','badge-mesh'], emerg: ['EMERGENCY','badge-emerg'], ssh: ['SSH','badge-ssh'] };
+  const [label, cls] = map[tag] || [tag, 'badge-mesh'];
+  return `<span class="ct-badge ${cls}">${label}</span>`;
+}
+
+function renderList() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let list = contacts.filter(c => {
+    if (currentFilter !== 'all' && !c.tags.includes(currentFilter)) return false;
+    if (q) return [c.name, c.callsign, c.nodeId, c.phone, c.email, c.notes].join(' ').toLowerCase().includes(q);
+    return true;
+  });
+  list.sort((a,b) => a.name.localeCompare(b.name));
+
+  document.getElementById('contactCount').textContent = `${contacts.length} CONTACTS`;
+
+  const el = document.getElementById('contactList');
+  if (!list.length) {
+    el.innerHTML = `<div style="padding:20px;text-align:center;color:var(--text-dim);font-size:.62rem">No contacts found</div>`;
+    return;
+  }
+  el.innerHTML = list.map(c => {
+    const col = c.color || colorFor(c.name);
+    return `<div class="ct-item${c.id===selectedId?' selected':''}" onclick="selectContact('${c.id}')">
+      <div class="ct-avatar" style="background:${col}22;color:${col}">${initials(c.name)}</div>
+      <div class="ct-info">
+        <div class="ct-name">${esc(c.name)}</div>
+        <div class="ct-sub">
+          ${c.callsign ? `<span>📡 ${esc(c.callsign)}</span>` : ''}
+          ${c.phone ? `<span>📱 ${esc(c.phone)}</span>` : ''}
+          ${(c.tags||[]).map(t => tagBadge(t)).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderList();
+}
+
+// ── Detail view ──────────────────────────────────────────────────
+function selectContact(id) {
+  selectedId = id;
+  renderList();
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  const col = c.color || colorFor(c.name);
+  const rp = document.getElementById('rightPanel');
+  rp.innerHTML = `
+    <div class="ct-detail">
+      <div class="detail-header">
+        <div class="detail-avatar" style="background:${col}22;color:${col};border-color:${col}44">${initials(c.name)}</div>
+        <div>
+          <div class="detail-name">${esc(c.name)}</div>
+          <div class="detail-badges">${(c.tags||[]).map(t=>tagBadge(t)).join('')}</div>
+        </div>
+      </div>
+      ${field('PHONE / SMS', c.phone)}
+      ${field('EMAIL', c.email)}
+      ${field('CALLSIGN', c.callsign)}
+      ${field('MESH NODE ID', c.nodeId)}
+      ${field('SSH HOST', c.sshHost ? `${c.sshUser||'root'}@${c.sshHost}:${c.sshPort||22}` : '')}
+      ${field('NOTES', c.notes)}
+      <div class="detail-actions">
+        <button class="pm-btn accent" onclick="showEditForm('${id}')">EDIT</button>
+        ${c.phone ? `<button class="pm-btn" onclick="sosQuickAdd('${id}')">+ SOS LIST</button>` : ''}
+        ${c.nodeId ? `<button class="pm-btn" style="border-color:var(--accent3);color:var(--accent3)" onclick="copyNode('${id}')">COPY NODE ID</button>` : ''}
+        <button class="pm-btn" style="border-color:var(--accent4);color:var(--accent4)" onclick="deleteContact('${id}')">DELETE</button>
+      </div>
+    </div>`;
+}
+
+function field(label, val) {
+  if (!val) return '';
+  return `<div class="detail-field">
+    <div class="detail-field-label">${label}</div>
+    <div class="detail-field-val">${esc(val)}</div>
+  </div>`;
+}
+
+function showEmpty() {
+  document.getElementById('rightPanel').innerHTML = `
+    <div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-text">SELECT A CONTACT</div>
+    </div>`;
+}
+
+// ── New / Edit Form ──────────────────────────────────────────────
+function showNewForm() {
+  selectedId = null;
+  renderList();
+  showForm({id: uid(), name:'', phone:'', email:'', callsign:'', nodeId:'', sshHost:'', sshUser:'root', sshPort:'22', notes:'', tags:[], color:'', ts: Date.now()}, false);
+}
+
+function showEditForm(id) {
+  const c = contacts.find(x => x.id === id);
+  if (c) showForm(c, true);
+}
+
+function showForm(c, isEdit) {
+  const rp = document.getElementById('rightPanel');
+  const tags = c.tags || [];
+  rp.innerHTML = `
+    <div style="padding:10px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:2px;color:var(--text-dim)">
+      ${isEdit ? 'EDIT CONTACT' : 'NEW CONTACT'}
+    </div>
+    <div class="ct-form">
+      <div class="ct-group">
+        <div class="ct-label">DISPLAY NAME *</div>
+        <input class="ct-input" id="f_name" value="${esc(c.name)}" placeholder="Full name or handle">
+      </div>
+      <div class="ct-row">
+        <div class="ct-group">
+          <div class="ct-label">PHONE / SMS</div>
+          <input class="ct-input" id="f_phone" value="${esc(c.phone)}" placeholder="+1 555...">
+        </div>
+        <div class="ct-group">
+          <div class="ct-label">EMAIL</div>
+          <input class="ct-input" id="f_email" value="${esc(c.email)}" placeholder="user@...">
+        </div>
+      </div>
+      <div class="ct-row">
+        <div class="ct-group">
+          <div class="ct-label">CALLSIGN (HAM)</div>
+          <input class="ct-input" id="f_callsign" value="${esc(c.callsign)}" placeholder="KN6XXX">
+        </div>
+        <div class="ct-group">
+          <div class="ct-label">MESH NODE ID</div>
+          <input class="ct-input" id="f_nodeId" value="${esc(c.nodeId)}" placeholder="node-abc123">
+        </div>
+      </div>
+      <div class="ct-label">SSH HOST</div>
+      <div class="ct-row">
+        <input class="ct-input" id="f_sshUser" value="${esc(c.sshUser||'root')}" placeholder="user" style="flex:1">
+        <input class="ct-input" id="f_sshHost" value="${esc(c.sshHost)}" placeholder="192.168.1.x" style="flex:2">
+        <input class="ct-input" id="f_sshPort" value="${esc(c.sshPort||'22')}" placeholder="22" style="flex:.7">
+      </div>
+      <div>
+        <div class="ct-label">TAGS</div>
+        <div class="tag-row">
+          <button class="tag-btn emerg${tags.includes('emerg')?' active':''}" onclick="toggleTag(this,'emerg')">EMERGENCY</button>
+          <button class="tag-btn sar${tags.includes('sar')?' active':''}" onclick="toggleTag(this,'sar')">SAR</button>
+          <button class="tag-btn mesh${tags.includes('mesh')?' active':''}" onclick="toggleTag(this,'mesh')">MESH</button>
+          <button class="tag-btn ssh${tags.includes('ssh')?' active':''}" onclick="toggleTag(this,'ssh')">SSH</button>
+        </div>
+      </div>
+      <div class="ct-group">
+        <div class="ct-label">NOTES</div>
+        <textarea class="ct-notes" id="f_notes" placeholder="Role, location, relationship...">${esc(c.notes)}</textarea>
+      </div>
+      <div class="ct-row" style="margin-top:6px">
+        <button class="pm-btn accent" style="flex:1" onclick="saveForm('${c.id}')">SAVE CONTACT</button>
+        <button class="pm-btn" style="flex:.4" onclick="showEmpty()">CANCEL</button>
+      </div>
+    </div>`;
+}
+
+function toggleTag(btn, tag) {
+  btn.classList.toggle('active');
+}
+
+function saveForm(id) {
+  const name = document.getElementById('f_name').value.trim();
+  if (!name) { alert('Name is required.'); return; }
+  const activeTags = [...document.querySelectorAll('.tag-btn.active')].map(b => b.dataset.tag || b.textContent.toLowerCase().replace(/\s/g,''));
+  // Map display names to tag keys
+  const tagMap = { 'emergency':'emerg', 'sar':'sar', 'mesh':'mesh', 'ssh':'ssh' };
+  const tags = [...document.querySelectorAll('.tag-btn.active')].map(b => {
+    const t = b.classList[1]; return t;
+  }).filter(Boolean);
+
+  const existing = contacts.find(x => x.id === id);
+  const c = {
+    id,
+    name,
+    phone:    document.getElementById('f_phone').value.trim(),
+    email:    document.getElementById('f_email').value.trim(),
+    callsign: document.getElementById('f_callsign').value.trim(),
+    nodeId:   document.getElementById('f_nodeId').value.trim(),
+    sshHost:  document.getElementById('f_sshHost').value.trim(),
+    sshUser:  document.getElementById('f_sshUser').value.trim() || 'root',
+    sshPort:  document.getElementById('f_sshPort').value.trim() || '22',
+    notes:    document.getElementById('f_notes').value.trim(),
+    tags:     [...new Set(tags)],
+    color:    existing?.color || '',
+    ts:       existing?.ts || Date.now()
+  };
+  upsert(c);
+  selectContact(id);
+}
+
+// ── Quick actions ─────────────────────────────────────────────────
+function sosQuickAdd(id) {
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  // Tag as emergency if not already
+  if (!c.tags.includes('emerg')) {
+    c.tags.push('emerg');
+    upsert(c);
+    renderList();
+    selectContact(id);
+  }
+  // Update sos_profile contact field
+  try {
+    const profile = JSON.parse(localStorage.getItem('sos_profile') || '{}');
+    profile.contact = c.phone;
+    localStorage.setItem('sos_profile', JSON.stringify(profile));
+    alert(`${c.name} added as SOS emergency contact.\nSOS Beacon profile updated.`);
+  } catch { alert('Tagged as emergency contact.'); }
+}
+
+function copyNode(id) {
+  const c = contacts.find(x => x.id === id);
+  if (c?.nodeId) { navigator.clipboard.writeText(c.nodeId).catch(()=>{}); }
+}
+
+// ── Import / Export ───────────────────────────────────────────────
+function exportContacts() {
+  const data = JSON.stringify(contacts, null, 2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([data], {type:'application/json'}));
+  a.download = `pm_contacts_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+}
+
+function importContacts(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const imported = JSON.parse(e.target.result);
+      if (!Array.isArray(imported)) throw new Error('Invalid format');
+      let added = 0;
+      for (const c of imported) {
+        if (!c.id || !c.name) continue;
+        if (!contacts.find(x => x.id === c.id)) { contacts.push(c); added++; }
+      }
+      save();
+      renderList();
+      alert(`Imported ${added} new contacts.`);
+    } catch (err) { alert('Import failed: ' + err.message); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+// ── Init ─────────────────────────────────────────────────────────
+load();
+renderList();
+</script>
+</body></html>

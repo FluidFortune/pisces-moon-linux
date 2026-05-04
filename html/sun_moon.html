@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — sun_moon.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Pure math — zero external deps. Works fully offline.
+  Algorithms: Jean Meeus "Astronomical Algorithms"
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // SUN & MOON</title>
+<style>
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;--accent4:#ff3366;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--gold);letter-spacing:3px;}
+.main{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+.panel{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.panel:last-child{border-right:none;}
+.ph{padding:10px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:2px;color:var(--text-dim);}
+.pbody{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
+.big-time{font-family:'Orbitron',monospace;font-size:1.6rem;color:var(--gold);letter-spacing:4px;text-align:center;}
+.big-label{font-size:.55rem;color:var(--text-dim);letter-spacing:2px;text-align:center;margin-top:3px;}
+.card{background:var(--bg3);border:1px solid var(--panel-border);padding:12px;}
+.card-title{font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:8px;}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.info-cell{text-align:center;}
+.cell-val{font-family:Orbitron,monospace;font-size:.9rem;color:var(--text-bright);}
+.cell-label{font-size:.52rem;color:var(--text-dim);margin-top:2px;}
+.timeline{position:relative;height:20px;background:var(--bg3);border:1px solid var(--panel-border);overflow:hidden;}
+.tl-fill{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,var(--gold),#ff8c00);opacity:.4;}
+.tl-now{position:absolute;top:0;bottom:0;width:2px;background:var(--accent4);}
+.moon-phase-display{display:flex;align-items:center;gap:14px;}
+.moon-icon{font-size:3.5rem;line-height:1;}
+.moon-info{flex:1;}
+.phase-name{font-family:Orbitron,monospace;font-size:.72rem;color:var(--text-bright);margin-bottom:4px;}
+.phase-pct{font-size:.65rem;color:var(--text-dim);}
+.loc-row{display:flex;gap:6px;align-items:center;}
+.loc-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:6px 8px;outline:none;flex:1;}
+.loc-input:focus{border-color:var(--gold);}
+.pm-btn{padding:6px 12px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.5rem;cursor:pointer;letter-spacing:1px;}
+.pm-btn:hover{border-color:var(--gold);color:var(--gold);}
+.golden-bar{height:8px;background:var(--bg3);border:1px solid var(--panel-border);position:relative;overflow:hidden;}
+.golden-fill{position:absolute;top:0;bottom:0;background:linear-gradient(90deg,transparent,var(--gold),transparent);}
+.alert-card{background:rgba(244,168,32,.08);border:1px solid rgba(244,168,32,.3);padding:10px 12px;}
+.sep{font-size:.52rem;color:var(--text-dim);}
+</style>
+</head><body>
+<header>
+  <div class="logo">☀️ SUN & 🌙 MOON</div>
+  <div id="clockDisplay" style="font-family:Orbitron,monospace;font-size:.8rem;color:var(--text-dim)"></div>
+</header>
+<div class="main">
+  <!-- Sun panel -->
+  <div class="panel">
+    <div class="ph">☀️ SOLAR DATA</div>
+    <div class="pbody" id="sunPanel">
+      <div style="text-align:center;color:var(--text-dim);font-size:.62rem;padding:20px">Getting location...</div>
+    </div>
+  </div>
+  <!-- Moon panel -->
+  <div class="panel">
+    <div class="ph">🌙 LUNAR DATA</div>
+    <div class="pbody" id="moonPanel">
+      <div style="text-align:center;color:var(--text-dim);font-size:.62rem;padding:20px">Getting location...</div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// SUN & MOON CALCULATOR
+// Solar: NOAA solar calculator algorithms (SPA)
+// Lunar: Simplified Meeus phase + rise/set
+// All pure math — works fully offline
+// ═══════════════════════════════════════════════════════════════════
+
+let lat = 33.195, lon = -117.379; // Default: Oceanside CA
+let userLat = null, userLon = null;
+const HIST_KEY = 'pm_sunmoon_loc';
+
+// ── Math helpers ─────────────────────────────────────────────────
+const d2r = d => d * Math.PI / 180;
+const r2d = r => r * 180 / Math.PI;
+function norm(x,m=360){ return ((x%m)+m)%m; }
+function fmtTime(h) {
+  if (h === null || isNaN(h)) return '---';
+  const total = Math.round(h * 60);
+  const hh = Math.floor(total/60) % 24;
+  const mm = total % 60;
+  return hh.toString().padStart(2,'0') + ':' + mm.toString().padStart(2,'0');
+}
+function fmtDur(h) {
+  const total = Math.round(h*60);
+  return `${Math.floor(total/60)}h ${total%60}m`;
+}
+
+// ── Solar algorithms (NOAA/Spencer) ──────────────────────────────
+function julianDay(date) {
+  const y=date.getFullYear(), m=date.getMonth()+1, d=date.getDate();
+  const A=Math.floor(y/100), B=2-A+Math.floor(A/4);
+  return Math.floor(365.25*(y+4716))+Math.floor(30.6001*(m+1))+d+B-1524.5;
+}
+
+function solarNoon(jd, lon) {
+  const n = jd - 2451545.0;
+  const L = norm(280.46 + 0.9856474*n);
+  const g = norm(357.528 + 0.9856003*n);
+  const λ = L + 1.915*Math.sin(d2r(g)) + 0.020*Math.sin(d2r(2*g));
+  const ε = 23.439 - 0.0000004*n;
+  const α = r2d(Math.atan2(Math.cos(d2r(ε))*Math.sin(d2r(λ)), Math.cos(d2r(λ))));
+  const eq = (L - α)/15;
+  return 12 - lon/15 - eq; // UTC hours
+}
+
+function solarDeclination(jd) {
+  const n = jd - 2451545.0;
+  const L = norm(280.46 + 0.9856474*n);
+  const g = norm(357.528 + 0.9856003*n);
+  const λ = L + 1.915*Math.sin(d2r(g)) + 0.020*Math.sin(d2r(2*g));
+  const ε = 23.439 - 0.0000004*n;
+  return r2d(Math.asin(Math.sin(d2r(ε))*Math.sin(d2r(λ))));
+}
+
+function sunRiseSet(date, lat, lon, zenith=90.833) {
+  const jd = julianDay(date);
+  const decl = solarDeclination(jd);
+  const noon = solarNoon(jd, lon);
+  const cosH = (Math.cos(d2r(zenith)) - Math.sin(d2r(lat))*Math.sin(d2r(decl))) /
+               (Math.cos(d2r(lat))*Math.cos(d2r(decl)));
+  if (cosH > 1) return { rise: null, set: null, polar: 'never' };
+  if (cosH < -1) return { rise: null, set: null, polar: 'always' };
+  const H = r2d(Math.acos(cosH));
+  const tz = -date.getTimezoneOffset()/60;
+  return { rise: norm(noon - H/15 + tz, 24), set: norm(noon + H/15 + tz, 24) };
+}
+
+function solarAzimuthAltitude(date, lat, lon) {
+  const jd = julianDay(date);
+  const decl = solarDeclination(jd);
+  const noon = solarNoon(jd, lon);
+  const tz = -date.getTimezoneOffset()/60;
+  const lct = date.getHours() + date.getMinutes()/60 + date.getSeconds()/3600;
+  const H = 15 * (lct - tz - noon + lon/15);
+  const sinAlt = Math.sin(d2r(lat))*Math.sin(d2r(decl)) +
+                 Math.cos(d2r(lat))*Math.cos(d2r(decl))*Math.cos(d2r(H));
+  const alt = r2d(Math.asin(Math.max(-1,Math.min(1,sinAlt))));
+  const cosAz = (Math.sin(d2r(decl)) - Math.sin(d2r(lat))*sinAlt) /
+                (Math.cos(d2r(lat))*Math.cos(d2r(Math.asin(sinAlt))));
+  let az = r2d(Math.acos(Math.max(-1,Math.min(1,cosAz))));
+  if (Math.sin(d2r(H)) > 0) az = 360 - az;
+  return { alt: Math.round(alt*10)/10, az: Math.round(az) };
+}
+
+// ── Lunar algorithms (Meeus simplified) ──────────────────────────
+function moonPhase(date) {
+  const jd = julianDay(date);
+  const k = (jd - 2451550.1) / 29.53058867;
+  const phase = norm(k * 360, 360); // 0=new, 90=first, 180=full, 270=last
+  const illum = (1 - Math.cos(d2r(phase))) / 2;
+  return { phase, illum, age: (k % 1) * 29.53 };
+}
+
+function moonPhaseName(phase) {
+  if (phase < 22.5)  return { name:'New Moon',         icon:'🌑' };
+  if (phase < 67.5)  return { name:'Waxing Crescent',  icon:'🌒' };
+  if (phase < 112.5) return { name:'First Quarter',    icon:'🌓' };
+  if (phase < 157.5) return { name:'Waxing Gibbous',   icon:'🌔' };
+  if (phase < 202.5) return { name:'Full Moon',        icon:'🌕' };
+  if (phase < 247.5) return { name:'Waning Gibbous',   icon:'🌖' };
+  if (phase < 292.5) return { name:'Last Quarter',     icon:'🌗' };
+  if (phase < 337.5) return { name:'Waning Crescent',  icon:'🌘' };
+  return                    { name:'New Moon',         icon:'🌑' };
+}
+
+function nextFullMoon(date) {
+  const jd = julianDay(date);
+  const k = (jd - 2451550.1) / 29.53058867;
+  const kRound = Math.ceil(k);
+  return new Date((kRound * 29.53058867 + 2451550.1 - 2440587.5) * 86400000);
+}
+
+function nextNewMoon(date) {
+  const jd = julianDay(date);
+  const k = Math.ceil((jd - 2451550.1) / 29.53058867) - 0.5;
+  return new Date((Math.ceil(k + 0.5) * 29.53058867 + 2451550.1 - 2440587.5) * 86400000);
+}
+
+function moonRiseSet(date, lat, lon) {
+  // Simplified: use sun algorithm with moon's approximate declination offset
+  const jd = julianDay(date);
+  const k = (jd - 2451550.1) / 29.53058867;
+  const moonLon = norm(218.316 + 13.176396*jd - 2451545);
+  const moonLat = 5.128 * Math.sin(d2r(93.3 + 483202.0175*((jd-2451545)/36525)));
+  const ε = 23.439;
+  const decl = r2d(Math.asin(Math.sin(d2r(ε))*Math.sin(d2r(moonLon))));
+  const tz = -date.getTimezoneOffset()/60;
+  const cosH = (Math.cos(d2r(108)) - Math.sin(d2r(lat))*Math.sin(d2r(decl))) /
+               (Math.cos(d2r(lat))*Math.cos(d2r(decl)));
+  if (Math.abs(cosH) > 1) return { rise: null, set: null };
+  const H = r2d(Math.acos(cosH));
+  const noon = 12 + (k % 1) * 0.8 - lon/15; // rough moon transit
+  return { rise: norm(noon - H/15 + tz, 24), set: norm(noon + H/15 + tz, 24) };
+}
+
+// ── Render ────────────────────────────────────────────────────────
+function render() {
+  const now = new Date();
+  const la = userLat ?? lat, lo = userLon ?? lon;
+
+  // Sun
+  const sun = sunRiseSet(now, la, lo);
+  const civilDusk = sunRiseSet(now, la, lo, 96);
+  const nautDusk = sunRiseSet(now, la, lo, 102);
+  const astro = sunRiseSet(now, la, lo, 108);
+  const goldMorn = sunRiseSet(now, la, lo, 86);
+  const pos = solarAzimuthAltitude(now, la, lo);
+  const dayLen = (sun.rise && sun.set) ? sun.set - sun.rise : null;
+  const nowH = now.getHours() + now.getMinutes()/60;
+  const pct = (sun.rise && sun.set) ? Math.max(0,Math.min(1,(nowH - sun.rise)/(sun.set - sun.rise))) : 0;
+
+  document.getElementById('sunPanel').innerHTML = `
+    <div class="card">
+      <div class="card-title">POSITION NOW</div>
+      <div class="row2">
+        <div class="info-cell"><div class="cell-val" style="color:var(--gold)">${pos.alt}°</div><div class="cell-label">ALTITUDE</div></div>
+        <div class="info-cell"><div class="cell-val" style="color:var(--gold)">${pos.az}°</div><div class="cell-label">AZIMUTH</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">RISE / SET</div>
+      <div class="row2">
+        <div class="info-cell"><div class="cell-val">🌅 ${fmtTime(sun.rise)}</div><div class="cell-label">SUNRISE</div></div>
+        <div class="info-cell"><div class="cell-val">🌇 ${fmtTime(sun.set)}</div><div class="cell-label">SUNSET</div></div>
+      </div>
+      <div style="margin-top:8px">
+        <div class="timeline">
+          ${sun.rise&&sun.set?`<div class="tl-fill" style="left:${(sun.rise/24)*100}%;width:${((sun.set-sun.rise)/24)*100}%"></div>
+          <div class="tl-now" style="left:${(nowH/24)*100}%"></div>`:''}
+        </div>
+        <div style="font-size:.55rem;color:var(--text-dim);margin-top:4px;text-align:center">DAY LENGTH: ${dayLen?fmtDur(dayLen):'---'}</div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">GOLDEN HOUR</div>
+      <div class="row2">
+        <div class="info-cell"><div class="cell-val" style="color:var(--gold)">${fmtTime(sun.rise)}</div><div class="cell-label">MORNING START</div></div>
+        <div class="info-cell"><div class="cell-val" style="color:var(--gold)">${fmtTime(goldMorn.rise)}</div><div class="cell-label">MORNING END</div></div>
+      </div>
+      <div class="row2" style="margin-top:6px">
+        <div class="info-cell"><div class="cell-val" style="color:var(--gold)">${fmtTime(goldMorn.set)}</div><div class="cell-label">EVENING START</div></div>
+        <div class="info-cell"><div class="cell-val" style="color:var(--gold)">${fmtTime(sun.set)}</div><div class="cell-label">EVENING END</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">TWILIGHT</div>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        ${twilightRow('CIVIL',   fmtTime(sun.set),       fmtTime(civilDusk.set))}
+        ${twilightRow('NAUTICAL',fmtTime(civilDusk.set), fmtTime(nautDusk.set))}
+        ${twilightRow('ASTRO',   fmtTime(nautDusk.set),  fmtTime(astro.set))}
+      </div>
+    </div>
+    <div style="font-size:.55rem;color:var(--text-dim);text-align:center">📍 ${la.toFixed(3)}°, ${lo.toFixed(3)}°</div>`;
+
+  // Moon
+  const mp = moonPhase(now);
+  const mpn = moonPhaseName(mp.phase);
+  const mr = moonRiseSet(now, la, lo);
+  const fullM = nextFullMoon(now);
+  const newM = nextNewMoon(now);
+  const daysToFull = Math.ceil((fullM - now) / 86400000);
+  const daysToNew  = Math.ceil((newM  - now) / 86400000);
+
+  document.getElementById('moonPanel').innerHTML = `
+    <div class="card">
+      <div class="moon-phase-display">
+        <div class="moon-icon">${mpn.icon}</div>
+        <div class="moon-info">
+          <div class="phase-name">${mpn.name}</div>
+          <div class="phase-pct">Illumination: ${Math.round(mp.illum*100)}%</div>
+          <div class="phase-pct">Age: ${mp.age.toFixed(1)} days</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">RISE / SET</div>
+      <div class="row2">
+        <div class="info-cell"><div class="cell-val">🌔 ${fmtTime(mr.rise)}</div><div class="cell-label">MOONRISE</div></div>
+        <div class="info-cell"><div class="cell-val">🌘 ${fmtTime(mr.set)}</div><div class="cell-label">MOONSET</div></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">UPCOMING</div>
+      <div class="row2">
+        <div class="info-cell">
+          <div class="cell-val" style="color:var(--text-bright)">🌕 ${daysToFull}d</div>
+          <div class="cell-label">NEXT FULL</div>
+          <div style="font-size:.52rem;color:var(--text-dim)">${fullM.toLocaleDateString()}</div>
+        </div>
+        <div class="info-cell">
+          <div class="cell-val" style="color:var(--text-bright)">🌑 ${daysToNew}d</div>
+          <div class="cell-label">NEXT NEW</div>
+          <div style="font-size:.52rem;color:var(--text-dim)">${newM.toLocaleDateString()}</div>
+        </div>
+      </div>
+    </div>
+    <div class="card alert-card">
+      <div class="card-title" style="color:var(--gold)">PHOTOGRAPHER'S NOTE</div>
+      <div style="font-size:.62rem;line-height:1.7;color:var(--text)">
+        ${mp.illum > 0.9 ? '🌕 Full moon tonight — excellent for astrophotography and night navigation.' :
+          mp.illum < 0.1 ? '🌑 New moon — darkest skies, best for deep-sky observation.' :
+          mp.illum > 0.5 ? '🌔 Waxing phase — good visibility after sunset.' :
+          '🌘 Waning phase — good visibility before sunrise.'}
+        ${pos.alt < 0 ? ' Sun is below horizon.' : pos.alt < 6 ? ' Near golden hour.' : ''}
+      </div>
+    </div>
+    <div style="font-size:.55rem;color:var(--text-dim);text-align:center">
+      <span style="cursor:pointer;color:var(--accent)" onclick="getLocation()">📍 UPDATE LOCATION</span>
+    </div>`;
+}
+
+function twilightRow(label, start, end) {
+  return `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(28,46,58,.3);font-size:.62rem">
+    <span style="color:var(--text-dim)">${label}</span>
+    <span>${start} → ${end}</span>
+  </div>`;
+}
+
+// ── Location ──────────────────────────────────────────────────────
+function getLocation() {
+  if (!navigator.geolocation) { render(); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    userLat = pos.coords.latitude;
+    userLon = pos.coords.longitude;
+    localStorage.setItem(HIST_KEY, JSON.stringify({lat:userLat,lon:userLon}));
+    render();
+  }, () => render());
+}
+
+// Clock ticker
+function tick() {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent =
+    now.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+setInterval(tick, 1000); tick();
+setInterval(render, 60000);
+
+// Init
+try {
+  const saved = JSON.parse(localStorage.getItem(HIST_KEY)||'{}');
+  if (saved.lat) { userLat = saved.lat; userLon = saved.lon; }
+} catch {}
+getLocation();
+render();
+</script>
+</body></html>

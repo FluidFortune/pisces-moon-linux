@@ -1,0 +1,45 @@
+/* Pisces Moon OS — pm_fonts.css
+ * Local-first font loading. No external network calls.
+ * Copyright (C) 2026 Eric Becker / Fluid Fortune
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ */
+
+@font-face {
+  font-family: 'Share Tech Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Share Tech Mono'),
+       local('ShareTechMono-Regular'),
+       url('fonts/share-tech-mono.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: local('Orbitron'),
+       local('Orbitron-Regular'),
+       url('fonts/orbitron-400.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: local('Orbitron Bold'),
+       local('Orbitron-Bold'),
+       url('fonts/orbitron-700.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Orbitron';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: local('Orbitron Black'),
+       local('Orbitron-Black'),
+       url('fonts/orbitron-900.woff2') format('woff2');
+}

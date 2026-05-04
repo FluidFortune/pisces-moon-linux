@@ -1,162 +1,529 @@
 <!DOCTYPE html>
-<!-- 
+<!--
   Pisces Moon OS — trails.html
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
+  SPDX-License-Identifier: AGPL-3.0-or-later
   fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
 -->
-<!-- PISCES MOON OS // TRAILS INTEL -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // TRAILS INTEL</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="lib/leaflet.min.css">
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--accent3);letter-spacing:3px;}
-.logo span{color:var(--gold);}
-.layout{display:flex;flex:1;overflow:hidden;}
-.sidebar{width:320px;background:var(--bg2);border-right:1px solid var(--panel-border);display:flex;flex-direction:column;flex-shrink:0;overflow-y:auto;}
-#map{flex:1;}
-.search-box{padding:12px;border-bottom:1px solid var(--panel-border);}
-.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.72rem;padding:8px 12px;outline:none;width:100%;}
-.pm-input:focus{border-color:var(--accent3);}
-.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent3);color:var(--accent3);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;width:100%;margin-top:6px;text-align:center;}
-.btn:hover{background:var(--accent3);color:var(--bg);}
-.btn.gold{border-color:var(--gold);color:var(--gold);}.btn.gold:hover{background:var(--gold);color:var(--bg);}
-.trail-card{background:var(--bg3);border-bottom:1px solid var(--panel-border);padding:12px;cursor:pointer;transition:background .15s;}
-.trail-card:hover{background:rgba(0,255,136,.05);}
-.trail-card.active{border-left:3px solid var(--accent3);background:rgba(0,255,136,.06);}
-.tc-name{font-size:.78rem;color:var(--text-bright);margin-bottom:4px;}
-.tc-meta{font-size:.62rem;color:var(--text-dim);display:flex;gap:12px;flex-wrap:wrap;}
-.tc-meta span{color:var(--text);}
-.badge{display:inline-block;padding:1px 6px;font-size:.57rem;border-radius:2px;}
-.be{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
-.bm{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
-.bh{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
-.detail-panel{padding:12px;border-bottom:1px solid var(--panel-border);}
-.dp-title{font-family:'Orbitron',monospace;font-size:.7rem;color:var(--accent3);margin-bottom:10px;letter-spacing:2px;}
-.dp-body{font-size:.7rem;line-height:1.7;color:var(--text);white-space:pre-wrap;}
-.thinking{display:flex;gap:5px;padding:6px 0;}
-.thinking span{width:6px;height:6px;background:var(--accent3);border-radius:50%;animation:th 1.2s infinite;}
-.thinking span:nth-child(2){animation-delay:.2s;}.thinking span:nth-child(3){animation-delay:.4s;}
-@keyframes th{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header>
-  <div class="logo">TRAILS <span>INTEL</span></div>
-  <div style="font-size:.65rem;color:var(--text-dim)">AI-Powered Trail Finder · Powered by Gemini</div>
-</header>
-<div class="layout">
-  <div class="sidebar">
-    <div class="search-box">
-      <input class="pm-input" id="locationInput" placeholder="Location: Las Vegas, NV...">
-      <input class="pm-input" id="diffInput" placeholder="Difficulty: easy / moderate / hard" style="margin-top:6px">
-      <input class="pm-input" id="distInput" placeholder="Max distance: 5 miles" style="margin-top:6px">
-      <button class="btn" onclick="findTrails()">⛰ FIND TRAILS</button>
-      <button class="btn gold" onclick="askTrailAI()">ASK GEMINI</button>
-      <input class="pm-input" id="aiQ" placeholder="Ask about trails, safety, gear..." style="margin-top:6px">
+.layout { display:grid; grid-template-columns:340px 1fr 320px; height:calc(100vh - 52px); overflow:hidden; }
+.sidebar { overflow-y:auto; border-right:1px solid var(--panel-border); }
+#map { height:100%; }
+.map-col { position:relative; }
+.ctrl-panel { padding:14px; background:var(--bg2); border-bottom:1px solid var(--panel-border); }
+.trail-card {
+    padding:14px; border-bottom:1px solid var(--panel-border); cursor:pointer;
+    transition:background .15s;
+}
+.trail-card:hover { background:rgba(240,165,0,.04); }
+.trail-card.active { background:rgba(240,165,0,.08); border-left:3px solid var(--gold); }
+.trail-name { font-size:.78rem; color:var(--text-bright); margin-bottom:6px; font-weight:500; }
+.trail-meta { font-size:.62rem; color:var(--text-dim); display:flex; gap:10px; flex-wrap:wrap; }
+.trail-meta span { color:var(--text); }
+.badge { display:inline-block; padding:2px 7px; font-size:.55rem; border-radius:2px;
+    font-family:Orbitron,monospace; letter-spacing:1.5px; }
+.be { background:rgba(0,232,122,.1); color:var(--accent3); border:1px solid var(--accent3); }
+.bm { background:rgba(255,214,10,.1); color:var(--warn); border:1px solid var(--warn); }
+.bh { background:rgba(255,45,85,.1); color:var(--accent4); border:1px solid var(--accent4); }
+.detail-panel { padding:14px; font-size:.72rem; line-height:1.7; white-space:pre-wrap; color:var(--text); }
+.mode-tabs { display:flex; border-bottom:1px solid var(--panel-border); }
+.mode-tab {
+    flex:1; padding:10px; text-align:center;
+    font-family:Orbitron,monospace; font-size:.55rem; letter-spacing:2px;
+    color:var(--text-dim); cursor:pointer; border-right:1px solid var(--panel-border);
+}
+.mode-tab:last-child { border-right:none; }
+.mode-tab.active { color:var(--gold); background:var(--bg3); }
+.mode-tab:hover { color:var(--text); }
+.ai-btn-quick { padding:5px 10px; border:1px solid var(--panel-border);
+    background:transparent; color:var(--text-dim);
+    font-family:'Share Tech Mono',monospace; font-size:.58rem;
+    cursor:pointer; margin:3px; }
+.ai-btn-quick:hover { border-color:var(--gold); color:var(--gold); }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">⛰ <em>TRAILS</em> INTEL</div>
+    <nav class="pm-nav">
+        <div class="pm-nav-item active">ICONIC</div>
+    </nav>
+    <div class="pm-hdr-right">
+        <span class="pm-last-update" id="trailCount">24 iconic</span>
     </div>
-    <div id="trailList"><div style="padding:16px;color:var(--text-dim);font-size:.68rem">Enter a location to find trails.</div></div>
-    <div class="detail-panel" id="trailDetail" style="display:none"></div>
-  </div>
-  <div id="map"></div>
+</header>
+
+<div class="layout">
+    <div class="sidebar">
+        <div class="ctrl-panel">
+            <div class="mode-tabs">
+                <div class="mode-tab active" onclick="setMode('iconic')" id="tab-iconic">ICONIC</div>
+                <div class="mode-tab" onclick="setMode('nearby')" id="tab-nearby">NEARBY</div>
+                <div class="mode-tab" onclick="setMode('saved')" id="tab-saved">SAVED</div>
+            </div>
+            <div id="searchBox" style="margin-top:12px;display:none">
+                <input class="pm-input" id="locationInput" placeholder="Location (city, park...)"
+                    onkeydown="if(event.key==='Enter')findNearby()">
+                <button class="pm-btn pm-btn-cy" onclick="findNearby()" style="margin-top:6px;width:100%">⛰ FIND NEARBY (AI)</button>
+                <input class="pm-input" id="scrapeInput" placeholder="Or paste trail URL..." style="margin-top:8px"
+                    onkeydown="if(event.key==='Enter')scrapeTrail()">
+                <button class="pm-btn" onclick="scrapeTrail()" style="margin-top:6px;width:100%">SCRAPE &amp; SAVE</button>
+            </div>
+        </div>
+        <div id="trailList"></div>
+    </div>
+
+    <div class="map-col">
+        <div id="map"></div>
+    </div>
+
+    <div class="pm-col-right">
+        <div class="pm-sh">TRAIL DETAIL</div>
+        <div class="detail-panel" id="trailDetail">
+            <div style="text-align:center;padding:24px;color:var(--text-dim)">
+                <div style="font-family:Orbitron,monospace;font-size:.58rem;letter-spacing:3px;margin-bottom:10px;color:var(--gold)">SELECT A TRAIL</div>
+                <div style="font-size:.62rem;line-height:2">Click any trail card to see full details, or use the tabs to find nearby trails or scrape from a URL.</div>
+            </div>
+        </div>
+        <div class="pm-sh">AI GUIDE</div>
+        <div style="padding:12px 14px">
+            <textarea class="pm-input" id="aiQ" rows="2" placeholder="Ask about trail conditions, gear, safety..."
+                style="resize:none;font-family:'Share Tech Mono',monospace"></textarea>
+            <button class="pm-btn" onclick="askAI()" style="width:100%;margin-top:8px">ASK ▶</button>
+            <div style="margin-top:10px">
+                <button class="ai-btn-quick" onclick="quickAsk('What gear do I need for a multi-day backpacking trip?')">Gear list</button>
+                <button class="ai-btn-quick" onclick="quickAsk('Bear safety basics')">Bear safety</button>
+                <button class="ai-btn-quick" onclick="quickAsk('How to read topographic maps')">Map reading</button>
+            </div>
+            <div id="aiAnswer" style="margin-top:12px;font-size:.7rem;line-height:1.7;color:var(--text)"></div>
+        </div>
+    </div>
 </div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script src="lib/leaflet.min.js"></script>
+<script src="pm_scraper.js"></script>
 <script>
-const map = L.map('map',{attributionControl:false}).setView([36.1,-115.2],11);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
-let markers=[], selectedTrail=null;
+// ═══════════════════════════════════════════════════════════════════
+// ICONIC TRAILS — famous, iconic, well-documented trails as defaults
+// ═══════════════════════════════════════════════════════════════════
+const ICONIC_TRAILS = [
+    // CALIFORNIA
+    {name:'Half Dome (Yosemite)', lat:37.7459, lon:-119.5332, difficulty:'Hard',
+     distance_miles:16.5, elevation_gain_ft:4800,
+     description:'The iconic Yosemite summit. Permit required. Cables on the final 400 feet make this a true adventure. 10–14 hour round trip. Start before sunrise. Features: waterfalls, granite domes, sequoias.',
+     features:['permit required','cables','waterfalls','exposure'], region:'CA'},
+    {name:'Mist Trail to Nevada Fall (Yosemite)', lat:37.7302, lon:-119.5568, difficulty:'Moderate',
+     distance_miles:5.4, elevation_gain_ft:1900,
+     description:'Yosemite\'s most popular trail. Stone steps alongside Vernal and Nevada Falls. Expect spray in spring. 3–5 hours. Iconic.',
+     features:['waterfalls','stone steps','family-friendly'], region:'CA'},
+    {name:'John Muir Trail', lat:36.5785, lon:-118.2923, difficulty:'Hard',
+     distance_miles:211, elevation_gain_ft:47000,
+     description:'The JMT: 211 miles from Yosemite Valley to Mt. Whitney. One of the great American thru-hikes. Typically 20–25 days. Permits required.',
+     features:['thru-hike','permit required','high Sierra'], region:'CA'},
+    {name:'Mount Whitney', lat:36.5786, lon:-118.2923, difficulty:'Hard',
+     distance_miles:22, elevation_gain_ft:6100,
+     description:'Highest peak in the lower 48 at 14,505 ft. Day hike or overnight from Whitney Portal. Lottery permit required. 12–16 hours single push.',
+     features:['14er','permit lottery','altitude'], region:'CA'},
 
-async function findTrails(){
-  const loc=document.getElementById('locationInput').value||'Las Vegas, NV';
-  const diff=document.getElementById('diffInput').value||'any difficulty';
-  const dist=document.getElementById('distInput').value||'any length';
-  const key=localStorage.getItem('pm_gemini_key')||'';
-  const el=document.getElementById('trailList');
-  el.innerHTML='<div style="padding:12px"><div class="thinking"><span></span><span></span><span></span></div></div>';
-  if(!key){el.innerHTML='<div style="padding:12px;color:var(--accent4);font-size:.68rem">⚠ No Gemini API key. Set one in Gemini Terminal.</div>';return;}
-  try{
-    const prompt=`List 6 hiking trails near ${loc} with ${diff} difficulty and max ${dist}. Return ONLY JSON array: [{name,distance_miles,elevation_gain_ft,difficulty,description,lat,lon,features}]. No markdown.`;
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${key}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{role:'user',parts:[{text:prompt}]}],generationConfig:{maxOutputTokens:1200}})
-    });
-    const data=await r.json();
-    const text=(data.candidates?.[0]?.content?.parts?.[0]?.text||'[]').replace(/```json|```/g,'').trim();
-    const trails=JSON.parse(text);
-    renderTrails(trails,loc);
-  }catch(e){el.innerHTML=`<div style="padding:12px;color:var(--accent4);font-size:.68rem">⚠ ${e.message}</div>`;}
+    // COLORADO / UTAH
+    {name:'Angel\'s Landing (Zion)', lat:37.2590, lon:-112.9491, difficulty:'Hard',
+     distance_miles:5.4, elevation_gain_ft:1488,
+     description:'Famous chain-assisted ridge walk with 1000+ ft drops on both sides. Permit required as of 2022. Not for fear of heights. 3–5 hours.',
+     features:['chains','exposure','permit required'], region:'UT'},
+    {name:'The Narrows (Zion)', lat:37.2980, lon:-112.9475, difficulty:'Moderate',
+     distance_miles:9.4, elevation_gain_ft:300,
+     description:'Hike IN the Virgin River through slot canyons. Bottom-up route from Temple of Sinawava. Rent dry boots. Flash flood risk — check forecast.',
+     features:['river hike','slot canyon','flash flood risk'], region:'UT'},
+    {name:'Delicate Arch (Arches NP)', lat:38.7436, lon:-109.4993, difficulty:'Moderate',
+     distance_miles:3.2, elevation_gain_ft:600,
+     description:'Utah\'s signature arch. Exposed slickrock trail. Sunset is magical but crowded. No shade.',
+     features:['arch','slickrock','photogenic'], region:'UT'},
+    {name:'Longs Peak Keyhole Route', lat:40.2550, lon:-105.6160, difficulty:'Hard',
+     distance_miles:15, elevation_gain_ft:5100,
+     description:'Colorado\'s iconic 14er. Class 3 scramble above the Keyhole. Weather window critical — start by 3 AM. Fatal falls not rare.',
+     features:['14er','class 3','weather critical'], region:'CO'},
+    {name:'Maroon Bells Four Pass Loop', lat:39.0708, lon:-106.9890, difficulty:'Hard',
+     distance_miles:27, elevation_gain_ft:7800,
+     description:'Four 12,000+ ft passes circumnavigating the Maroon Bells. 3–4 day backpack. Lottery permits. Aspen groves, alpine lakes.',
+     features:['backpacking','permits','high passes'], region:'CO'},
+
+    // ARIZONA / NEW MEXICO
+    {name:'Bright Angel Trail (Grand Canyon)', lat:36.0579, lon:-112.1429, difficulty:'Hard',
+     distance_miles:19, elevation_gain_ft:4380,
+     description:'Rim to Colorado River and back. Do NOT attempt in a day in summer — deaths occur. Mule traffic. Water at rest houses.',
+     features:['canyon','inverse hike','desert'], region:'AZ'},
+    {name:'Havasu Falls', lat:36.2552, lon:-112.6981, difficulty:'Moderate',
+     distance_miles:20, elevation_gain_ft:2400,
+     description:'Turquoise waterfalls in the Grand Canyon. Requires permit from Havasupai Tribe — books a year out. 3-day minimum stay.',
+     features:['waterfall','permit required','backpacking'], region:'AZ'},
+
+    // WASHINGTON / OREGON
+    {name:'Mount Si (WA)', lat:47.4860, lon:-121.7230, difficulty:'Moderate',
+     distance_miles:8, elevation_gain_ft:3150,
+     description:'Seattle\'s iconic training hike. Steep and relentless. 3–5 hours. Used by mountaineers preparing for Rainier.',
+     features:['training hike','steep','views of Seattle'], region:'WA'},
+    {name:'Enchantments Core Zone (WA)', lat:47.5170, lon:-120.8180, difficulty:'Hard',
+     distance_miles:19, elevation_gain_ft:5900,
+     description:'Alpine wonderland. Granite, larches, turquoise lakes, goats. Permit lottery. Day-through is brutal but doable.',
+     features:['alpine','larches','permit lottery'], region:'WA'},
+    {name:'Multnomah Falls Loop (OR)', lat:45.5762, lon:-122.1158, difficulty:'Moderate',
+     distance_miles:5, elevation_gain_ft:1500,
+     description:'Iconic 620 ft waterfall. Loop connects Multnomah and Wahkeena Falls. Always crowded but worth it. Timed-entry permit in summer.',
+     features:['waterfall','timed entry','columbia gorge'], region:'OR'},
+
+    // EAST COAST
+    {name:'Mount Washington via Tuckerman Ravine (NH)', lat:44.2705, lon:-71.3033, difficulty:'Hard',
+     distance_miles:8.4, elevation_gain_ft:4250,
+     description:'Most dangerous weather in the world at the summit. Killers in every month. 6000 ft of alpine exposure in bad weather.',
+     features:['alpine','extreme weather','no bailout'], region:'NH'},
+    {name:'Mount Katahdin (ME)', lat:45.9045, lon:-68.9212, difficulty:'Hard',
+     distance_miles:11, elevation_gain_ft:4200,
+     description:'Northern terminus of the Appalachian Trail. The Knife Edge is exactly what it sounds like. Reservation required in Baxter SP.',
+     features:['AT terminus','knife edge','reservation'], region:'ME'},
+    {name:'Franconia Ridge Loop (NH)', lat:44.1478, lon:-71.6444, difficulty:'Hard',
+     distance_miles:8.9, elevation_gain_ft:3900,
+     description:'Premier above-treeline ridgeline in the Northeast. Three 4000-footers. Exposed to sudden weather.',
+     features:['ridge','4000 footers','above treeline'], region:'NH'},
+    {name:'Old Rag Mountain (VA)', lat:38.5540, lon:-78.3160, difficulty:'Moderate',
+     distance_miles:9.2, elevation_gain_ft:2415,
+     description:'Shenandoah\'s famous rock scramble. Class 3 boulder sections — not for the unprepared. Day-use ticket required.',
+     features:['scramble','ticket required','shenandoah'], region:'VA'},
+
+    // NATIONAL / INTERNATIONAL ICONIC
+    {name:'Pacific Crest Trail', lat:32.5908, lon:-116.4667, difficulty:'Hard',
+     distance_miles:2650, elevation_gain_ft:489418,
+     description:'Mexico to Canada. 5 months. PCTA permit. Desert, Sierra, Cascades. About 300 finishers per year.',
+     features:['thru-hike','legendary','5 months'], region:'ALL'},
+    {name:'Appalachian Trail', lat:34.6262, lon:-84.1932, difficulty:'Hard',
+     distance_miles:2193, elevation_gain_ft:515000,
+     description:'Springer Mountain GA to Mount Katahdin ME. 6 months. The original thru-hike. ~25% completion rate.',
+     features:['thru-hike','legendary','AT'], region:'ALL'},
+    {name:'Kalalau Trail (Kauai, HI)', lat:22.2150, lon:-159.5820, difficulty:'Hard',
+     distance_miles:22, elevation_gain_ft:5000,
+     description:'Na Pali Coast. Permit required for past mile 2. Beaches, cliffs, jungle, streams. Flash floods deadly.',
+     features:['coastal','permit required','flash floods'], region:'HI'},
+
+    // DESERT ICONIC
+    {name:'Wave Permit Hike (Coyote Buttes)', lat:36.9958, lon:-112.0058, difficulty:'Moderate',
+     distance_miles:6.4, elevation_gain_ft:350,
+     description:'The famous sandstone wave. Lottery permit — 64 per day from 100,000+ applicants. No trail — GPS navigation.',
+     features:['lottery permit','no trail','sandstone'], region:'AZ'},
+    {name:'Bright Angel to Phantom Ranch', lat:36.0939, lon:-112.0939, difficulty:'Hard',
+     distance_miles:19, elevation_gain_ft:4380,
+     description:'Bottom of the Grand Canyon. Historic ranch. Reservations 15 months in advance. Mules carry your gear back up.',
+     features:['canyon floor','reservations','mules'], region:'AZ'},
+    {name:'South Kaibab Trail (Grand Canyon)', lat:36.0532, lon:-112.0839, difficulty:'Hard',
+     distance_miles:14, elevation_gain_ft:4780,
+     description:'Steepest trail into the Grand Canyon. Shortest route to the river. No water after Kaibab trailhead — carry all you need.',
+     features:['steep','no water','canyon'], region:'AZ'},
+];
+
+let currentMode = 'iconic';
+let currentTrails = [...ICONIC_TRAILS];
+let savedTrails = [];
+let selectedTrail = null;
+let geminiKey = '';
+let markers = [];
+
+// Init map
+const map = L.map('map', {attributionControl: false}).setView([39.8283, -98.5795], 4); // Center on US
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19}).addTo(map);
+
+function init() {
+    // Load saved
+    try {
+        const s = localStorage.getItem('pm_trails_saved');
+        if (s) savedTrails = JSON.parse(s);
+    } catch(e) {}
+
+    geminiKey = localStorage.getItem('gemini_key') || localStorage.getItem('pm_gemini_key') || '';
+
+    render();
+    addMarkers();
 }
 
-async function askTrailAI(){
-  const q=document.getElementById('aiQ').value.trim();
-  if(!q)return;
-  const key=localStorage.getItem('pm_gemini_key')||'';
-  const el=document.getElementById('trailDetail');
-  el.style.display='block';
-  el.innerHTML='<div class="thinking"><span></span><span></span><span></span></div>';
-  if(!key){el.innerHTML='<span style="color:var(--accent4)">No API key.</span>';return;}
-  try{
-    const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key=${key}`,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{role:'user',parts:[{text:'You are a hiking expert. '+q}]}],generationConfig:{maxOutputTokens:600}})
+function setMode(mode) {
+    currentMode = mode;
+    ['iconic','nearby','saved'].forEach(m => {
+        document.getElementById('tab-'+m).classList.toggle('active', m === mode);
     });
-    const data=await r.json();
-    const text=data.candidates?.[0]?.content?.parts?.[0]?.text||'No response';
-    el.innerHTML=`<div class="dp-title">// AI RESPONSE</div><div class="dp-body">${esc(text)}</div>`;
-  }catch(e){el.innerHTML=`<span style="color:var(--accent4)">⚠ ${e.message}</span>`;}
+    document.getElementById('searchBox').style.display = mode === 'nearby' ? 'block' : 'none';
+
+    if (mode === 'iconic') currentTrails = [...ICONIC_TRAILS];
+    if (mode === 'saved') currentTrails = [...savedTrails];
+    if (mode === 'nearby') currentTrails = [];
+
+    document.getElementById('trailCount').textContent = `${currentTrails.length} trails`;
+    render();
+    addMarkers();
 }
 
-function renderTrails(trails,loc){
-  // Clear old markers
-  markers.forEach(m=>map.removeLayer(m));markers=[];
-  if(trails.length&&trails[0].lat){map.setView([trails[0].lat,trails[0].lon],13);}
-  document.getElementById('trailList').innerHTML=trails.map((t,i)=>`
-    <div class="trail-card" onclick="selectTrail(${i})" id="tc-${i}">
-      <div class="tc-name">${esc(t.name)}</div>
-      <div style="margin:4px 0">
-        <span class="badge ${t.difficulty?.toLowerCase().includes('easy')?'be':t.difficulty?.toLowerCase().includes('hard')?'bh':'bm'}">${esc(t.difficulty||'?')}</span>
-      </div>
-      <div class="tc-meta">
-        <div>📏 <span>${t.distance_miles||'?'} mi</span></div>
-        <div>⛰ <span>${t.elevation_gain_ft||'?'} ft gain</span></div>
-      </div>
-    </div>`).join('');
-  trails.forEach((t,i)=>{
-    if(t.lat&&t.lon){
-      const m=L.circleMarker([t.lat,t.lon],{radius:8,fillColor:'var(--accent3)',color:'#fff',fillOpacity:.9,weight:2})
-        .addTo(map).bindPopup(`<b>${t.name}</b><br>${t.difficulty} · ${t.distance_miles}mi`);
-      markers.push(m);
+function render() {
+    if (currentTrails.length === 0) {
+        const msg = currentMode === 'nearby'
+            ? 'Enter a location above and click FIND NEARBY to use AI, or paste a trail URL to scrape.'
+            : currentMode === 'saved' ? 'No saved trails yet. Iconic trails can be saved from their detail view.' : '';
+        document.getElementById('trailList').innerHTML = `
+            <div style="padding:24px;color:var(--text-dim);font-size:.7rem;line-height:1.8;text-align:center">${msg}</div>`;
+        return;
     }
-  });
-  window._trails=trails;
+
+    document.getElementById('trailList').innerHTML = currentTrails.map((t, i) => {
+        const diffClass = (t.difficulty||'').toLowerCase().includes('easy') ? 'be'
+                      : (t.difficulty||'').toLowerCase().includes('hard') ? 'bh' : 'bm';
+        return `
+        <div class="trail-card ${selectedTrail===i?'active':''}" onclick="selectTrail(${i})">
+            <div class="trail-name">${PM.esc(t.name)}</div>
+            <div style="margin:4px 0">
+                <span class="badge ${diffClass}">${PM.esc(t.difficulty||'?')}</span>
+            </div>
+            <div class="trail-meta">
+                <div>📏 <span>${t.distance_miles || '?'} mi</span></div>
+                <div>⛰ <span>${t.elevation_gain_ft || '?'} ft</span></div>
+                ${t.region ? `<div>📍 <span>${PM.esc(t.region)}</span></div>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('trailCount').textContent = `${currentTrails.length} trails`;
 }
 
-function selectTrail(i){
-  const t=window._trails[i];if(!t)return;
-  document.querySelectorAll('.trail-card').forEach(el=>el.classList.remove('active'));
-  document.getElementById('tc-'+i).classList.add('active');
-  const el=document.getElementById('trailDetail');el.style.display='block';
-  el.innerHTML=`<div class="dp-title">${esc(t.name)}</div>
-    <div class="dp-body">Distance: ${t.distance_miles} miles
-Elevation: ${t.elevation_gain_ft} ft gain
-Difficulty: ${t.difficulty}
-Features: ${(t.features||[]).join(', ')||'N/A'}
+function addMarkers() {
+    markers.forEach(m => map.removeLayer(m));
+    markers = [];
 
-${t.description||''}</div>`;
-  if(t.lat&&t.lon){map.setView([t.lat,t.lon],15);markers[i]?.openPopup();}
+    currentTrails.forEach((t, i) => {
+        if (t.lat && t.lon) {
+            const diffColor = (t.difficulty||'').toLowerCase().includes('easy') ? '#00e87a'
+                          : (t.difficulty||'').toLowerCase().includes('hard') ? '#ff2d55' : '#ffd60a';
+            const m = L.circleMarker([t.lat, t.lon], {
+                radius: 7, fillColor: diffColor, color: '#fff',
+                fillOpacity: .9, weight: 2
+            }).addTo(map)
+              .bindPopup(`<b>${PM.esc(t.name)}</b><br>${PM.esc(t.difficulty)} · ${t.distance_miles}mi`)
+              .on('click', () => selectTrail(i));
+            markers.push(m);
+        }
+    });
+
+    // Fit to markers if we have them
+    if (markers.length > 0 && currentMode !== 'iconic') {
+        const group = L.featureGroup(markers);
+        map.fitBounds(group.getBounds().pad(0.1));
+    }
 }
 
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function selectTrail(i) {
+    const t = currentTrails[i];
+    if (!t) return;
+    selectedTrail = i;
+
+    const el = document.getElementById('trailDetail');
+    const isSaved = savedTrails.some(s => s.name === t.name);
+
+    el.innerHTML = `
+        <div style="font-family:Orbitron,monospace;font-size:.75rem;letter-spacing:2px;color:var(--gold);margin-bottom:14px">
+            ${PM.esc(t.name)}
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:14px 0;border-top:1px solid var(--panel-border);border-bottom:1px solid var(--panel-border);margin-bottom:14px">
+            <div>
+                <div style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:3px">DISTANCE</div>
+                <div style="font-size:.9rem;color:var(--text-bright)">${t.distance_miles} mi</div>
+            </div>
+            <div>
+                <div style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:3px">ELEVATION</div>
+                <div style="font-size:.9rem;color:var(--text-bright)">${t.elevation_gain_ft} ft</div>
+            </div>
+            <div>
+                <div style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:3px">DIFFICULTY</div>
+                <div style="font-size:.9rem;color:var(--text-bright)">${PM.esc(t.difficulty)}</div>
+            </div>
+            <div>
+                <div style="font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:3px">REGION</div>
+                <div style="font-size:.9rem;color:var(--text-bright)">${PM.esc(t.region || '—')}</div>
+            </div>
+        </div>
+        ${t.features?.length ? `
+        <div style="margin-bottom:14px">
+            ${t.features.map(f => `<span style="display:inline-block;padding:3px 8px;margin:3px 3px 3px 0;background:var(--bg3);border:1px solid var(--panel-border);font-size:.58rem;color:var(--accent);font-family:'Share Tech Mono',monospace;letter-spacing:1px">${PM.esc(f)}</span>`).join('')}
+        </div>` : ''}
+        <div style="font-size:.72rem;line-height:1.7;color:var(--text)">${PM.esc(t.description || '')}</div>
+        ${t.sourceUrl ? `<div style="margin-top:14px"><a href="${PM.esc(t.sourceUrl)}" target="_blank" style="color:var(--accent);font-size:.65rem">View source →</a></div>` : ''}
+        ${!isSaved && currentMode !== 'saved' ? `
+            <button class="pm-btn" onclick="saveTrail(${i})" style="width:100%;margin-top:14px">SAVE TRAIL</button>
+        ` : ''}
+        ${isSaved && currentMode === 'saved' ? `
+            <button class="pm-btn" onclick="removeTrail(${i})" style="width:100%;margin-top:14px;border-color:var(--accent4);color:var(--accent4)">REMOVE</button>
+        ` : ''}
+    `;
+
+    render();
+
+    if (t.lat && t.lon) {
+        map.setView([t.lat, t.lon], 11);
+        markers[i]?.openPopup();
+    }
+}
+
+function saveTrail(i) {
+    const t = currentTrails[i];
+    if (savedTrails.some(s => s.name === t.name)) return;
+    savedTrails.push(t);
+    localStorage.setItem('pm_trails_saved', JSON.stringify(savedTrails));
+    alert('Saved: ' + t.name);
+    selectTrail(i);
+}
+
+function removeTrail(i) {
+    const t = currentTrails[i];
+    if (!confirm('Remove ' + t.name + '?')) return;
+    savedTrails = savedTrails.filter(s => s.name !== t.name);
+    localStorage.setItem('pm_trails_saved', JSON.stringify(savedTrails));
+    setMode('saved');
+}
+
+async function findNearby() {
+    const loc = document.getElementById('locationInput').value.trim();
+    if (!loc) { alert('Enter a location first'); return; }
+
+    if (!geminiKey) {
+        alert('Set Gemini API key via another Pisces Moon app first (stored in localStorage as gemini_key)');
+        return;
+    }
+
+    document.getElementById('trailList').innerHTML = '<div class="pm-thinking" style="padding:20px"><span></span><span></span><span></span></div>';
+
+    try {
+        const prompt = `List 8 notable hiking trails near ${loc}. Return ONLY a JSON array (no markdown), each object with these exact fields:
+{name, distance_miles, elevation_gain_ft, difficulty, description, lat, lon, features, region}
+description should be 2-3 sentences. features is a string array. difficulty is Easy/Moderate/Hard. Coordinates must be real GPS points.`;
+
+        const text = await PM.gemini(prompt, {apiKey: geminiKey, maxTokens: 2048});
+        const cleaned = text.replace(/```json|```/g, '').trim();
+        const trails = JSON.parse(cleaned);
+
+        currentTrails = trails;
+        render();
+        addMarkers();
+    } catch(e) {
+        document.getElementById('trailList').innerHTML = `
+            <div style="padding:20px;color:var(--accent4);font-size:.7rem">AI error: ${PM.esc(e.message)}</div>`;
+    }
+}
+
+async function scrapeTrail() {
+    const url = document.getElementById('scrapeInput').value.trim();
+    if (!url || !/^https?:\/\//.test(url)) {
+        alert('Paste a valid URL');
+        return;
+    }
+
+    document.getElementById('trailList').innerHTML = '<div class="pm-thinking" style="padding:20px"><span></span><span></span><span></span></div>';
+
+    try {
+        let html = null;
+        for (const makeUrl of PM.CORS_PROXIES) {
+            try {
+                const resp = await PM.fetchWithTimeout(makeUrl(url), {}, 15000);
+                if (resp.ok) { html = await resp.text(); break; }
+            } catch(e) {}
+        }
+        if (!html) throw new Error('Could not fetch page');
+
+        // Extract page title + body text, send to AI to structure it
+        const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
+        const title = titleMatch ? titleMatch[1] : 'Unknown Trail';
+
+        // Strip scripts and get visible text
+        const bodyText = html
+            .replace(/<script[\s\S]*?<\/script>/gi, '')
+            .replace(/<style[\s\S]*?<\/style>/gi, '')
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/\s+/g, ' ')
+            .substring(0, 6000);
+
+        if (!geminiKey) {
+            // No AI — save a basic entry
+            const trail = {
+                name: title.substring(0, 80),
+                difficulty: 'Unknown',
+                distance_miles: 0,
+                elevation_gain_ft: 0,
+                description: bodyText.substring(0, 400),
+                sourceUrl: url
+            };
+            savedTrails.push(trail);
+            localStorage.setItem('pm_trails_saved', JSON.stringify(savedTrails));
+            alert('Saved basic entry (set Gemini key for full structured extraction)');
+            setMode('saved');
+            return;
+        }
+
+        const prompt = `Extract trail data from this scraped page. Return ONLY JSON (no markdown) with these fields:
+{name, distance_miles, elevation_gain_ft, difficulty, description, lat, lon, features, region}
+Use numbers for distance/elevation. difficulty is Easy/Moderate/Hard. features is a string array. If coords unknown, use null. description should be 2-3 sentences.
+
+Page title: ${title}
+Content: ${bodyText}`;
+
+        const aiText = await PM.gemini(prompt, {apiKey: geminiKey, maxTokens: 1200});
+        const cleaned = aiText.replace(/```json|```/g, '').trim();
+        const trail = JSON.parse(cleaned);
+        trail.sourceUrl = url;
+
+        savedTrails.push(trail);
+        localStorage.setItem('pm_trails_saved', JSON.stringify(savedTrails));
+
+        setMode('saved');
+    } catch(e) {
+        document.getElementById('trailList').innerHTML = `
+            <div style="padding:20px;color:var(--accent4);font-size:.7rem">Scrape error: ${PM.esc(e.message)}</div>`;
+    }
+}
+
+async function askAI() {
+    const q = document.getElementById('aiQ').value.trim();
+    if (!q) return;
+    await sendAI(q);
+    document.getElementById('aiQ').value = '';
+}
+
+async function quickAsk(q) { await sendAI(q); }
+
+async function sendAI(q) {
+    const el = document.getElementById('aiAnswer');
+
+    if (!geminiKey) {
+        el.innerHTML = '<div style="color:var(--accent4)">No API key set. Use Gemini Terminal to add one.</div>';
+        return;
+    }
+
+    el.innerHTML = '<div class="pm-thinking"><span></span><span></span><span></span></div>';
+
+    let context = '';
+    if (selectedTrail !== null && currentTrails[selectedTrail]) {
+        const t = currentTrails[selectedTrail];
+        context = `User is viewing: ${t.name} (${t.difficulty}, ${t.distance_miles}mi, ${t.elevation_gain_ft}ft).\n${t.description}\n\n`;
+    }
+
+    try {
+        const response = await PM.gemini(
+            `${context}You are an experienced hiking and backcountry guide. Give practical, safety-focused advice.\n\nUser question: ${q}`,
+            {apiKey: geminiKey, maxTokens: 1000}
+        );
+        el.innerHTML = `<div>${PM.esc(response)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>')}</div>`;
+    } catch(e) {
+        el.innerHTML = `<div style="color:var(--accent4)">AI error: ${PM.esc(e.message)}</div>`;
+    }
+}
+
+window.addEventListener('load', init);
 </script>
 </body></html>

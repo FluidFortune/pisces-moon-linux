@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — news_finance.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  fluidfortune.com
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // FINANCE NEWS</title>
+<link rel="stylesheet" href="pm_shared.css">
+<style>
+.news-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+}
+.news-card {
+    border-bottom: 1px solid var(--panel-border);
+    cursor: pointer;
+    transition: background .2s;
+    overflow: hidden;
+}
+.news-card:nth-child(odd) { border-right: 1px solid var(--panel-border); }
+.news-card:hover { background: rgba(240,165,0,.04); }
+.news-card.featured { grid-column: 1/-1; border-right: none; }
+.news-img { width:100%; height:200px; object-fit:cover; display:block; filter:brightness(.8) saturate(.85); }
+.news-card.featured .news-img { height: 280px; }
+.news-img-wrap { position:relative; overflow:hidden; }
+.news-img-wrap::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(to bottom, transparent 40%, var(--bg) 100%);
+}
+.news-source-tag {
+    position:absolute; top:10px; left:10px; z-index:1;
+    background: var(--bg); padding:3px 10px;
+    font-family:Orbitron,monospace; font-size:.52rem;
+    letter-spacing:2px; color: var(--gold);
+    border: 1px solid var(--gold-dim);
+}
+.news-body { padding: 14px 16px; }
+.news-title { font-size:.78rem; color:var(--text-bright); line-height:1.5; margin-bottom:8px; font-weight:500; }
+.news-card.featured .news-title { font-size:1.05rem; font-weight:600; }
+.news-snippet {
+    font-size:.65rem; color:var(--text-dim); line-height:1.7; margin-top:8px;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+}
+.news-card.featured .news-snippet { -webkit-line-clamp: 4; }
+.news-meta { font-size:.58rem; color:var(--text-dim); display:flex; gap:12px; margin-top:8px; }
+.filters {
+    display: flex; gap: 0;
+    border-bottom: 1px solid var(--panel-border);
+    background: var(--bg2);
+}
+.filter-btn {
+    padding: 10px 16px;
+    font-family: 'Orbitron', monospace;
+    font-size: .55rem;
+    letter-spacing: 2px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-right: 1px solid var(--panel-border);
+    transition: all .15s;
+}
+.filter-btn:hover { color: var(--text); }
+.filter-btn.active { color: var(--gold); background: var(--bg3); }
+.source-list { padding: 8px 0; }
+.source-item {
+    padding: 8px 14px;
+    cursor: pointer;
+    font-size: .68rem;
+    color: var(--text);
+    display: flex; justify-content: space-between; align-items: center;
+    border-bottom: 1px solid rgba(28,46,58,.4);
+}
+.source-item:hover { background: rgba(240,165,0,.04); color: var(--text-bright); }
+.source-count {
+    font-family: 'Orbitron', monospace;
+    font-size: .58rem;
+    color: var(--gold);
+    background: rgba(240,165,0,.1);
+    padding: 2px 8px;
+}
+.ai-btn-quick {
+    padding: 5px 10px;
+    border: 1px solid var(--panel-border);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .58rem;
+    cursor: pointer;
+    transition: all .15s;
+    margin: 3px;
+}
+.ai-btn-quick:hover { border-color: var(--gold); color: var(--gold); }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">💰 <em>FINANCE</em> NEWS</div>
+    <nav class="pm-nav">
+        <div class="pm-nav-item active">LATEST</div>
+    </nav>
+    <div class="pm-hdr-right">
+        <div class="pm-live-badge"><div class="pm-live-dot"></div>LIVE</div>
+        <span class="pm-last-update" id="lastUpdate"></span>
+        <button class="pm-refresh" onclick="loadNews()">⟳ REFRESH</button>
+    </div>
+</header>
+
+<div class="pm-app">
+    <!-- LEFT: Source filter -->
+    <div class="pm-col-left">
+        <div class="pm-sh">NEWS SOURCES <span class="pm-sh-sub" id="totalCount">0 stories</span></div>
+        <div class="source-list" id="sourceList"></div>
+    </div>
+
+    <!-- MAIN: News grid -->
+    <div class="pm-col-main">
+        <div class="filters" id="filters">
+            <div class="filter-btn active" data-filter="all">ALL</div>
+            <div class="filter-btn" data-filter="markets">MARKETS</div>
+            <div class="filter-btn" data-filter="crypto">CRYPTO</div>
+            <div class="filter-btn" data-filter="economy">ECONOMY</div>
+            <div class="filter-btn" data-filter="companies">COMPANIES</div>
+            <div class="filter-btn" data-filter="real-estate">REAL ESTATE</div>
+        </div>
+        <div class="news-grid" id="newsGrid">
+            <div style="grid-column:1/-1">
+                <div class="pm-shimmer" style="height:280px;margin-bottom:1px"></div>
+                <div class="pm-shimmer" style="height:200px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: AI Analyst -->
+    <div class="pm-col-right">
+        <div class="pm-sh">AI ANALYST <span class="pm-sh-sub">Gemini</span></div>
+        <div style="padding:12px 14px;border-bottom:1px solid var(--panel-border)">
+            <textarea class="pm-input" id="aiInput" rows="3"
+                placeholder="Ask anything about today's news..."
+                style="resize:none;font-family:'Share Tech Mono',monospace"></textarea>
+            <button class="pm-btn" onclick="askAI()" style="width:100%;margin-top:8px">ASK ▶</button>
+            <div style="margin-top:10px">
+                <button class="ai-btn-quick" onclick="quickAsk('What moved the markets today?')">Markets today</button>
+                <button class="ai-btn-quick" onclick="quickAsk('Any major earnings or M&A news?')">Corporate</button>
+                <button class="ai-btn-quick" onclick="quickAsk('Economic indicators worth noting?')">Economy</button>
+                <button class="ai-btn-quick" onclick="quickAsk('What should an investor watch this week?')">Investor watch</button>
+                </div>
+        </div>
+        <div class="pm-ai-response" id="aiResponse">
+            <div style="text-align:center;padding:24px;color:var(--text-dim)">
+                <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;margin-bottom:8px;color:var(--gold)">AI ANALYST READY</div>
+                <div style="font-size:.62rem;line-height:2">Set Gemini API key in<br><code style="color:var(--accent)">~/.pisces-moon/gemini.key</code><br>to enable analysis.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="pm_scraper.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// GENERAL NEWS — Major news outlet aggregator
+// ═══════════════════════════════════════════════════════════════════
+
+const NEWS_SOURCES = [
+    {url:'https://feeds.reuters.com/reuters/businessNews'            , source:'Reuters Business'},
+    {url:'https://feeds.bloomberg.com/markets/news.rss'              , source:'Bloomberg'},
+    {url:'https://www.cnbc.com/id/100003114/device/rss/rss.html'     , source:'CNBC'},
+    {url:'https://seekingalpha.com/market_currents.xml'              , source:'Seeking Alpha'},
+    {url:'https://feeds.marketwatch.com/marketwatch/topstories/'     , source:'MarketWatch'},
+    {url:'http://feeds.bbci.co.uk/news/business/rss.xml'             , source:'BBC Business'},
+    {url:'https://rss.nytimes.com/services/xml/rss/nyt/Business.xml' , source:'NY Times Business'},
+    {url:'https://www.ft.com/rss/home'                               , source:'Financial Times'},
+];
+
+let allItems = [];
+let currentFilter = 'all';
+let selectedSource = null;
+let geminiKey = '';
+
+async function init() {
+    // Try to load API key from the standard location via a fetch trick
+    try {
+        const keyPath = window.location.href.replace(/[^/]+$/, '../..') + '/.pisces-moon/gemini.key';
+        // This will fail silently if not accessible — key stays blank
+        const r = await fetch(keyPath);
+        if (r.ok) geminiKey = (await r.text()).trim();
+    } catch (e) {}
+
+    // Also check localStorage
+    if (!geminiKey) geminiKey = localStorage.getItem('gemini_key') || '';
+
+    // Hook filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = btn.dataset.filter;
+            render();
+        });
+    });
+
+    loadNews();
+}
+
+async function loadNews() {
+    document.getElementById('newsGrid').innerHTML = `
+        <div style="grid-column:1/-1">
+            <div class="pm-shimmer" style="height:280px;margin-bottom:1px"></div>
+            <div class="pm-shimmer" style="height:200px;margin-bottom:1px"></div>
+            <div class="pm-shimmer" style="height:200px"></div>
+        </div>`;
+
+    const result = await PM.fetchFeeds(NEWS_SOURCES, {maxItems: 50});
+
+    if (result.items.length === 0) {
+        PM.renderError('newsGrid',
+            'Could not reach any news sources. Check network connection.',
+            loadNews);
+        return;
+    }
+
+    // Tag categories
+    allItems = result.items.map(item => ({
+        ...item,
+        category: detectCategory(item.title + ' ' + item.description)
+    }));
+
+    document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    document.getElementById('totalCount').textContent = `${allItems.length} stories`;
+
+    renderSources();
+    render();
+}
+
+function detectCategory(text) {
+    const t = text.toLowerCase();
+if (/crypto|bitcoin|ethereum|btc|eth|blockchain|defi|nft/i.test(t)) return 'crypto';
+if (/stock|dow|nasdaq|s&p|bonds|treasury|futures|options|etf/i.test(t)) return 'markets';
+if (/fed|inflation|gdp|unemployment|recession|economy|powell|rate hike/i.test(t)) return 'economy';
+if (/real estate|housing|mortgage|property|home sales|rent/i.test(t)) return 'real-estate';
+if (/earnings|ipo|merger|acquisition|ceo|profit|revenue|dividend/i.test(t)) return 'companies';
+    return 'general';
+}
+
+function renderSources() {
+    const sources = {};
+    allItems.forEach(i => { sources[i.source] = (sources[i.source] || 0) + 1; });
+
+    document.getElementById('sourceList').innerHTML = Object.entries(sources)
+        .sort((a,b) => b[1] - a[1])
+        .map(([src, count]) => `
+            <div class="source-item ${selectedSource===src?'active':''}"
+                 onclick="toggleSource('${PM.esc(src)}')"
+                 style="${selectedSource===src?'background:rgba(240,165,0,.08);color:var(--gold)':''}">
+                <span>${PM.esc(src)}</span>
+                <span class="source-count">${count}</span>
+            </div>`).join('');
+}
+
+function toggleSource(src) {
+    selectedSource = selectedSource === src ? null : src;
+    renderSources();
+    render();
+}
+
+function render() {
+    let items = allItems;
+    if (currentFilter !== 'all') items = items.filter(i => i.category === currentFilter);
+    if (selectedSource) items = items.filter(i => i.source === selectedSource);
+
+    if (items.length === 0) {
+        document.getElementById('newsGrid').innerHTML = `
+            <div style="grid-column:1/-1;padding:60px;text-align:center;color:var(--text-dim);font-size:.75rem">
+                No stories match current filter.
+            </div>`;
+        return;
+    }
+
+    // First story is featured
+    items[0].featured = true;
+
+    document.getElementById('newsGrid').innerHTML = items.map((item, idx) => `
+        <div class="news-card ${idx===0?'featured':''}"
+             onclick="window.open('${PM.esc(item.link)}', '_blank')">
+            ${item.img ? `
+                <div class="news-img-wrap">
+                    <img class="news-img" src="${PM.esc(item.img)}" alt=""
+                         loading="lazy" onerror="this.parentElement.style.display='none'">
+                    <span class="news-source-tag">${PM.esc(item.source)}</span>
+                </div>
+            ` : `
+                <div style="padding:12px 16px 0">
+                    <span class="news-source-tag" style="position:static">${PM.esc(item.source)}</span>
+                </div>
+            `}
+            <div class="news-body">
+                <div class="news-title">${PM.esc(item.title)}</div>
+                ${item.description ? `<div class="news-snippet">${PM.esc(item.description)}</div>` : ''}
+                <div class="news-meta">
+                    <span>${PM.ago(item.pubDate)}</span>
+                    <span style="text-transform:uppercase;color:${
+                        item.category==='politics' ? 'var(--accent4)' :
+                        item.category==='business' ? 'var(--accent3)' :
+                        item.category==='science'  ? 'var(--accent)' :
+                        item.category==='culture'  ? 'var(--gold)' : 'var(--text-dim)'
+                    }">${item.category}</span>
+                </div>
+            </div>
+        </div>`).join('');
+}
+
+// ── AI ANALYST ───────────────────────────────────────────────────
+async function askAI() {
+    const input = document.getElementById('aiInput');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    await sendToAI(q);
+}
+
+async function quickAsk(q) { await sendToAI(q); }
+
+async function sendToAI(prompt) {
+    const el = document.getElementById('aiResponse');
+
+    if (!geminiKey) {
+        el.innerHTML = `
+            <div style="padding:24px;text-align:center;color:var(--text-dim)">
+                <div style="color:var(--accent4);font-family:Orbitron,monospace;font-size:.58rem;margin-bottom:10px;letter-spacing:2px">NO API KEY</div>
+                <div style="font-size:.65rem;line-height:1.8">Paste your Gemini API key:<br>
+                    <input type="password" class="pm-input" id="quickKey" placeholder="API key..." style="margin-top:10px">
+                    <button class="pm-btn" onclick="saveKey()" style="margin-top:8px">SAVE</button>
+                </div>
+            </div>`;
+        return;
+    }
+
+    el.innerHTML = '<div class="pm-thinking"><span></span><span></span><span></span></div>';
+
+    // Build context from top 10 stories
+    const context = allItems.slice(0, 10).map(i =>
+        `${i.source}: ${i.title}${i.description ? ' — ' + i.description.substring(0, 150) : ''}`
+    ).join('\n');
+
+    const fullPrompt = `You are a sharp financial analyst for Pisces Moon OS. You have access to today's top news stories.
+
+TOP STORIES TODAY:
+${context}
+
+USER QUESTION: ${prompt}
+
+Provide a clear, direct answer. Be specific. Cite sources when relevant. Use 2-4 paragraphs. Avoid generic filler.`;
+
+    try {
+        const response = await PM.gemini(fullPrompt, {apiKey: geminiKey, temperature: 0.6});
+        el.innerHTML = `<div>${PM.esc(response)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n\n/g, '</p><p style="margin-top:10px">')
+            .replace(/^/, '<p>') + '</p>'}</div>`;
+    } catch (e) {
+        el.innerHTML = `<div style="padding:14px;color:var(--accent4);font-size:.7rem">
+            AI error: ${PM.esc(e.message)}</div>`;
+    }
+}
+
+function saveKey() {
+    const k = document.getElementById('quickKey').value.trim();
+    if (k) {
+        geminiKey = k;
+        localStorage.setItem('gemini_key', k);
+        document.getElementById('aiResponse').innerHTML = `
+            <div style="padding:24px;text-align:center;color:var(--accent3);font-size:.7rem">Key saved. Ask a question above.</div>`;
+    }
+}
+
+window.addEventListener('load', init);
+</script>
+</body></html>

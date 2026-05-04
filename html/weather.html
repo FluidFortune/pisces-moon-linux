@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — weather.html v2 (NEW APP)
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Local BME280 sensor from T-Beam + NWS forecast API (no API key needed)
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // WEATHER</title>
+<link rel="stylesheet" href="pm_shared.css">
+<style>
+.wx-layout{display:grid;grid-template-columns:280px 1fr;height:calc(100vh - 52px);overflow:hidden;}
+.wx-left{border-right:1px solid var(--panel-border);overflow-y:auto;}
+.wx-main{overflow-y:auto;padding:16px;}
+.wx-current{background:var(--bg2);border:1px solid var(--panel-border);padding:20px;margin-bottom:16px;display:flex;gap:20px;align-items:center;}
+.wx-temp-big{font-family:Orbitron,monospace;font-size:4rem;font-weight:900;color:var(--text-bright);line-height:1;}
+.wx-feels{font-size:.65rem;color:var(--text-dim);margin-top:4px;}
+.wx-condition{font-family:Orbitron,monospace;font-size:.8rem;color:var(--gold);letter-spacing:2px;margin-top:8px;}
+.wx-icon{font-size:4rem;}
+.wx-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:16px;}
+.wx-stat{background:var(--bg2);border:1px solid var(--panel-border);padding:12px;}
+.wx-stat-label{font-family:Orbitron,monospace;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:4px;}
+.wx-stat-value{font-family:Orbitron,monospace;font-size:1.2rem;color:var(--text-bright);font-weight:700;}
+.wx-stat-sub{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
+.forecast-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:16px;}
+.forecast-card{background:var(--bg2);border:1px solid var(--panel-border);padding:10px;text-align:center;}
+.fc-day{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--gold);margin-bottom:6px;}
+.fc-icon{font-size:1.8rem;margin-bottom:4px;}
+.fc-temp{font-family:Orbitron,monospace;font-size:.9rem;color:var(--text-bright);}
+.fc-detail{font-size:.55rem;color:var(--text-dim);margin-top:3px;}
+.sensor-card{background:rgba(0,255,136,.04);border:1px solid var(--accent3);padding:14px;margin-bottom:16px;}
+.sensor-title{font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;color:var(--accent3);margin-bottom:10px;}
+.sensor-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.sensor-stat{text-align:center;}
+.sensor-val{font-family:Orbitron,monospace;font-size:1.3rem;color:var(--accent3);font-weight:700;}
+.sensor-lbl{font-size:.52rem;color:var(--text-dim);margin-top:2px;font-family:Orbitron,monospace;letter-spacing:1px;}
+.alert-card{background:rgba(255,204,0,.06);border:1px solid var(--warn);padding:12px;margin-bottom:12px;}
+.alert-title{font-family:Orbitron,monospace;font-size:.58rem;letter-spacing:2px;color:var(--warn);margin-bottom:4px;}
+.chart-wrap{background:var(--bg2);border:1px solid var(--panel-border);padding:12px;margin-bottom:12px;}
+.chart-title{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px;}
+</style>
+</head><body>
+<header class="pm-header">
+  <div class="pm-logo">🌤 <em>WEATHER</em></div>
+  <div class="pm-hdr-right">
+    <span id="locationLabel" style="font-size:.6rem;color:var(--text-dim);font-family:Orbitron,monospace;letter-spacing:1px"></span>
+    <button class="pm-refresh" onclick="refresh()">⟳ REFRESH</button>
+  </div>
+</header>
+
+<div class="wx-layout">
+  <div class="wx-left">
+    <div class="pm-sh">LOCAL SENSOR (T-BEAM)</div>
+    <div id="sensorPanel" style="padding:12px">
+      <div style="color:var(--text-dim);font-size:.65rem;text-align:center;padding:20px">
+        Connect T-Beam for live BME280 readings
+      </div>
+    </div>
+
+    <div class="pm-sh">PRESSURE TREND</div>
+    <div style="padding:8px"><canvas id="pressureChart" width="260" height="100"></canvas></div>
+
+    <div class="pm-sh">TEMPERATURE HISTORY</div>
+    <div style="padding:8px"><canvas id="tempChart" width="260" height="100"></canvas></div>
+
+    <div class="pm-sh">LOCATION</div>
+    <div style="padding:12px">
+      <input id="cityInput" placeholder="City or ZIP code" style="width:100%;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.65rem;padding:7px 10px;outline:none;margin-bottom:8px;">
+      <button class="pm-refresh" style="width:100%;padding:7px" onclick="searchCity()">SEARCH</button>
+      <button class="pm-refresh" style="width:100%;padding:7px;margin-top:4px" onclick="useGPS()">📍 USE GPS</button>
+    </div>
+  </div>
+
+  <div class="wx-main" id="wxMain">
+    <div style="text-align:center;padding:40px;color:var(--text-dim)">
+      <div style="font-size:3rem;margin-bottom:16px">🌤</div>
+      <div style="font-family:Orbitron,monospace;font-size:.7rem;letter-spacing:3px;color:var(--gold)">PISCES MOON WEATHER</div>
+      <div style="font-size:.65rem;margin-top:10px;line-height:1.8">
+        Enter a city name or ZIP code to get the forecast.<br>
+        Uses the free NWS API — no API key required.<br>
+        Connect T-Beam for live BME280 temperature, humidity, and pressure.
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_utils.js"></script>
+<script src="pm_transport.js"></script>
+<script>
+// Sensor data from T-Beam
+let sensorTemp = null, sensorHumidity = null, sensorPressure = null;
+let pressureHistory = [], tempHistory = [];
+
+// Transport
+const beam = new PMTransport({
+  onMessage: handleData,
+  onStatus: () => {}
+});
+
+function handleData(msg) {
+  if (msg.type === 'ENV_READING') {
+    sensorTemp     = msg.temp_c;
+    sensorHumidity = msg.humidity_pct;
+    sensorPressure = msg.pressure_hpa;
+    pressureHistory.push(sensorPressure);
+    tempHistory.push(sensorTemp);
+    if (pressureHistory.length > 30) pressureHistory.shift();
+    if (tempHistory.length > 30) tempHistory.shift();
+    renderSensor();
+    drawCharts();
+  } else if (msg.type === 'GPS_FIX' && !document.getElementById('cityInput').value) {
+    fetchNWSByCoords(msg.lat, msg.lon);
+  }
+}
+
+function renderSensor() {
+  if (!sensorTemp && !sensorHumidity && !sensorPressure) return;
+  const trend = pressureHistory.length > 2 ?
+    pressureHistory[pressureHistory.length-1] - pressureHistory[pressureHistory.length-2] : 0;
+  const trendIcon = trend > 0.5 ? '↗ RISING' : trend < -0.5 ? '↘ FALLING' : '→ STEADY';
+  const trendColor = trend > 0.5 ? 'var(--accent3)' : trend < -0.5 ? 'var(--accent4)' : 'var(--gold)';
+
+  document.getElementById('sensorPanel').innerHTML = `
+    <div class="sensor-grid" style="grid-template-columns:1fr 1fr">
+      ${sensorTemp !== null ? `<div class="sensor-stat"><div class="sensor-val">${sensorTemp.toFixed(1)}°C</div><div class="sensor-lbl">TEMP</div></div>` : ''}
+      ${sensorHumidity !== null ? `<div class="sensor-stat"><div class="sensor-val">${sensorHumidity.toFixed(0)}%</div><div class="sensor-lbl">HUMIDITY</div></div>` : ''}
+      ${sensorPressure !== null ? `
+        <div class="sensor-stat" style="grid-column:1/-1">
+          <div class="sensor-val" style="font-size:1rem">${sensorPressure.toFixed(1)} hPa</div>
+          <div class="sensor-lbl">PRESSURE — <span style="color:${trendColor}">${trendIcon}</span></div>
+        </div>` : ''}
+    </div>
+    <div style="font-size:.55rem;color:var(--text-dim);margin-top:8px;text-align:center">
+      💧 Dew point: ${dewPoint(sensorTemp, sensorHumidity).toFixed(1)}°C
+      | 🌡 Heat index: ${heatIndex(sensorTemp, sensorHumidity).toFixed(1)}°C
+    </div>`;
+}
+
+function dewPoint(t, h) {
+  if (!t || !h) return 0;
+  const a = 17.27, b = 237.7;
+  const gamma = (a*t/(b+t)) + Math.log(h/100);
+  return b*gamma/(a-gamma);
+}
+
+function heatIndex(t, h) {
+  if (!t || !h) return 0;
+  const tf = t*9/5+32;
+  const hi = -42.379 + 2.04901523*tf + 10.14333127*h - 0.22475541*tf*h
+    - 0.00683783*tf*tf - 0.05481717*h*h + 0.00122874*tf*tf*h
+    + 0.00085282*tf*h*h - 0.00000199*tf*tf*h*h;
+  return (hi-32)*5/9;
+}
+
+function drawCharts() {
+  drawSpark('pressureChart', pressureHistory, 'var(--accent2)', 'hPa');
+  drawSpark('tempChart', tempHistory, 'var(--accent4)', '°C');
+}
+
+function drawSpark(id, data, color, unit) {
+  const c = document.getElementById(id);
+  if (!c || data.length < 2) return;
+  c.width = c.parentElement.offsetWidth - 16;
+  const ctx = c.getContext('2d'), w = c.width, h = c.height;
+  ctx.fillStyle = '#080f14'; ctx.fillRect(0,0,w,h);
+  const min = Math.min(...data), max = Math.max(...data), range = max-min||1;
+  const px = i => (i/(data.length-1))*w;
+  const py = v => h-4 - ((v-min)/range)*(h-8);
+  ctx.beginPath();
+  ctx.moveTo(0,h);
+  data.forEach((v,i) => ctx.lineTo(px(i), py(v)));
+  ctx.lineTo(w,h); ctx.closePath();
+  const grad = ctx.createLinearGradient(0,0,0,h);
+  grad.addColorStop(0, color+'44'); grad.addColorStop(1, color+'00');
+  ctx.fillStyle = grad; ctx.fill();
+  ctx.beginPath();
+  data.forEach((v,i) => i===0?ctx.moveTo(px(i),py(v)):ctx.lineTo(px(i),py(v)));
+  ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.stroke();
+  ctx.fillStyle = '#7ab8d4'; ctx.font = '9px monospace'; ctx.textAlign = 'left';
+  ctx.fillText(`${data[data.length-1].toFixed(1)}${unit}`, 4, 12);
+}
+
+// NWS API — free, no key
+async function fetchNWSByCoords(lat, lon) {
+  try {
+    document.getElementById('wxMain').innerHTML = '<div style="padding:30px;text-align:center;color:var(--text-dim);font-size:.7rem">Loading forecast...</div>';
+    // Step 1: Get grid point
+    const pointRes = await fetch(`https://api.weather.gov/points/${parseFloat(lat).toFixed(4)},${parseFloat(lon).toFixed(4)}`);
+    const pointData = await pointRes.json();
+    const props = pointData.properties;
+    document.getElementById('locationLabel').textContent = `${props.relativeLocation?.properties?.city||''}, ${props.relativeLocation?.properties?.state||''}`;
+
+    // Step 2: Get forecast
+    const [fRes, fHRes] = await Promise.all([
+      fetch(props.forecast),
+      fetch(props.forecastHourly),
+    ]);
+    const [forecast, forecastHourly] = await Promise.all([fRes.json(), fHRes.json()]);
+    renderForecast(props, forecast.properties.periods, forecastHourly.properties.periods);
+  } catch(e) {
+    document.getElementById('wxMain').innerHTML = `<div style="padding:30px;text-align:center;color:var(--accent4);font-size:.7rem">Failed to load: ${e.message}<br>NWS API covers US locations only.</div>`;
+  }
+}
+
+function renderForecast(meta, periods, hourly) {
+  const current = periods[0];
+  const icon = wxIcon(current.shortForecast);
+  const tempC = ((current.temperature - 32) * 5/9).toFixed(1);
+  const windSpeed = current.windSpeed;
+  const humidity = hourly[0]?.relativeHumidity?.value || 0;
+
+  // Alerts
+  let alertsHtml = '';
+  if (current.shortForecast.toLowerCase().includes('storm') ||
+      current.shortForecast.toLowerCase().includes('warning') ||
+      current.shortForecast.toLowerCase().includes('watch')) {
+    alertsHtml = `<div class="alert-card"><div class="alert-title">⚠ WEATHER ALERT</div><div style="font-size:.65rem;color:var(--warn)">${current.shortForecast}</div></div>`;
+  }
+
+  // Hourly chart data
+  const hourlyTemps = hourly.slice(0,24).map(h => ((h.temperature-32)*5/9).toFixed(1));
+
+  const html = `
+    ${alertsHtml}
+
+    <div class="wx-current">
+      <div class="wx-icon">${icon}</div>
+      <div>
+        <div class="wx-temp-big">${tempC}°<span style="font-size:2rem">C</span></div>
+        <div class="wx-feels">${current.temperature}°F · Feels like ${current.temperature}°F</div>
+        <div class="wx-condition">${current.shortForecast}</div>
+        <div style="font-size:.6rem;color:var(--text-dim);margin-top:6px">${current.name}</div>
+      </div>
+    </div>
+
+    <div class="wx-grid">
+      <div class="wx-stat">
+        <div class="wx-stat-label">WIND</div>
+        <div class="wx-stat-value">${windSpeed}</div>
+        <div class="wx-stat-sub">${current.windDirection}</div>
+      </div>
+      <div class="wx-stat">
+        <div class="wx-stat-label">HUMIDITY</div>
+        <div class="wx-stat-value">${humidity}%</div>
+        <div class="wx-stat-sub">Relative</div>
+      </div>
+      <div class="wx-stat">
+        <div class="wx-stat-label">PRECIPITATION</div>
+        <div class="wx-stat-value">${hourly[0]?.probabilityOfPrecipitation?.value||0}%</div>
+        <div class="wx-stat-sub">Probability</div>
+      </div>
+      <div class="wx-stat">
+        <div class="wx-stat-label">VISIBILITY</div>
+        <div class="wx-stat-value">${hourly[0]?.visibility?.value ? (hourly[0].visibility.value/1000).toFixed(1)+'km' : '—'}</div>
+        <div class="wx-stat-sub"></div>
+      </div>
+    </div>
+
+    <div class="chart-wrap">
+      <div class="chart-title">24-HOUR TEMPERATURE (°C)</div>
+      <canvas id="hourlyChart" height="80" style="width:100%"></canvas>
+    </div>
+
+    <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;color:var(--gold);margin-bottom:10px">7-DAY FORECAST</div>
+    <div class="forecast-grid">
+      ${periods.slice(0,14).map(p => `
+        <div class="forecast-card">
+          <div class="fc-day">${p.name.toUpperCase().substring(0,10)}</div>
+          <div class="fc-icon">${wxIcon(p.shortForecast)}</div>
+          <div class="fc-temp">${((p.temperature-32)*5/9).toFixed(0)}°C</div>
+          <div class="fc-detail">${p.shortForecast.substring(0,20)}</div>
+          <div class="fc-detail" style="color:var(--accent3)">${p.probabilityOfPrecipitation?.value||0}% 💧</div>
+        </div>`).join('')}
+    </div>
+
+    <div style="font-size:.55rem;color:var(--text-dim);text-align:center;margin-top:8px">
+      Data: National Weather Service (weather.gov) · Free, no API key required
+    </div>
+  `;
+
+  document.getElementById('wxMain').innerHTML = html;
+
+  // Draw hourly chart
+  setTimeout(() => {
+    const c = document.getElementById('hourlyChart');
+    if (c) {
+      c.width = c.parentElement.offsetWidth - 24;
+      drawSpark('hourlyChart', hourlyTemps.map(Number), 'var(--accent4)', '°C');
+    }
+  }, 50);
+}
+
+function wxIcon(forecast) {
+  const f = (forecast||'').toLowerCase();
+  if (f.includes('thunder')) return '⛈';
+  if (f.includes('snow') || f.includes('blizzard')) return '❄️';
+  if (f.includes('rain') || f.includes('shower')) return '🌧';
+  if (f.includes('drizzle')) return '🌦';
+  if (f.includes('fog') || f.includes('mist')) return '🌫';
+  if (f.includes('cloud') && f.includes('sun')) return '⛅';
+  if (f.includes('overcast') || (f.includes('cloud') && !f.includes('sun'))) return '☁️';
+  if (f.includes('clear') || f.includes('sunny')) return '☀️';
+  if (f.includes('wind')) return '💨';
+  return '🌤';
+}
+
+async function searchCity() {
+  const city = document.getElementById('cityInput').value.trim();
+  if (!city) return;
+  try {
+    // Use nominatim for geocoding
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city)}&format=json&limit=1`);
+    const data = await res.json();
+    if (!data.length) { alert('Location not found'); return; }
+    fetchNWSByCoords(data[0].lat, data[0].lon);
+  } catch(e) { alert('Geocoding failed: ' + e.message); }
+}
+
+async function useGPS() {
+  if (!navigator.geolocation) { alert('GPS not available'); return; }
+  navigator.geolocation.getCurrentPosition(pos => {
+    fetchNWSByCoords(pos.coords.latitude, pos.coords.longitude);
+  }, () => alert('Could not get GPS position'));
+}
+
+function refresh() {
+  const city = document.getElementById('cityInput').value.trim();
+  if (city) searchCity();
+  else useGPS();
+}
+
+// Init
+window.addEventListener('load', async () => {
+  try { await beam.connect(); } catch {}
+  useGPS(); // Try to auto-load on start
+});
+</script>
+</body></html>

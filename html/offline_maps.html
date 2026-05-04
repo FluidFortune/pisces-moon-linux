@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — offline_maps.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Leaflet.js + OpenStreetMap + Service Worker tile caching
+  Cache tiles for offline use. Waypoints. GPX export.
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // OFFLINE MAPS</title>
+<link rel="stylesheet" href="lib/leaflet.min.css">
+<style>
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;--accent4:#ff3366;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;}
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;position:relative;z-index:1000;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--accent3);letter-spacing:3px;}
+#map{width:100%;height:calc(100vh - 52px);}
+/* Overlay panel */
+.side-panel{position:absolute;top:52px;right:0;width:260px;height:calc(100vh - 52px);background:rgba(8,15,20,.95);border-left:1px solid var(--panel-border);z-index:500;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .2s;}
+.side-panel.open{transform:translateX(0);}
+.sp-header{padding:10px 14px;border-bottom:1px solid var(--panel-border);font-family:Orbitron,monospace;font-size:.58rem;letter-spacing:2px;color:var(--text-dim);display:flex;justify-content:space-between;}
+.wp-list{flex:1;overflow-y:auto;}
+.wp-item{padding:9px 14px;border-bottom:1px solid rgba(28,46,58,.3);cursor:pointer;}
+.wp-item:hover{background:rgba(0,212,255,.04);}
+.wp-name{font-size:.68rem;color:var(--text-bright);}
+.wp-coords{font-size:.54rem;color:var(--text-dim);margin-top:2px;}
+.sp-footer{padding:8px 10px;border-top:1px solid var(--panel-border);display:flex;flex-direction:column;gap:6px;}
+.map-btn{padding:6px 12px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.52rem;cursor:pointer;letter-spacing:1px;width:100%;}
+.map-btn:hover{border-color:var(--accent);color:var(--accent);}
+.map-btn.primary{border-color:var(--accent3);color:var(--accent3);}
+/* Map controls overlay */
+.map-ctrl{position:absolute;bottom:80px;left:10px;z-index:400;display:flex;flex-direction:column;gap:6px;}
+.mc-btn{width:36px;height:36px;background:rgba(8,15,20,.9);border:1px solid var(--panel-border);color:var(--text-dim);font-size:.9rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.mc-btn:hover{border-color:var(--accent);color:var(--accent);}
+.mc-btn.active{border-color:var(--accent3);color:var(--accent3);}
+.cache-status{position:absolute;bottom:10px;left:10px;z-index:400;background:rgba(8,15,20,.9);border:1px solid var(--panel-border);padding:5px 10px;font-size:.55rem;color:var(--text-dim);font-family:Orbitron,monospace;letter-spacing:1px;}
+.layer-sel{position:absolute;top:10px;left:50px;z-index:400;background:rgba(8,15,20,.9);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.62rem;padding:5px 8px;outline:none;cursor:pointer;}
+/* GPS dot */
+.gps-dot{width:14px;height:14px;border-radius:50%;background:var(--accent4);border:2px solid #fff;box-shadow:0 0 8px var(--accent4);}
+/* Toolbar buttons */
+.hdr-btn{padding:5px 12px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.5rem;cursor:pointer;letter-spacing:1px;margin-left:4px;}
+.hdr-btn:hover{border-color:var(--accent);color:var(--accent);}
+.hdr-btn.active{border-color:var(--accent3);color:var(--accent3);}
+.coord-bar{position:absolute;bottom:10px;right:10px;z-index:400;background:rgba(8,15,20,.9);border:1px solid var(--panel-border);padding:5px 10px;font-size:.55rem;color:var(--text-dim);font-family:'Share Tech Mono',monospace;}
+</style>
+</head><body>
+<header>
+  <div class="logo">🗺 OFFLINE MAPS</div>
+  <div style="display:flex;align-items:center">
+    <div id="gpsStatus" style="font-size:.58rem;color:var(--text-dim);margin-right:10px;font-family:Orbitron,monospace;letter-spacing:1px">GPS ---</div>
+    <button class="hdr-btn" onclick="findMe()">📍 MY LOCATION</button>
+    <button class="hdr-btn active" id="panelBtn" onclick="togglePanel()">☰ WAYPOINTS</button>
+    <button class="hdr-btn" onclick="cacheArea()">⬇ CACHE AREA</button>
+  </div>
+</header>
+<div id="map"></div>
+
+<!-- Layer selector -->
+<select class="layer-sel" id="layerSel" onchange="switchLayer(this.value)">
+  <option value="osm">OpenStreetMap</option>
+  <option value="topo">Topo (OpenTopoMap)</option>
+  <option value="satellite">Satellite (ESRI)</option>
+  <option value="dark">Dark (CartoDB)</option>
+</select>
+
+<!-- Map controls -->
+<div class="map-ctrl">
+  <button class="mc-btn" id="addWpBtn" onclick="toggleAddWaypoint()" title="Add waypoint">📍</button>
+  <button class="mc-btn" onclick="map.zoomIn()" title="Zoom in">+</button>
+  <button class="mc-btn" onclick="map.zoomOut()" title="Zoom out">−</button>
+</div>
+
+<div class="cache-status" id="cacheStatus">CACHE: 0 TILES</div>
+<div class="coord-bar" id="coordBar">---.---- , ---.----</div>
+
+<!-- Side panel -->
+<div class="side-panel" id="sidePanel">
+  <div class="sp-header">
+    WAYPOINTS
+    <span onclick="togglePanel()" style="cursor:pointer;color:var(--accent4)">✕</span>
+  </div>
+  <div class="wp-list" id="wpList"></div>
+  <div class="sp-footer">
+    <button class="map-btn primary" onclick="exportGPX()">⬇ EXPORT GPX</button>
+    <label class="map-btn" style="cursor:pointer;text-align:center">⬆ IMPORT GPX<input type="file" accept=".gpx" style="display:none" onchange="importGPX(this)"></label>
+    <button class="map-btn" style="border-color:var(--accent4);color:var(--accent4)" onclick="clearWaypoints()">CLEAR ALL</button>
+  </div>
+</div>
+
+<script src="lib/leaflet.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// OFFLINE MAPS
+// Strategy: Leaflet + OSM tiles cached via Cache API
+// Offline: cached tiles serve from browser cache when offline
+// Waypoints: localStorage, exportable as GPX
+// ═══════════════════════════════════════════════════════════════════
+
+const STORE = 'pm_waypoints';
+const CACHE_NAME = 'pm-map-tiles-v1';
+let waypoints = [];
+let addingWaypoint = false;
+let myMarker = null;
+let tileCount = 0;
+let panelOpen = true;
+
+// ── Map setup ─────────────────────────────────────────────────────
+const LAYERS = {
+  osm:       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OSM', maxZoom:19 }),
+  topo:      L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution:'© OpenTopoMap', maxZoom:17 }),
+  satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution:'© ESRI', maxZoom:19 }),
+  dark:      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { attribution:'© CARTO', maxZoom:19 })
+};
+
+const map = L.map('map', {
+  center: [33.195, -117.379], // Oceanside default
+  zoom: 13,
+  layers: [LAYERS.osm],
+  zoomControl: false
+});
+
+let currentLayer = LAYERS.osm;
+
+function switchLayer(key) {
+  map.removeLayer(currentLayer);
+  currentLayer = LAYERS[key] || LAYERS.osm;
+  map.addLayer(currentLayer);
+}
+
+// Coordinate display
+map.on('mousemove', e => {
+  document.getElementById('coordBar').textContent =
+    e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);
+});
+map.on('touchmove', e => {
+  if (e.latlng) document.getElementById('coordBar').textContent =
+    e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);
+});
+
+// Click to add waypoint
+map.on('click', e => {
+  if (!addingWaypoint) return;
+  const name = prompt('Waypoint name:', 'WP ' + (waypoints.length+1));
+  if (name === null) return;
+  addWaypointAtLatLng(e.latlng.lat, e.latlng.lng, name);
+  toggleAddWaypoint();
+});
+
+// ── GPS ───────────────────────────────────────────────────────────
+function findMe() {
+  document.getElementById('gpsStatus').textContent = 'GPS ACQUIRING...';
+  navigator.geolocation?.watchPosition(pos => {
+    const ll = [pos.coords.latitude, pos.coords.longitude];
+    document.getElementById('gpsStatus').textContent = `GPS ±${Math.round(pos.coords.accuracy)}m`;
+    if (!myMarker) {
+      const icon = L.divIcon({ html:'<div class="gps-dot"></div>', iconSize:[14,14], className:'' });
+      myMarker = L.marker(ll, {icon}).addTo(map);
+      map.setView(ll, 15);
+    } else {
+      myMarker.setLatLng(ll);
+    }
+  }, () => document.getElementById('gpsStatus').textContent = 'GPS DENIED', { enableHighAccuracy:true, maximumAge:5000 });
+}
+
+// ── Waypoints ─────────────────────────────────────────────────────
+function loadWaypoints() {
+  try { waypoints = JSON.parse(localStorage.getItem(STORE)||'[]'); } catch { waypoints=[]; }
+  waypoints.forEach(wp => addMarker(wp));
+  renderWpList();
+}
+
+const WP_ICON = L.divIcon({
+  html:'<div style="width:12px;height:12px;border-radius:50%;background:#f4a820;border:2px solid #fff;box-shadow:0 0 6px #f4a820"></div>',
+  iconSize:[12,12], className:''
+});
+
+function addMarker(wp) {
+  wp.marker = L.marker([wp.lat, wp.lon], {icon:WP_ICON})
+    .addTo(map)
+    .bindPopup(`<b style="font-family:Orbitron,monospace;font-size:.65rem">${wp.name}</b><br>
+      <span style="font-size:.58rem">${wp.lat.toFixed(5)}, ${wp.lon.toFixed(5)}</span><br>
+      <button onclick="deleteWaypoint('${wp.id}')" style="margin-top:4px;padding:3px 8px;background:transparent;border:1px solid #ff3366;color:#ff3366;font-size:.55rem;cursor:pointer">DELETE</button>`);
+}
+
+function addWaypointAtLatLng(lat, lon, name) {
+  const wp = { id: Date.now().toString(36), lat, lon, name, ts: Date.now() };
+  waypoints.push(wp);
+  addMarker(wp);
+  saveWaypoints();
+  renderWpList();
+  map.setView([lat, lon]);
+}
+
+function saveWaypoints() {
+  const clean = waypoints.map(({id,lat,lon,name,ts}) => ({id,lat,lon,name,ts}));
+  localStorage.setItem(STORE, JSON.stringify(clean));
+}
+
+function deleteWaypoint(id) {
+  const wp = waypoints.find(w=>w.id===id);
+  if (wp?.marker) map.removeLayer(wp.marker);
+  waypoints = waypoints.filter(w=>w.id!==id);
+  saveWaypoints(); renderWpList();
+  map.closePopup();
+}
+
+function clearWaypoints() {
+  if (!confirm('Delete all waypoints?')) return;
+  waypoints.forEach(w => w.marker && map.removeLayer(w.marker));
+  waypoints = []; saveWaypoints(); renderWpList();
+}
+
+function renderWpList() {
+  const el = document.getElementById('wpList');
+  if (!waypoints.length) { el.innerHTML = '<div style="padding:14px;color:var(--text-dim);font-size:.62rem;text-align:center">No waypoints.<br>Tap 📍 then tap map to add.</div>'; return; }
+  el.innerHTML = waypoints.map(wp =>
+    `<div class="wp-item" onclick="goToWaypoint('${wp.id}')">
+      <div class="wp-name">📍 ${esc(wp.name)}</div>
+      <div class="wp-coords">${wp.lat.toFixed(4)}, ${wp.lon.toFixed(4)}</div>
+    </div>`
+  ).join('');
+}
+
+function goToWaypoint(id) {
+  const wp = waypoints.find(w=>w.id===id);
+  if (wp) { map.setView([wp.lat, wp.lon], 15); wp.marker?.openPopup(); }
+}
+
+function toggleAddWaypoint() {
+  addingWaypoint = !addingWaypoint;
+  const btn = document.getElementById('addWpBtn');
+  btn.classList.toggle('active', addingWaypoint);
+  map.getContainer().style.cursor = addingWaypoint ? 'crosshair' : '';
+}
+
+// ── Panel ─────────────────────────────────────────────────────────
+function togglePanel() {
+  panelOpen = !panelOpen;
+  document.getElementById('sidePanel').classList.toggle('open', panelOpen);
+  document.getElementById('panelBtn').classList.toggle('active', panelOpen);
+}
+
+// ── Cache area ────────────────────────────────────────────────────
+async function cacheArea() {
+  if (!('caches' in window)) { alert('Cache API not available in this browser.'); return; }
+  const bounds = map.getBounds();
+  const z = map.getZoom();
+  const zMin = Math.max(0, z-1), zMax = Math.min(z+2, 17);
+  const tiles = [];
+
+  for (let zoom = zMin; zoom <= zMax; zoom++) {
+    const nw = deg2tile(bounds.getNorth(), bounds.getWest(), zoom);
+    const se = deg2tile(bounds.getSouth(), bounds.getEast(), zoom);
+    for (let x = nw[0]; x <= se[0]; x++) {
+      for (let y = nw[1]; y <= se[1]; y++) {
+        tiles.push(`https://tile.openstreetmap.org/${zoom}/${x}/${y}.png`);
+      }
+    }
+  }
+
+  if (tiles.length > 500) {
+    if (!confirm(`Cache ${tiles.length} tiles (zoom ${zMin}-${zMax})? Large download.`)) return;
+  }
+
+  document.getElementById('cacheStatus').textContent = `CACHING 0/${tiles.length}...`;
+  const cache = await caches.open(CACHE_NAME);
+  let done = 0;
+  for (const url of tiles) {
+    try {
+      const existing = await cache.match(url);
+      if (!existing) await cache.add(url);
+      done++;
+      if (done % 20 === 0) document.getElementById('cacheStatus').textContent = `CACHING ${done}/${tiles.length}...`;
+    } catch {}
+  }
+  tileCount += tiles.length;
+  document.getElementById('cacheStatus').textContent = `CACHED ${done} TILES ✓`;
+}
+
+function deg2tile(lat, lon, zoom) {
+  const n = 2 ** zoom;
+  return [
+    Math.floor((lon + 180) / 360 * n),
+    Math.floor((1 - Math.asinh(Math.tan(lat * Math.PI / 180)) / Math.PI) / 2 * n)
+  ];
+}
+
+// ── GPX export/import ─────────────────────────────────────────────
+function exportGPX() {
+  if (!waypoints.length) { alert('No waypoints to export.'); return; }
+  const wpts = waypoints.map(w =>
+    `  <wpt lat="${w.lat}" lon="${w.lon}"><name>${esc(w.name)}</name></wpt>`
+  ).join('\n');
+  const gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Pisces Moon OS">\n${wpts}\n</gpx>`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([gpx], {type:'application/gpx+xml'}));
+  a.download = `pm_waypoints_${new Date().toISOString().split('T')[0]}.gpx`;
+  a.click();
+}
+
+function importGPX(input) {
+  const file = input.files[0]; if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(e.target.result, 'text/xml');
+    const wpts = doc.querySelectorAll('wpt');
+    let added = 0;
+    wpts.forEach(w => {
+      const lat = parseFloat(w.getAttribute('lat'));
+      const lon = parseFloat(w.getAttribute('lon'));
+      const name = w.querySelector('name')?.textContent || 'WP';
+      if (!isNaN(lat) && !isNaN(lon)) { addWaypointAtLatLng(lat, lon, name); added++; }
+    });
+    alert(`Imported ${added} waypoints.`);
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// Update tile count
+async function updateCacheCount() {
+  try {
+    const cache = await caches.open(CACHE_NAME);
+    const keys = await cache.keys();
+    document.getElementById('cacheStatus').textContent = `CACHE: ${keys.length} TILES`;
+  } catch {}
+}
+
+// Init
+loadWaypoints();
+updateCacheCount();
+togglePanel(); // open by default
+</script>
+</body></html>

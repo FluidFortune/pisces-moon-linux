@@ -1,214 +1,428 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — calculator.html
+<!--
+  Pisces Moon OS — calculator.html v3
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
 -->
-<!-- PISCES MOON OS // CALCULATOR -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PISCES MOON // CALCULATOR</title>
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // CALCULATOR v3</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);--glow-gold:0 0 20px rgba(244,168,32,.4);}
+:root{
+  --bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;
+  --panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;
+  --accent4:#ff3366;--gold:#f4a820;
+  --text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{width:100%;max-width:400px;text-align:center;margin-bottom:20px;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--accent);text-shadow:var(--glow);letter-spacing:3px;}
-.logo span{color:var(--gold);}
-.calc{background:var(--panel);border:1px solid var(--panel-border);width:100%;max-width:400px;border-top:3px solid var(--accent);}
-.display{background:var(--bg);padding:16px 20px;border-bottom:1px solid var(--panel-border);}
-.expr{font-size:.72rem;color:var(--text-dim);min-height:20px;text-align:right;margin-bottom:4px;word-break:break-all;}
-.result{font-family:'Orbitron',monospace;font-size:2rem;color:var(--text-bright);text-align:right;font-weight:700;word-break:break-all;min-height:52px;transition:color .2s;}
-.result.error{color:var(--accent4);font-size:1.1rem;}
-.modes{display:flex;border-bottom:1px solid var(--panel-border);}
-.mode{flex:1;padding:8px;text-align:center;font-size:.58rem;color:var(--text-dim);cursor:pointer;letter-spacing:2px;font-family:'Orbitron',monospace;transition:all .2s;}
-.mode:hover{color:var(--accent);}
-.mode.active{color:var(--accent);border-bottom:2px solid var(--accent);}
-.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--panel-border);}
-.k{background:var(--panel);padding:16px 8px;text-align:center;cursor:pointer;font-size:.85rem;font-family:'Share Tech Mono',monospace;color:var(--text);transition:all .15s;user-select:none;border:none;}
-.k:hover{background:var(--bg3);color:var(--text-bright);}
-.k:active{background:var(--bg2);}
-.k.op{color:var(--accent2);font-size:1rem;}
-.k.op:hover{background:rgba(255,107,0,.1);color:var(--accent2);}
-.k.eq{background:rgba(0,212,255,.1);color:var(--accent);font-size:1.1rem;font-family:'Orbitron',monospace;}
-.k.eq:hover{background:rgba(0,212,255,.2);box-shadow:var(--glow);}
-.k.clr{color:var(--accent4);}
-.k.clr:hover{background:rgba(255,51,102,.1);}
-.k.fn{color:var(--accent3);font-size:.72rem;}
-.k.fn:hover{background:rgba(0,255,136,.08);}
-.k.span2{grid-column:span 2;}
-.history{background:var(--bg2);border-top:1px solid var(--panel-border);padding:10px 14px;max-height:150px;overflow-y:auto;}
-.hist-head{font-family:'Orbitron',monospace;font-size:.55rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:6px;}
-.hi{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(26,58,80,.3);font-size:.68rem;cursor:pointer;}
-.hi:hover .hiv{color:var(--accent);}
-.hie{color:var(--text-dim);}
-.hiv{color:var(--text-bright);}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header><div class="logo">PISCES MOON // <span>CALC</span></div></header>
-<div class="calc">
-  <div class="display">
-    <div class="expr" id="expr"></div>
-    <div class="result" id="result">0</div>
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--accent3);letter-spacing:3px;}
+.mode-tabs{display:flex;gap:0;}
+.mtab{padding:5px 14px;font-size:.55rem;font-family:'Orbitron',monospace;letter-spacing:1px;cursor:pointer;border:1px solid var(--panel-border);background:transparent;color:var(--text-dim);transition:all .15s;margin-left:-1px;}
+.mtab:hover{color:var(--accent3);}
+.mtab.active{background:var(--bg3);color:var(--accent3);border-color:var(--accent3);}
+.layout{flex:1;display:grid;grid-template-columns:1fr 220px;overflow:hidden;}
+/* Left: calculator */
+.calc-col{display:flex;flex-direction:column;overflow:hidden;}
+/* Display */
+.display{background:var(--bg3);border-bottom:2px solid var(--panel-border);padding:14px 18px;flex-shrink:0;}
+.expr{font-size:.68rem;color:var(--text-dim);min-height:18px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right;}
+.result{font-family:'Orbitron',monospace;font-size:2.2rem;color:var(--accent3);text-align:right;letter-spacing:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:4px;}
+.result.error{color:var(--accent4);font-size:1.2rem;}
+.mem-row{display:flex;gap:8px;margin-top:6px;justify-content:flex-end;}
+.mem-badge{font-size:.52rem;color:var(--text-dim);border:1px solid var(--panel-border);padding:2px 6px;}
+.mem-badge.active{color:var(--gold);border-color:var(--gold);}
+/* Buttons */
+.btn-grid{flex:1;display:grid;padding:8px;gap:5px;overflow:hidden;}
+.btn-grid.standard{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(5,1fr);}
+.btn-grid.scientific{grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(6,1fr);}
+.btn-grid.converter{display:flex;flex-direction:column;gap:8px;padding:12px;overflow-y:auto;}
+button.cb{background:var(--bg2);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.82rem;cursor:pointer;border-radius:3px;transition:all .12s;display:flex;align-items:center;justify-content:center;}
+button.cb:hover{border-color:var(--accent3);}
+button.cb:active{background:rgba(0,255,136,.15);}
+button.cb.op{color:var(--accent3);border-color:rgba(0,255,136,.2);}
+button.cb.eq{background:rgba(0,255,136,.1);border-color:var(--accent3);color:var(--accent3);font-family:'Orbitron',monospace;}
+button.cb.eq:hover{background:rgba(0,255,136,.25);}
+button.cb.fn{color:var(--accent);font-size:.68rem;border-color:rgba(0,212,255,.15);}
+button.cb.fn:hover{border-color:var(--accent);}
+button.cb.clr{color:var(--accent4);border-color:rgba(255,51,102,.2);}
+button.cb.clr:hover{border-color:var(--accent4);background:rgba(255,51,102,.08);}
+button.cb.mem{color:var(--gold);font-size:.65rem;border-color:rgba(244,168,32,.15);}
+button.cb.span2{grid-column:span 2;}
+/* Converter */
+.conv-group{background:var(--bg2);border:1px solid var(--panel-border);padding:12px;}
+.conv-title{font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px;}
+.conv-row{display:flex;gap:8px;align-items:center;margin-bottom:6px;}
+.conv-inp{flex:1;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.75rem;padding:6px;outline:none;}
+.conv-inp:focus{border-color:var(--accent);}
+.conv-sel{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:6px;outline:none;min-width:80px;}
+.conv-result{background:var(--bg3);border:1px solid var(--accent3);color:var(--accent3);font-family:'Orbitron',monospace;font-size:.9rem;padding:8px;text-align:center;margin-top:4px;letter-spacing:1px;}
+/* History */
+.hist-col{background:var(--bg2);border-left:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.hist-header{padding:6px 10px;font-family:'Orbitron',monospace;font-size:.48rem;letter-spacing:3px;color:var(--text-dim);background:var(--bg);border-bottom:1px solid var(--panel-border);display:flex;justify-content:space-between;align-items:center;}
+.hist-list{flex:1;overflow-y:auto;padding:4px;}
+.hist-item{padding:7px 8px;border-bottom:1px solid rgba(28,46,58,.3);cursor:pointer;transition:background .15s;}
+.hist-item:hover{background:rgba(0,255,136,.04);}
+.hist-expr{font-size:.6rem;color:var(--text-dim);}
+.hist-val{font-size:.78rem;color:var(--text-bright);font-family:'Orbitron',monospace;}
+</style>
+</head><body>
+
+<header>
+  <div class="logo">🧮 CALCULATOR <span style="color:var(--text-dim);font-size:.6rem">v3</span></div>
+  <div class="mode-tabs">
+    <button class="mtab active" id="mStd" onclick="setMode('standard')">STANDARD</button>
+    <button class="mtab" id="mSci" onclick="setMode('scientific')">SCIENTIFIC</button>
+    <button class="mtab" id="mCon" onclick="setMode('converter')">CONVERTER</button>
   </div>
-  <div class="modes">
-    <div class="mode active" onclick="setMode('std')" id="m-std">STANDARD</div>
-    <div class="mode" onclick="setMode('sci')" id="m-sci">SCIENTIFIC</div>
-    <div class="mode" onclick="setMode('hex')" id="m-hex">HEX/BIN</div>
+</header>
+
+<div class="layout">
+  <div class="calc-col">
+    <!-- Display -->
+    <div class="display">
+      <div class="expr" id="expr"></div>
+      <div class="result" id="result">0</div>
+      <div class="mem-row">
+        <div class="mem-badge" id="memBadge">M: 0</div>
+        <div class="mem-badge" id="degBadge">DEG</div>
+      </div>
+    </div>
+    <!-- Buttons -->
+    <div class="btn-grid standard" id="btnGrid"></div>
   </div>
-  <div class="keys" id="keypad"></div>
-  <div class="history">
-    <div class="hist-head">HISTORY</div>
-    <div id="hist"></div>
+
+  <!-- History tape -->
+  <div class="hist-col">
+    <div class="hist-header">HISTORY <button onclick="clearHistory()" style="background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:.58rem;font-family:'Share Tech Mono',monospace">CLEAR</button></div>
+    <div class="hist-list" id="histList"></div>
   </div>
 </div>
+
 <script>
-let cur='0', expr='', history=[], mode='std', shiftActive=false;
+// ═══════════════════════════════════════════════════════════════════
+// PISCES MOON CALCULATOR v3
+// ═══════════════════════════════════════════════════════════════════
 
-const LAYOUTS={
-  std:[
-    ['AC','±','%','÷'],
-    ['7','8','9','×'],
-    ['4','5','6','−'],
-    ['1','2','3','+'],
-    ['0','0','.','='],
-  ],
-  sci:[
-    ['AC','(',')','÷'],
-    ['sin','cos','tan','×'],
-    ['ln','log','√','−'],
-    ['x²','x³','xⁿ','+'],
-    ['π','e','.',  '='],
-  ],
-  hex:[
-    ['AC','AND','OR','XOR'],
-    ['A','B','C','÷'],
-    ['D','E','F','×'],
-    ['7','8','9','−'],
-    ['4','5','6','+'],
-    ['1','2','3','='],
-    ['0','0','<<','>>'],
-  ],
-};
+let expr = '', display = '0', mem = 0, inDeg = true;
+let history = JSON.parse(localStorage.getItem('pm_calc_history') || '[]');
+let calcMode = 'standard';
+let justEvaled = false;
 
-function setMode(m){
-  mode=m;
-  document.querySelectorAll('.mode').forEach(el=>el.classList.remove('active'));
-  document.getElementById('m-'+m).classList.add('active');
-  buildKeys();
+const STANDARD_BTNS = [
+  ['MC','MR','M+','M-'],
+  ['C','±','%','÷'],
+  ['7','8','9','×'],
+  ['4','5','6','−'],
+  ['1','2','3','+'],
+  ['0','','.',['=','span2']],
+];
+
+const SCI_BTNS = [
+  ['sin','cos','tan','log','ln'],
+  ['asin','acos','atan','log₂','√'],
+  ['x²','x³','xⁿ','10ˣ','eˣ'],
+  ['π','e','(',')','^'],
+  ['MC','MR','M+','M-','%'],
+  ['C','±','÷','×','−'],
+  ['7','8','9','+','='],
+  ['4','5','6','DEL',''],
+  ['1','2','3','0','.'],
+];
+
+// ── Mode ──────────────────────────────────────────────────────────
+function setMode(m) {
+  calcMode = m;
+  ['mStd','mSci','mCon'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById({standard:'mStd',scientific:'mSci',converter:'mCon'}[m]).classList.add('active');
+  renderButtons();
 }
 
-function buildKeys(){
-  const kp=document.getElementById('keypad');
-  const rows=LAYOUTS[mode];
-  let html='';
-  rows.forEach(row=>{
-    row.forEach((k,i)=>{
-      const cls=['k'];
-      const isLast=i===row.length-1;
-      const isFirst=i===0;
-      if(['÷','×','−','+','='].includes(k)) cls.push(isLast?'eq':'op');
-      if(['AC','C'].includes(k)) cls.push('clr');
-      if(['sin','cos','tan','ln','log','√','x²','x³','xⁿ','π','e','AND','OR','XOR','<<','>>'].includes(k)) cls.push('fn');
-      if(k==='0'&&i===0) cls.push('span2');
-      html+=`<button class="${cls.join(' ')}" onclick="press('${k}')">${k}</button>`;
-    });
+// ── Render buttons ────────────────────────────────────────────────
+function renderButtons() {
+  const grid = document.getElementById('btnGrid');
+
+  if (calcMode === 'converter') {
+    grid.className = 'btn-grid converter';
+    grid.innerHTML = renderConverter();
+    return;
+  }
+
+  grid.className = 'btn-grid ' + calcMode;
+  const btns = calcMode === 'standard' ? STANDARD_BTNS : SCI_BTNS;
+  let html = '';
+  btns.flat().forEach(b => {
+    if (!b) { html += `<div></div>`; return; }
+    const label = Array.isArray(b) ? b[0] : b;
+    const span = Array.isArray(b) ? b[1] : '';
+    const cls = getBtnClass(label);
+    html += `<button class="cb ${cls} ${span?'span2':''}" onclick="press('${label}')">${label}</button>`;
   });
-  kp.innerHTML=html;
+  grid.innerHTML = html;
 }
 
-function press(k){
-  try{
-    switch(k){
-      case 'AC': cur='0'; expr=''; setDisp(); break;
-      case '±': cur=String(-parseFloat(cur)||0); setDisp(); break;
-      case '%': cur=String(parseFloat(cur)/100); setDisp(); break;
-      case '=':
-        if(!expr&&cur==='0')break;
-        const full=(expr+cur)
-          .replace(/÷/g,'/')
-          .replace(/×/g,'*')
-          .replace(/−/g,'-')
-          .replace(/π/g,'Math.PI')
-          .replace(/e(?![0-9])/g,'Math.E')
-          .replace(/sin\(/g,'Math.sin(')
-          .replace(/cos\(/g,'Math.cos(')
-          .replace(/tan\(/g,'Math.tan(')
-          .replace(/ln\(/g,'Math.log(')
-          .replace(/log\(/g,'Math.log10(')
-          .replace(/√\(/g,'Math.sqrt(')
-          .replace(/(\d+(\.\d+)?)²/g,'($1**2)')
-          .replace(/(\d+(\.\d+)?)³/g,'($1**3)')
-          .replace(/(\d+(\.\d+)?)ⁿ/g,'($1**')
-          .replace(/<<(\d+)/g,'<<$1')
-          .replace(/>>(\d+)/g,'>>$1');
-        const res=Function('"use strict";return ('+full+')')();
-        const resStr=mode==='hex'?'0x'+Math.floor(res).toString(16).toUpperCase():
-                     Number.isInteger(res)?String(res):parseFloat(res.toFixed(10)).toString();
-        addHistory(expr+cur, resStr);
-        expr=''; cur=resStr;
-        document.getElementById('result').className='result';
-        setDisp(); break;
-      case '(':
-      case ')': expr+=cur==='0'?'':cur; expr+=k; cur='0'; setDisp(); break;
-      case '.': cur=cur.includes('.')?cur:cur+'.'; setDisp(); break;
-      case 'sin': case 'cos': case 'tan': case 'ln': case 'log': case '√':
-        expr+=k+'('; cur='0'; setDisp(); break;
-      case 'x²': cur=String(parseFloat(cur)**2); setDisp(); break;
-      case 'x³': cur=String(parseFloat(cur)**3); setDisp(); break;
-      case 'xⁿ': expr+=cur+'**'; cur='0'; setDisp(); break;
-      case 'π': cur=String(Math.PI); setDisp(); break;
-      case 'e': cur=String(Math.E); setDisp(); break;
-      case 'AND': case 'OR': case 'XOR': case '<<': case '>>':
-        expr+=cur+' '+k+' '; cur='0'; setDisp(); break;
-      case '÷': case '×': case '−': case '+':
-        expr+=cur+k; cur='0'; setDisp(); break;
-      default:
-        cur=cur==='0'?k:cur+k; setDisp();
-    }
-  }catch(e){
-    document.getElementById('result').textContent='ERROR';
-    document.getElementById('result').className='result error';
-    setTimeout(()=>{cur='0';expr='';setDisp();},1200);
+function getBtnClass(b) {
+  if ('='.includes(b)) return 'eq';
+  if (['÷','×','−','+','^','%'].includes(b)) return 'op';
+  if (['C','DEL'].includes(b)) return 'clr';
+  if (['MC','MR','M+','M-'].includes(b)) return 'mem';
+  if (['sin','cos','tan','asin','acos','atan','log','ln','log₂','√','x²','x³','xⁿ','10ˣ','eˣ','π','e','(',')','±'].includes(b)) return 'fn';
+  return '';
+}
+
+// ── Button press ──────────────────────────────────────────────────
+function press(b) {
+  // Memory
+  if (b === 'MC') { mem = 0; updateDisplay(); return; }
+  if (b === 'MR') { display = String(mem); justEvaled = true; updateDisplay(); return; }
+  if (b === 'M+') { mem += parseFloat(display) || 0; updateMemBadge(); return; }
+  if (b === 'M-') { mem -= parseFloat(display) || 0; updateMemBadge(); return; }
+
+  if (b === 'C') { expr = ''; display = '0'; justEvaled = false; updateDisplay(); return; }
+  if (b === 'DEL') { display = display.length > 1 ? display.slice(0,-1) : '0'; updateDisplay(); return; }
+  if (b === '=') { evaluate(); return; }
+
+  // Toggle degree/radian (double-tap DEG badge)
+  if (b === '±') { display = String(-parseFloat(display)||0); updateDisplay(); return; }
+  if (b === '%') {
+    const v = parseFloat(display);
+    if (expr) {
+      const match = expr.match(/(\d+\.?\d*)\s*[+−]$/);
+      if (match) { display = String(parseFloat(match[1]) * v / 100); }
+      else { display = String(v / 100); }
+    } else { display = String(v / 100); }
+    updateDisplay(); return;
+  }
+
+  // Scientific functions
+  const sci = {
+    'sin': x=>inDeg?Math.sin(x*Math.PI/180):Math.sin(x),
+    'cos': x=>inDeg?Math.cos(x*Math.PI/180):Math.cos(x),
+    'tan': x=>inDeg?Math.tan(x*Math.PI/180):Math.tan(x),
+    'asin':x=>inDeg?Math.asin(x)*180/Math.PI:Math.asin(x),
+    'acos':x=>inDeg?Math.acos(x)*180/Math.PI:Math.acos(x),
+    'atan':x=>inDeg?Math.atan(x)*180/Math.PI:Math.atan(x),
+    'log': x=>Math.log10(x),
+    'ln':  x=>Math.log(x),
+    'log₂':x=>Math.log2(x),
+    '√':   x=>Math.sqrt(x),
+    'x²':  x=>x*x,
+    'x³':  x=>x*x*x,
+    '10ˣ':x=>Math.pow(10,x),
+    'eˣ':  x=>Math.exp(x),
+  };
+  if (sci[b]) {
+    const v = parseFloat(display);
+    const r = sci[b](v);
+    const exprStr = `${b}(${v})`;
+    display = fmt(r);
+    addHistory(exprStr, display);
+    expr = ''; justEvaled = true;
+    updateDisplay(); return;
+  }
+  if (b === 'π') { display = String(Math.PI); justEvaled = true; updateDisplay(); return; }
+  if (b === 'e') { display = String(Math.E); justEvaled = true; updateDisplay(); return; }
+  if (b === 'xⁿ') { expr += display + '^'; display = '0'; justEvaled = false; updateDisplay(); return; }
+
+  // Operators
+  const ops = {'÷':'/','×':'*','−':'-','+':'+'};
+  if (ops[b]) {
+    if (justEvaled) expr = display + ops[b];
+    else expr += display + ops[b];
+    display = '0'; justEvaled = false;
+    updateDisplay(); return;
+  }
+
+  // Parens
+  if (b === '(' || b === ')') {
+    expr += b; updateDisplay(); return;
+  }
+
+  // Digits and decimal
+  if (justEvaled) { display = b === '.' ? '0.' : b; justEvaled = false; }
+  else if (display === '0' && b !== '.') display = b;
+  else if (b === '.' && display.includes('.')) {}
+  else display += b;
+  updateDisplay();
+}
+
+function evaluate() {
+  const full = expr + display;
+  if (!full) return;
+  try {
+    // Safe eval: replace operator symbols and power
+    let evalStr = full
+      .replace(/÷/g,'/').replace(/×/g,'*').replace(/−/g,'-')
+      .replace(/\^/g,'**');
+    const result = Function('"use strict"; return (' + evalStr + ')')();
+    if (!isFinite(result)) throw new Error('Math error');
+    const fmtResult = fmt(result);
+    addHistory(full, fmtResult);
+    expr = '';
+    display = fmtResult;
+    justEvaled = true;
+    updateDisplay();
+  } catch(e) {
+    document.getElementById('result').textContent = 'ERROR';
+    document.getElementById('result').className = 'result error';
+    setTimeout(() => { display = '0'; expr = ''; updateDisplay(); }, 1200);
   }
 }
 
-function setDisp(){
-  document.getElementById('expr').textContent=expr;
-  document.getElementById('result').textContent=cur;
-  document.getElementById('result').className='result';
+function fmt(n) {
+  if (!isFinite(n)) return 'Error';
+  if (Number.isInteger(n) || Math.abs(n) > 1e10) return String(parseFloat(n.toPrecision(12)));
+  return parseFloat(n.toPrecision(10)).toString();
 }
 
-function addHistory(e,v){
-  history.unshift({e,v});if(history.length>30)history.pop();
+function updateDisplay() {
+  document.getElementById('result').textContent = display;
+  document.getElementById('result').className = 'result';
+  document.getElementById('expr').textContent = expr;
+  updateMemBadge();
+}
+
+function updateMemBadge() {
+  const b = document.getElementById('memBadge');
+  b.textContent = 'M: ' + fmt(mem);
+  b.classList.toggle('active', mem !== 0);
+}
+
+// ── History ───────────────────────────────────────────────────────
+function addHistory(expr, val) {
+  history.unshift({expr, val, ts: Date.now()});
+  if (history.length > 50) history.pop();
+  localStorage.setItem('pm_calc_history', JSON.stringify(history));
   renderHistory();
 }
 
-function renderHistory(){
-  document.getElementById('hist').innerHTML=history.slice(0,12).map(h=>`
-    <div class="hi" onclick="useHistory('${h.v}')">
-      <span class="hie">${esc(h.e)}</span><span class="hiv">${esc(h.v)}</span>
+function renderHistory() {
+  document.getElementById('histList').innerHTML = history.map((h,i) =>
+    `<div class="hist-item" onclick="recallHistory(${i})">
+      <div class="hist-expr">${h.expr}</div>
+      <div class="hist-val">${h.val}</div>
+    </div>`
+  ).join('');
+}
+
+function recallHistory(i) {
+  display = history[i].val;
+  justEvaled = true;
+  updateDisplay();
+}
+
+function clearHistory() {
+  history = [];
+  localStorage.removeItem('pm_calc_history');
+  renderHistory();
+}
+
+// ── Unit Converter ────────────────────────────────────────────────
+const CONVERTERS = [
+  {
+    title:'LENGTH',
+    units:['mm','cm','m','km','in','ft','yd','mi','nmi'],
+    toBase: {mm:0.001,cm:0.01,m:1,km:1000,in:0.0254,ft:0.3048,yd:0.9144,mi:1609.344,nmi:1852},
+  },
+  {
+    title:'WEIGHT / MASS',
+    units:['mg','g','kg','t','oz','lb','st','ton'],
+    toBase: {mg:0.000001,g:0.001,kg:1,t:1000,oz:0.0283495,lb:0.453592,st:6.35029,ton:907.185},
+  },
+  {
+    title:'TEMPERATURE',
+    units:['°C','°F','K'],
+    toBase: null, // Special handling
+  },
+  {
+    title:'SPEED',
+    units:['m/s','km/h','mph','knots','ft/s'],
+    toBase: {'m/s':1,'km/h':1/3.6,'mph':0.44704,'knots':0.514444,'ft/s':0.3048},
+  },
+  {
+    title:'AREA',
+    units:['mm²','cm²','m²','km²','in²','ft²','ac','ha'],
+    toBase: {'mm²':0.000001,'cm²':0.0001,'m²':1,'km²':1e6,'in²':0.00064516,'ft²':0.092903,'ac':4046.86,'ha':10000},
+  },
+  {
+    title:'VOLUME',
+    units:['ml','cl','l','m³','tsp','tbsp','fl oz','cup','pt','qt','gal'],
+    toBase: {ml:0.001,cl:0.01,l:1,'m³':1000,tsp:0.00492892,tbsp:0.0147868,'fl oz':0.0295735,cup:0.236588,pt:0.473176,qt:0.946353,gal:3.78541},
+  },
+  {
+    title:'DATA',
+    units:['bit','byte','KB','MB','GB','TB'],
+    toBase: {bit:1/8,byte:1,KB:1024,MB:1048576,GB:1073741824,TB:1099511627776},
+  },
+];
+
+function renderConverter() {
+  return CONVERTERS.map((conv, ci) => `
+    <div class="conv-group">
+      <div class="conv-title">${conv.title}</div>
+      <div class="conv-row">
+        <input type="number" class="conv-inp" id="ci${ci}" value="1" oninput="convert(${ci})">
+        <select class="conv-sel" id="cs${ci}" onchange="convert(${ci})">
+          ${conv.units.map(u=>`<option value="${u}">${u}</option>`).join('')}
+        </select>
+        <span style="color:var(--text-dim);font-size:.7rem">→</span>
+        <select class="conv-sel" id="ct${ci}" onchange="convert(${ci})">
+          ${conv.units.map((u,i)=>`<option value="${u}" ${i===1?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </div>
+      <div class="conv-result" id="cr${ci}">—</div>
     </div>`).join('');
 }
 
-function useHistory(v){cur=v;expr='';setDisp();}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function convert(ci) {
+  const conv = CONVERTERS[ci];
+  const val = parseFloat(document.getElementById('ci'+ci).value);
+  const from = document.getElementById('cs'+ci).value;
+  const to   = document.getElementById('ct'+ci).value;
+  let result;
 
-document.addEventListener('keydown',e=>{
-  const map={'0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9',
-    '+':'+','-':'−','*':'×','/':'÷','.':'.','Enter':'=','Backspace':'AC','Escape':'AC','%':'%'};
-  if(map[e.key]) press(map[e.key]);
+  if (conv.title === 'TEMPERATURE') {
+    let celsius;
+    if (from === '°C') celsius = val;
+    else if (from === '°F') celsius = (val - 32) * 5/9;
+    else celsius = val - 273.15;
+    if (to === '°C') result = celsius;
+    else if (to === '°F') result = celsius * 9/5 + 32;
+    else result = celsius + 273.15;
+  } else {
+    result = val * conv.toBase[from] / conv.toBase[to];
+  }
+
+  const fmt2 = n => {
+    if (!isFinite(n)) return 'Error';
+    if (Math.abs(n) >= 1e10 || (Math.abs(n) < 1e-4 && n !== 0)) return n.toExponential(4);
+    return parseFloat(n.toPrecision(8)).toString();
+  };
+  document.getElementById('cr'+ci).textContent = fmt2(result) + ' ' + to;
+}
+
+// ── Keyboard ──────────────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  if (calcMode === 'converter') return;
+  const map = {
+    '0':'0','1':'1','2':'2','3':'3','4':'4','5':'5','6':'6','7':'7','8':'8','9':'9',
+    '.':'.','Enter':'=','Backspace':'DEL','Escape':'C',
+    '+':'+','-':'−','*':'×','/':'÷','%':'%',
+  };
+  if (map[e.key]) { e.preventDefault(); press(map[e.key]); }
 });
 
-buildKeys();
+// ── Toggle deg/rad ────────────────────────────────────────────────
+document.getElementById('degBadge').addEventListener('click', () => {
+  inDeg = !inDeg;
+  document.getElementById('degBadge').textContent = inDeg ? 'DEG' : 'RAD';
+});
+
+// ── Init ──────────────────────────────────────────────────────────
+renderButtons();
 renderHistory();
+updateDisplay();
 </script>
 </body></html>

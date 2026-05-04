@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — galaga.html v2
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Full Galaga with touch swipe, formation patterns, boss battles
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // GALAGA</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;font-family:'Courier New',monospace;touch-action:none;}
+#hdr{color:#0ff;font-size:.7rem;letter-spacing:3px;margin-bottom:6px;display:flex;gap:20px;width:100%;max-width:400px;justify-content:space-between;}
+canvas{display:block;}
+#msg{color:#ff0;font-size:1rem;letter-spacing:4px;margin-top:8px;min-height:24px;text-align:center;}
+#hint{color:#333;font-size:.55rem;letter-spacing:2px;margin-top:4px;text-align:center;}
+</style>
+</head><body>
+<div id="hdr">
+  <span>SCORE <span id="score" style="color:#fff">0</span></span>
+  <span style="color:#ff0">GALAGA</span>
+  <span>HI <span id="hi" style="color:#fff">0</span></span>
+</div>
+<canvas id="c"></canvas>
+<div id="msg">TAP / SWIPE TO START</div>
+<div id="hint">← SWIPE → TO MOVE • TAP TO FIRE</div>
+
+<script>
+const canvas = document.getElementById('c');
+const ctx    = canvas.getContext('2d');
+let W, H;
+
+function resize() {
+  const s = Math.min(window.innerWidth, window.innerHeight * 0.85);
+  W = canvas.width  = Math.min(s, 400);
+  H = canvas.height = Math.floor(W * 1.5);
+}
+resize();
+window.addEventListener('resize', resize);
+
+// ── Stars ─────────────────────────────────────────────────────
+const stars = Array.from({length:80}, () => ({
+  x: Math.random()*400, y: Math.random()*600, s: Math.random()*2+0.5, speed: Math.random()*1.5+0.5
+}));
+
+// ── Game state ────────────────────────────────────────────────
+let state = 'title';
+let score = 0, hiScore = parseInt(localStorage.getItem('pm_galaga_hi')||'0');
+let lives = 3, level = 1, stage = 'formation'; // formation | attack | boss
+let formTimer = 0;
+
+// Player
+let player = {x: 200, y: 550, w: 28, h: 28, vel: 0};
+const PLAYER_SPEED = 4;
+
+// Bullets
+let bullets  = []; // player bullets
+let eBullets = []; // enemy bullets
+
+// Enemies — 5 rows × 10 cols
+let enemies = [];
+let bosses  = [];
+const ROWS = 5, COLS = 10;
+const ENEMY_W = 28, ENEMY_H = 22;
+
+// Formation
+function initEnemies() {
+  enemies = [];
+  bosses  = [];
+  formTimer = 0;
+  for (let r=0; r<ROWS; r++) for (let c=0; c<COLS; c++) {
+    const isBoss = r === 0 && (c === 3 || c === 4 || c === 5 || c === 6);
+    const entry = {
+      gx: c, gy: r,
+      x: -50, y: -50,
+      tx: 40 + c * ((W-80)/COLS), // target x in formation
+      ty: 60 + r * 36,             // target y in formation
+      entering: true,
+      entryDelay: (r * COLS + c) * 3,
+      alive: true,
+      type: isBoss ? 'boss' : r < 2 ? 'bee' : r < 4 ? 'butterfly' : 'boss_fighter',
+      diving: false, diveX: 0, diveY: 0, diveAngle: 0, diveSpeed: 0,
+      w: isBoss ? ENEMY_W*1.4 : ENEMY_W,
+      h: isBoss ? ENEMY_H*1.4 : ENEMY_H,
+      anim: 0,
+      captured: false,
+    };
+    entry.x = entry.tx;
+    entry.y = -50 - (r * COLS + c) * 5;
+    if (isBoss) bosses.push(entry);
+    enemies.push(entry);
+  }
+}
+
+// Formation drift
+let formX = 0, formDX = 0.5;
+
+// ── Touch controls ────────────────────────────────────────────
+let touchX0, touchY0, touchT0;
+let touchCurX = null;
+let firing = false;
+
+document.addEventListener('touchstart', e => {
+  e.preventDefault();
+  touchX0 = e.touches[0].clientX;
+  touchY0 = e.touches[0].clientY;
+  touchCurX = touchX0;
+  touchT0 = Date.now();
+  if (state !== 'playing') { startGame(); return; }
+}, {passive:false});
+
+document.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (state !== 'playing') return;
+  const dx = e.touches[0].clientX - touchX0;
+  player.x = Math.max(20, Math.min(W-20, player.x + dx * (W/window.innerWidth)));
+  touchX0 = e.touches[0].clientX;
+}, {passive:false});
+
+document.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (state !== 'playing') return;
+  const dt = Date.now() - touchT0;
+  const dy = e.changedTouches[0].clientY - touchY0;
+  // Tap (short, no movement) = fire
+  if (dt < 250 && Math.abs(dy) < 20) {
+    fireBullet();
+  }
+}, {passive:false});
+
+// Keyboard
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.key] = true;
+  if (e.key === ' ') { e.preventDefault(); fireBullet(); }
+  if ((state === 'title'||state==='gameover') && e.key) startGame();
+});
+document.addEventListener('keyup',  e => keys[e.key] = false);
+
+function startGame() {
+  score = 0; lives = 3; level = 1;
+  player.x = W/2; player.y = H - 60;
+  bullets = []; eBullets = [];
+  initEnemies();
+  state = 'playing';
+  document.getElementById('msg').textContent = '';
+}
+
+function fireBullet() {
+  if (bullets.length >= 2) return;
+  bullets.push({x: player.x, y: player.y - 14, w: 3, h: 12});
+}
+
+// ── Update ────────────────────────────────────────────────────
+let eBulletTimer = 0;
+let frameCount = 0;
+
+function update() {
+  if (state !== 'playing') return;
+  frameCount++;
+
+  // Stars
+  stars.forEach(s => { s.y += s.speed * (W/400); if (s.y > H) s.y = 0; });
+
+  // Player keyboard movement
+  if (keys['ArrowLeft']  || keys['a']) player.x -= PLAYER_SPEED;
+  if (keys['ArrowRight'] || keys['d']) player.x += PLAYER_SPEED;
+  player.x = Math.max(20, Math.min(W-20, player.x));
+
+  // Formation drift
+  const anyEntering = enemies.some(e => e.entering && e.alive);
+  if (!anyEntering) {
+    formX += formDX * (W/400);
+    const minX = enemies.filter(e=>e.alive&&!e.diving).reduce((m,e)=>Math.min(m,e.x),W);
+    const maxX = enemies.filter(e=>e.alive&&!e.diving).reduce((m,e)=>Math.max(m,e.x),0);
+    if (maxX > W-20 || minX < 20) formDX *= -1;
+  }
+
+  // Enemy positions
+  enemies.forEach(e => {
+    if (!e.alive) return;
+    e.anim = Math.floor(frameCount / 8) % 2;
+
+    if (e.entering) {
+      if (e.entryDelay > 0) { e.entryDelay--; return; }
+      // Fly in from top
+      const dx = e.tx - e.x, dy = e.ty - e.y;
+      const d  = Math.sqrt(dx*dx+dy*dy);
+      if (d < 3) { e.x = e.tx; e.y = e.ty; e.entering = false; }
+      else { e.x += dx/d*4; e.y += dy/d*4; }
+      return;
+    }
+
+    if (e.diving) {
+      e.diveAngle += 0.04;
+      e.x += Math.cos(e.diveAngle) * e.diveSpeed;
+      e.y += Math.sin(Math.abs(e.diveAngle)) * e.diveSpeed + 1.5;
+      if (e.y > H + 50) {
+        e.diving = false;
+        e.x = e.tx; e.y = e.ty;
+      }
+    } else {
+      e.x = e.tx + formX;
+    }
+
+    // Random dive
+    if (!anyEntering && Math.random() < 0.0005 * level && !e.diving) {
+      e.diving = true;
+      e.diveAngle = Math.random() * Math.PI * 2;
+      e.diveSpeed = 2 + level * 0.3;
+    }
+  });
+
+  // Enemy fire
+  eBulletTimer++;
+  if (eBulletTimer > Math.max(30, 80 - level*5)) {
+    eBulletTimer = 0;
+    const alive = enemies.filter(e=>e.alive&&!e.entering);
+    if (alive.length > 0) {
+      const shooter = alive[Math.floor(Math.random()*alive.length)];
+      eBullets.push({x:shooter.x, y:shooter.y+10, w:3, h:10, speed:3+level*0.3});
+    }
+  }
+
+  // Move bullets
+  bullets  = bullets.filter(b => { b.y -= 8 * (H/600); return b.y > 0; });
+  eBullets = eBullets.filter(b => { b.y += b.speed * (H/600); return b.y < H+20; });
+
+  // Player hit
+  eBullets.forEach(b => {
+    if (Math.abs(b.x-player.x)<14 && Math.abs(b.y-player.y)<14) {
+      eBullets = eBullets.filter(eb=>eb!==b);
+      lives--;
+      if (lives <= 0) { state='gameover'; document.getElementById('msg').textContent='GAME OVER — TAP TO RETRY'; }
+      else { player.x = W/2; document.getElementById('msg').textContent=''; }
+    }
+  });
+
+  // Bullet hit enemies
+  bullets.forEach(b => {
+    enemies.forEach(e => {
+      if (!e.alive) return;
+      if (Math.abs(b.x-e.x)<e.w/2 && Math.abs(b.y-e.y)<e.h/2) {
+        e.alive = false;
+        bullets = bullets.filter(bl=>bl!==b);
+        score += e.type==='boss_fighter' ? 150 : e.type==='butterfly' ? 80 : 50;
+        if (score > hiScore) { hiScore=score; localStorage.setItem('pm_galaga_hi',hiScore); }
+      }
+    });
+  });
+
+  // Level complete
+  if (enemies.filter(e=>e.alive).length === 0) {
+    level++;
+    initEnemies();
+    document.getElementById('msg').textContent = `STAGE ${level}`;
+    setTimeout(()=>document.getElementById('msg').textContent='', 1500);
+  }
+
+  document.getElementById('score').textContent = score;
+  document.getElementById('hi').textContent    = hiScore;
+}
+
+// ── Render ────────────────────────────────────────────────────
+function drawEnemy(e) {
+  if (!e.alive) return;
+  const x=e.x, y=e.y, a=e.anim;
+  ctx.save();
+  ctx.translate(x, y);
+
+  switch(e.type) {
+    case 'bee':
+      ctx.fillStyle = a ? '#00ff00' : '#00cc00';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, e.w/2-2, e.h/2-2, 0, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#ffff00';
+      ctx.beginPath();
+      ctx.ellipse(0, -2, e.w/4, e.h/3, 0, 0, Math.PI*2);
+      ctx.fill();
+      // Wings
+      ctx.fillStyle = 'rgba(0,255,0,0.4)';
+      ctx.beginPath(); ctx.ellipse(-e.w/2+2, -2, e.w/3, e.h/4, -0.3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse( e.w/2-2, -2, e.w/3, e.h/4,  0.3, 0, Math.PI*2); ctx.fill();
+      break;
+
+    case 'butterfly':
+      ctx.fillStyle = a ? '#4444ff' : '#2222cc';
+      ctx.fillRect(-e.w/2, -e.h/2, e.w, e.h);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(-e.w/2+2, -e.h/2+2, e.w/2-3, e.h/2-3);
+      ctx.fillRect(1, -e.h/2+2, e.w/2-3, e.h/2-3);
+      ctx.fillStyle = '#0088ff';
+      ctx.fillRect(-e.w/2+2, 1, e.w/2-3, e.h/2-3);
+      ctx.fillRect(1, 1, e.w/2-3, e.h/2-3);
+      break;
+
+    case 'boss_fighter':
+      ctx.fillStyle = a ? '#ff4400' : '#cc2200';
+      ctx.beginPath();
+      ctx.moveTo(0, -e.h/2);
+      ctx.lineTo(e.w/2, e.h/2);
+      ctx.lineTo(0, e.h/2-4);
+      ctx.lineTo(-e.w/2, e.h/2);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = '#ffaa00';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, e.w/4, e.h/4, 0, 0, Math.PI*2);
+      ctx.fill();
+      break;
+  }
+  ctx.restore();
+}
+
+function drawPlayer() {
+  const x=player.x, y=player.y;
+  ctx.save();
+  ctx.translate(x, y);
+  // Ship body
+  ctx.fillStyle = '#00ccff';
+  ctx.beginPath();
+  ctx.moveTo(0, -14);
+  ctx.lineTo(10, 8);
+  ctx.lineTo(6, 6);
+  ctx.lineTo(0, 10);
+  ctx.lineTo(-6, 6);
+  ctx.lineTo(-10, 8);
+  ctx.closePath();
+  ctx.fill();
+  // Cockpit
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  ctx.ellipse(0, -4, 4, 6, 0, 0, Math.PI*2);
+  ctx.fill();
+  // Engine glow
+  ctx.fillStyle = '#ff6600';
+  ctx.beginPath();
+  ctx.ellipse(0, 12, 4, 4 + Math.random()*3, 0, 0, Math.PI*2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function render() {
+  ctx.fillStyle = '#000010';
+  ctx.fillRect(0, 0, W, H);
+
+  // Stars
+  stars.forEach(s => {
+    ctx.fillStyle = `rgba(255,255,255,${s.s/3})`;
+    ctx.fillRect(s.x*(W/400), s.y*(H/600), s.s, s.s);
+  });
+
+  if (state === 'title') {
+    ctx.fillStyle = '#ff0';
+    ctx.font = 'bold 28px Courier New';
+    ctx.textAlign = 'center';
+    ctx.fillText('GALAGA', W/2, H/2-20);
+    ctx.font = '14px Courier New';
+    ctx.fillStyle = '#0ff';
+    ctx.fillText('TAP OR SWIPE TO START', W/2, H/2+20);
+    return;
+  }
+
+  // Enemies
+  enemies.forEach(drawEnemy);
+
+  // Player
+  drawPlayer();
+
+  // Bullets
+  ctx.fillStyle = '#ffff00';
+  bullets.forEach(b => ctx.fillRect(b.x-1, b.y, b.w, b.h));
+
+  ctx.fillStyle = '#ff4444';
+  eBullets.forEach(b => ctx.fillRect(b.x-1, b.y, b.w, b.h));
+
+  // Lives
+  ctx.fillStyle = '#00ccff';
+  ctx.font = '12px Courier New';
+  ctx.textAlign = 'left';
+  for (let i=0; i<lives-1; i++) {
+    ctx.fillText('▲', 10+i*16, H-10);
+  }
+}
+
+function loop() {
+  update();
+  render();
+  requestAnimationFrame(loop);
+}
+loop();
+</script>
+</body></html>

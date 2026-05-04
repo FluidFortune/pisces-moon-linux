@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — recipes.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  fluidfortune.com
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // RECIPE BOOK</title>
+<link rel="stylesheet" href="pm_shared.css">
+<style>
+.recipe-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+.recipe-card { border-bottom:1px solid var(--panel-border); cursor:pointer; overflow:hidden;
+    transition:background .2s; }
+.recipe-card:nth-child(odd) { border-right:1px solid var(--panel-border); }
+.recipe-card:hover { background:rgba(240,165,0,.04); }
+.recipe-img { width:100%; height:200px; object-fit:cover; filter:brightness(.85); }
+.recipe-img-wrap { position:relative; overflow:hidden; }
+.recipe-img-wrap::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(to bottom, transparent 40%, var(--bg) 100%);
+}
+.recipe-source-tag {
+    position:absolute; top:10px; left:10px; z-index:1;
+    background:var(--bg); padding:3px 10px;
+    font-family:Orbitron,monospace; font-size:.52rem;
+    letter-spacing:2px; color:var(--gold);
+    border:1px solid var(--gold-dim);
+}
+.recipe-saved-badge {
+    position:absolute; top:10px; right:10px; z-index:1;
+    background:var(--accent3); padding:3px 10px;
+    font-family:Orbitron,monospace; font-size:.5rem;
+    letter-spacing:2px; color:var(--bg);
+}
+.recipe-body { padding:14px 16px; }
+.recipe-title { font-size:.82rem; color:var(--text-bright); line-height:1.4;
+    margin-bottom:6px; font-weight:500; }
+.recipe-desc { font-size:.65rem; color:var(--text-dim); line-height:1.7;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+.recipe-meta { font-size:.58rem; color:var(--text-dim); display:flex; gap:12px; margin-top:8px; }
+
+.search-panel { padding:14px; border-bottom:1px solid var(--panel-border); background:var(--bg2); }
+.search-panel input { margin-bottom:8px; }
+.search-panel button { width:100%; }
+
+.cat-list { padding:0; }
+.cat-item { padding:10px 14px; cursor:pointer; font-size:.68rem;
+    color:var(--text); border-bottom:1px solid rgba(28,46,58,.4);
+    display:flex; justify-content:space-between; align-items:center; }
+.cat-item:hover { background:rgba(240,165,0,.04); color:var(--text-bright); }
+.cat-item.active { background:rgba(240,165,0,.08); color:var(--gold); border-left:2px solid var(--gold); }
+.cat-count { font-family:Orbitron,monospace; font-size:.55rem;
+    color:var(--gold); background:rgba(240,165,0,.1); padding:2px 8px; }
+
+.modal-overlay {
+    display:none; position:fixed; inset:0;
+    background:rgba(0,0,0,.85); z-index:1000;
+    align-items:flex-start; justify-content:center; padding:40px 20px; overflow-y:auto;
+}
+.modal-overlay.show { display:flex; }
+.modal-content {
+    background:var(--bg2); border:1px solid var(--gold-dim);
+    max-width:800px; width:100%; color:var(--text);
+}
+.modal-header {
+    padding:20px 24px; border-bottom:1px solid var(--panel-border);
+    display:flex; justify-content:space-between; align-items:center;
+}
+.modal-title { font-family:Orbitron,monospace; color:var(--gold);
+    font-size:1rem; letter-spacing:2px; }
+.modal-close { color:var(--text-dim); cursor:pointer; font-size:1.2rem; }
+.modal-close:hover { color:var(--gold); }
+.modal-body { padding:24px; }
+.recipe-detail-meta {
+    display:grid; grid-template-columns:repeat(4,1fr); gap:14px;
+    padding:14px 0; border-bottom:1px solid var(--panel-border); margin-bottom:20px;
+}
+.meta-item { text-align:center; }
+.meta-label { font-family:Orbitron,monospace; font-size:.5rem;
+    letter-spacing:2px; color:var(--text-dim); margin-bottom:4px; }
+.meta-value { font-size:.9rem; color:var(--text-bright); font-weight:500; }
+.recipe-section-title {
+    font-family:Orbitron,monospace; font-size:.6rem;
+    letter-spacing:3px; color:var(--gold); margin:20px 0 12px;
+}
+.ingredient-list { list-style:none; padding:0; }
+.ingredient-list li {
+    padding:8px 12px; border-bottom:1px solid rgba(28,46,58,.4);
+    font-size:.72rem; display:flex; gap:10px;
+}
+.ingredient-list li::before {
+    content:'▸'; color:var(--gold);
+}
+.step-list { list-style:none; padding:0; counter-reset:step; }
+.step-list li {
+    padding:12px 12px 12px 42px; border-bottom:1px solid rgba(28,46,58,.4);
+    font-size:.72rem; line-height:1.7; position:relative; counter-increment:step;
+}
+.step-list li::before {
+    content:counter(step);
+    position:absolute; left:10px; top:12px;
+    width:22px; height:22px; background:var(--gold); color:var(--bg);
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-family:Orbitron,monospace; font-size:.65rem; font-weight:700;
+}
+.ai-btn-quick { padding:5px 10px; border:1px solid var(--panel-border);
+    background:transparent; color:var(--text-dim);
+    font-family:'Share Tech Mono',monospace; font-size:.58rem;
+    cursor:pointer; transition:all .15s; margin:3px; }
+.ai-btn-quick:hover { border-color:var(--gold); color:var(--gold); }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">🍳 <em>RECIPE</em> BOOK</div>
+    <nav class="pm-nav">
+        <div class="pm-nav-item active" onclick="showTab('all')" id="tab-all">ALL</div>
+        <div class="pm-nav-item" onclick="showTab('saved')" id="tab-saved">SAVED</div>
+    </nav>
+    <div class="pm-hdr-right">
+        <span class="pm-last-update" id="savedCount">0 saved</span>
+    </div>
+</header>
+
+<div class="pm-app">
+    <!-- LEFT: Search + categories -->
+    <div class="pm-col-left">
+        <div class="search-panel">
+            <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px">ADD RECIPE</div>
+            <input class="pm-input" id="urlInput" placeholder="Paste recipe URL..."
+                onkeydown="if(event.key==='Enter')scrapeRecipe()">
+            <button class="pm-btn" onclick="scrapeRecipe()" style="margin-top:8px">SCRAPE &amp; SAVE</button>
+            <div style="font-size:.55rem;color:var(--text-dim);margin-top:8px;line-height:1.5">
+                Works with Allrecipes, NYT Cooking, Serious Eats, Bon Appétit, Food Network, and most recipe sites.
+            </div>
+        </div>
+
+        <div class="pm-sh">CATEGORIES</div>
+        <div class="cat-list" id="catList"></div>
+    </div>
+
+    <!-- MAIN: Recipe grid -->
+    <div class="pm-col-main">
+        <div class="recipe-grid" id="recipeGrid"></div>
+    </div>
+
+    <!-- RIGHT: AI Chef -->
+    <div class="pm-col-right">
+        <div class="pm-sh">AI CHEF <span class="pm-sh-sub">Gemini</span></div>
+        <div style="padding:12px 14px;border-bottom:1px solid var(--panel-border)">
+            <textarea class="pm-input" id="aiInput" rows="3"
+                placeholder="Ask about cooking, substitutions, pairings..."
+                style="resize:none;font-family:'Share Tech Mono',monospace"></textarea>
+            <button class="pm-btn" onclick="askAI()" style="width:100%;margin-top:8px">ASK ▶</button>
+            <div style="margin-top:10px">
+                <button class="ai-btn-quick" onclick="quickAsk('Suggest 3 weeknight dinners')">Weeknight ideas</button>
+                <button class="ai-btn-quick" onclick="quickAsk('What can I make with chicken, rice, and vegetables?')">Pantry cook</button>
+                <button class="ai-btn-quick" onclick="quickAsk('Classic substitutions list for common ingredients')">Substitutions</button>
+                <button class="ai-btn-quick" onclick="quickAsk('Wine pairing basics')">Pairings</button>
+            </div>
+        </div>
+        <div class="pm-ai-response" id="aiResponse">
+            <div style="text-align:center;padding:24px;color:var(--text-dim)">
+                <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;margin-bottom:8px;color:var(--gold)">CHEF READY</div>
+                <div style="font-size:.62rem;line-height:2">Ask about recipes, techniques,<br>substitutions, or pairings.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Recipe detail modal -->
+<div class="modal-overlay" id="recipeModal" onclick="closeModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+            <div class="modal-title" id="modalTitle">Recipe</div>
+            <div class="modal-close" onclick="document.getElementById('recipeModal').classList.remove('show')">✕</div>
+        </div>
+        <div class="modal-body" id="modalBody"></div>
+    </div>
+</div>
+
+<script src="pm_scraper.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// RECIPE BOOK — Scrape, save, organize recipes
+// ═══════════════════════════════════════════════════════════════════
+
+// Default recipes — popular, well-tested classics
+const DEFAULT_RECIPES = [
+    {
+        id: 'default_carbonara',
+        title: 'Classic Spaghetti Carbonara',
+        description: 'Authentic Roman pasta with eggs, Pecorino Romano, guanciale, and black pepper.',
+        img: 'https://images.unsplash.com/photo-1612874742237-6526221588e3?w=800&q=80',
+        category: 'pasta',
+        source: 'Pisces Moon',
+        prepTime: '10 min', cookTime: '15 min', servings: '4', difficulty: 'Medium',
+        ingredients: [
+            '400g spaghetti',
+            '200g guanciale or pancetta, diced',
+            '4 large egg yolks + 2 whole eggs',
+            '100g Pecorino Romano, finely grated',
+            '50g Parmigiano-Reggiano, finely grated',
+            'Freshly cracked black pepper — lots',
+            'Salt for pasta water'
+        ],
+        steps: [
+            'Bring a large pot of well-salted water to a rolling boil. Drop the spaghetti.',
+            'While pasta cooks, render the guanciale in a large skillet over medium-low heat until crisp and the fat has rendered, about 6–8 minutes. Remove from heat.',
+            'In a bowl, whisk the egg yolks, whole eggs, both cheeses, and a generous amount of black pepper until well combined.',
+            'When pasta is al dente (about 1 min before package directions), reserve 1 cup of pasta water and drain.',
+            'Working quickly, add the hot pasta to the skillet with the guanciale. Toss to coat in the rendered fat off the heat.',
+            'Pour the egg mixture over the pasta, tossing vigorously. Add pasta water a splash at a time until the sauce is silky — never lumpy. The residual heat cooks the egg; do not put the pan back on heat.',
+            'Serve immediately with extra cheese and black pepper on top.'
+        ]
+    },
+    {
+        id: 'default_chili',
+        title: 'The Best Beef Chili',
+        description: 'Deep, smoky Texas-style chili with chuck roast, three chiles, and espresso.',
+        img: 'https://images.unsplash.com/photo-1582196016295-f8c8bd4b3a99?w=800&q=80',
+        category: 'stews',
+        source: 'Pisces Moon',
+        prepTime: '20 min', cookTime: '3 hr', servings: '8', difficulty: 'Easy',
+        ingredients: [
+            '3 lbs beef chuck, cut into 1/2 inch cubes',
+            '4 dried ancho chiles, stemmed and seeded',
+            '3 dried guajillo chiles, stemmed and seeded',
+            '2 dried chipotle chiles, stemmed and seeded',
+            '1 large onion, diced',
+            '6 garlic cloves, minced',
+            '2 tbsp tomato paste',
+            '1 cup strong brewed coffee or espresso',
+            '2 cups beef broth',
+            '1 can (14 oz) fire-roasted tomatoes',
+            '2 tbsp cumin, 1 tbsp smoked paprika, 1 tbsp oregano',
+            'Salt, pepper, vegetable oil'
+        ],
+        steps: [
+            'Toast the dried chiles in a dry skillet over medium heat until fragrant, 30 seconds per side. Soak in hot water 15 minutes, then blend with 1 cup soaking liquid until smooth. Set aside.',
+            'Pat beef dry and season generously with salt and pepper. Brown in batches in a Dutch oven with vegetable oil over medium-high heat. Transfer to a plate.',
+            'Reduce heat, add onion and cook until soft, 6 minutes. Add garlic and tomato paste, cook 2 minutes.',
+            'Deglaze with coffee, scraping up browned bits. Add chile purée, broth, tomatoes, cumin, paprika, and oregano.',
+            'Return beef and any juices. Bring to a simmer, cover partially, and cook on low for 2.5–3 hours until meat is fork-tender and sauce has thickened.',
+            'Season to taste with salt. Serve with sour cream, cheddar, cilantro, and lime.'
+        ]
+    },
+    {
+        id: 'default_sourdough',
+        title: 'Artisan Sourdough Bread',
+        description: 'Open-crumb country loaf with crackling crust. 24-hour cold ferment.',
+        img: 'https://images.unsplash.com/photo-1585478259715-876a6a81fc08?w=800&q=80',
+        category: 'bread',
+        source: 'Pisces Moon',
+        prepTime: '30 min active', cookTime: '24 hr total', servings: '1 loaf', difficulty: 'Hard',
+        ingredients: [
+            '500g bread flour (or 450g bread + 50g whole wheat)',
+            '375g water (75% hydration), room temperature',
+            '100g active sourdough starter (fed 4–6 hours prior)',
+            '10g fine sea salt'
+        ],
+        steps: [
+            'Autolyse: Mix flour and water in a large bowl until no dry spots remain. Cover and rest 1 hour.',
+            'Add starter and salt. Mix by hand using a pinching motion until incorporated, about 3 minutes.',
+            'Bulk fermentation: Cover and ferment at 75°F for 4–5 hours. Perform 4 sets of stretch and folds in the first 2 hours, spaced 30 minutes apart. Dough should be smooth and 50% larger.',
+            'Shape: Turn dough onto unfloured counter. Preshape into a tight round, rest 20 minutes, then final shape into a batard or boule. Place seam-side up in a floured banneton.',
+            'Cold retard: Cover and refrigerate 12–24 hours.',
+            'Bake: Preheat Dutch oven at 500°F for 45 minutes. Score dough, place in Dutch oven, cover, and bake 20 minutes. Remove lid, reduce heat to 450°F, bake another 20–25 minutes until deeply browned.',
+            'Cool completely on a wire rack — at least 1 hour — before cutting.'
+        ]
+    },
+    {
+        id: 'default_thai_basil',
+        title: 'Thai Basil Chicken (Pad Krapow Gai)',
+        description: '15-minute street-food classic with holy basil, chile, and crispy fried egg.',
+        img: 'https://images.unsplash.com/photo-1569058242253-92a9c755a0ec?w=800&q=80',
+        category: 'asian',
+        source: 'Pisces Moon',
+        prepTime: '10 min', cookTime: '10 min', servings: '2', difficulty: 'Easy',
+        ingredients: [
+            '1 lb ground chicken (or sliced chicken thigh)',
+            '4 cloves garlic, minced',
+            '4–6 Thai bird chiles, minced (adjust to heat tolerance)',
+            '2 cups holy basil leaves (Thai basil works as substitute)',
+            '2 tbsp oyster sauce',
+            '1 tbsp fish sauce',
+            '1 tbsp light soy sauce',
+            '1 tsp dark soy sauce (for color)',
+            '1 tsp sugar',
+            '2 tbsp vegetable oil',
+            '2 eggs',
+            'Jasmine rice, for serving'
+        ],
+        steps: [
+            'Cook rice according to package directions.',
+            'Mix oyster sauce, fish sauce, both soy sauces, and sugar in a small bowl.',
+            'Heat 1 tbsp oil in a wok over high heat. Add minced garlic and chiles, stir-fry 15 seconds until fragrant.',
+            'Add chicken and break apart. Stir-fry 3–4 minutes until no longer pink.',
+            'Pour in sauce mixture, toss to coat. Stir-fry 1 minute until glossy.',
+            'Kill the heat, add basil, and toss until just wilted — 15 seconds.',
+            'In a separate pan, fry eggs in the remaining tbsp of oil until whites are crispy and yolks are still runny.',
+            'Serve chicken over rice, topped with fried egg.'
+        ]
+    },
+    {
+        id: 'default_beef_bourguignon',
+        title: 'Beef Bourguignon',
+        description: 'Julia Child\'s classic French beef stew. Worth every minute.',
+        img: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=800&q=80',
+        category: 'stews',
+        source: 'Pisces Moon',
+        prepTime: '30 min', cookTime: '3 hr', servings: '6', difficulty: 'Medium',
+        ingredients: [
+            '3 lbs beef chuck, cut into 2 inch chunks',
+            '6 oz bacon, diced',
+            '1 large onion, diced',
+            '2 carrots, diced',
+            '4 garlic cloves, minced',
+            '2 tbsp tomato paste',
+            '1 bottle (750ml) dry red wine (Burgundy or Pinot Noir)',
+            '2 cups beef broth',
+            '1 bouquet garni (thyme, parsley, bay leaf)',
+            '1 lb pearl onions, peeled',
+            '1 lb cremini mushrooms, halved',
+            '3 tbsp butter + 3 tbsp flour for thickening',
+            'Salt, pepper, olive oil'
+        ],
+        steps: [
+            'Preheat oven to 325°F. Cook bacon in a Dutch oven until crispy. Remove and set aside.',
+            'Pat beef dry, season well, and brown in batches in the bacon fat. Transfer to a plate.',
+            'Add onion and carrots to the pot, cook 6 minutes. Add garlic and tomato paste, 1 minute.',
+            'Return beef and bacon. Pour wine and broth, add bouquet garni. Bring to a simmer, cover, and braise in oven 2.5 hours until meat is fork-tender.',
+            'While braising, sauté pearl onions in butter until lightly browned. Separately, sauté mushrooms until golden.',
+            'Remove pot from oven. Strain liquid, discard bouquet garni. Return solids to pot and add onions and mushrooms.',
+            'Make a beurre manié: mix softened butter and flour. Whisk into the strained liquid, simmer 5 minutes until thickened, then pour over the solids.',
+            'Serve over mashed potatoes or buttered noodles.'
+        ]
+    },
+    {
+        id: 'default_chocolate_chip',
+        title: 'Brown Butter Chocolate Chip Cookies',
+        description: 'Deeply caramelized, chewy-centered cookies with pools of dark chocolate.',
+        img: 'https://images.unsplash.com/photo-1558961363-fa8fdf82db35?w=800&q=80',
+        category: 'desserts',
+        source: 'Pisces Moon',
+        prepTime: '15 min + chill', cookTime: '12 min', servings: '24 cookies', difficulty: 'Easy',
+        ingredients: [
+            '1 cup (2 sticks) unsalted butter',
+            '1 cup dark brown sugar, packed',
+            '1/2 cup granulated sugar',
+            '2 large eggs + 1 yolk',
+            '2 tsp vanilla extract',
+            '2 1/4 cups all-purpose flour',
+            '1 tsp baking soda',
+            '1 tsp fine sea salt + flaky salt for finishing',
+            '10 oz dark chocolate, roughly chopped (not chips)'
+        ],
+        steps: [
+            'Brown the butter: Cook butter in a light-colored saucepan over medium heat, swirling, until deeply amber and smells nutty, 6–8 minutes. Pour into a heatproof bowl and cool to room temp.',
+            'Whisk browned butter with both sugars until glossy. Add eggs and yolk, one at a time, then vanilla. Whisk until thick and shiny.',
+            'In a separate bowl, whisk flour, baking soda, and fine salt.',
+            'Fold dry ingredients into wet until just combined. Fold in chopped chocolate.',
+            'Refrigerate dough at least 30 minutes, ideally overnight — this is non-negotiable for texture.',
+            'Preheat oven to 375°F. Scoop dough into 3-tbsp balls, space 3 inches apart on parchment.',
+            'Bake 10–12 minutes until edges are set but centers look slightly underdone. Immediately sprinkle with flaky salt.',
+            'Cool on the pan 5 minutes, then transfer to a rack.'
+        ]
+    },
+];
+
+const CATEGORIES = ['all', 'pasta', 'stews', 'bread', 'asian', 'desserts', 'custom'];
+
+let allRecipes = [...DEFAULT_RECIPES];
+let currentCategory = 'all';
+let currentTab = 'all'; // 'all' or 'saved'
+let geminiKey = '';
+
+function init() {
+    // Load saved
+    const saved = localStorage.getItem('pm_recipes_custom');
+    if (saved) {
+        try {
+            const customRecipes = JSON.parse(saved);
+            allRecipes = [...DEFAULT_RECIPES, ...customRecipes];
+        } catch(e) {}
+    }
+
+    geminiKey = localStorage.getItem('gemini_key') || '';
+
+    updateSavedCount();
+    renderCategories();
+    render();
+}
+
+function updateSavedCount() {
+    const saved = allRecipes.filter(r => !r.id.startsWith('default_')).length;
+    document.getElementById('savedCount').textContent = `${saved} saved`;
+}
+
+function renderCategories() {
+    const counts = {};
+    allRecipes.forEach(r => { counts[r.category] = (counts[r.category] || 0) + 1; });
+
+    document.getElementById('catList').innerHTML = CATEGORIES.map(cat => {
+        const count = cat === 'all' ? allRecipes.length : (counts[cat] || 0);
+        if (count === 0 && cat !== 'all') return '';
+        return `
+            <div class="cat-item ${currentCategory===cat?'active':''}" onclick="setCategory('${cat}')">
+                <span>${cat.toUpperCase()}</span>
+                <span class="cat-count">${count}</span>
+            </div>`;
+    }).join('');
+}
+
+function setCategory(cat) {
+    currentCategory = cat;
+    renderCategories();
+    render();
+}
+
+function showTab(tab) {
+    currentTab = tab;
+    document.getElementById('tab-all').classList.toggle('active', tab === 'all');
+    document.getElementById('tab-saved').classList.toggle('active', tab === 'saved');
+    render();
+}
+
+function render() {
+    let recipes = allRecipes;
+
+    if (currentTab === 'saved') {
+        recipes = recipes.filter(r => !r.id.startsWith('default_'));
+    }
+
+    if (currentCategory !== 'all') {
+        recipes = recipes.filter(r => r.category === currentCategory);
+    }
+
+    if (recipes.length === 0) {
+        const msg = currentTab === 'saved'
+            ? 'No saved recipes yet. Paste a recipe URL on the left to start your collection.'
+            : 'No recipes in this category.';
+        document.getElementById('recipeGrid').innerHTML = `
+            <div style="grid-column:1/-1;padding:60px 40px;text-align:center;color:var(--text-dim);font-size:.75rem;line-height:1.8">
+                ${msg}
+            </div>`;
+        return;
+    }
+
+    document.getElementById('recipeGrid').innerHTML = recipes.map(r => {
+        const isSaved = !r.id.startsWith('default_');
+        return `
+        <div class="recipe-card" onclick="openRecipe('${r.id}')">
+            <div class="recipe-img-wrap">
+                ${r.img ? `<img class="recipe-img" src="${PM.esc(r.img)}" alt="" loading="lazy"
+                    onerror="this.style.display='none'">` : ''}
+                <span class="recipe-source-tag">${PM.esc(r.source || 'Custom')}</span>
+                ${isSaved ? '<span class="recipe-saved-badge">SAVED</span>' : ''}
+            </div>
+            <div class="recipe-body">
+                <div class="recipe-title">${PM.esc(r.title)}</div>
+                <div class="recipe-desc">${PM.esc(r.description || '')}</div>
+                <div class="recipe-meta">
+                    ${r.prepTime ? `<span>⏱ ${PM.esc(r.prepTime)}</span>` : ''}
+                    ${r.servings ? `<span>🍽 ${PM.esc(r.servings)}</span>` : ''}
+                    ${r.difficulty ? `<span style="color:${
+                        r.difficulty==='Easy' ? 'var(--accent3)' :
+                        r.difficulty==='Hard' ? 'var(--accent4)' : 'var(--warn)'
+                    }">${PM.esc(r.difficulty)}</span>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function openRecipe(id) {
+    const r = allRecipes.find(x => x.id === id);
+    if (!r) return;
+
+    const isSaved = !r.id.startsWith('default_');
+
+    document.getElementById('modalTitle').textContent = r.title;
+    document.getElementById('modalBody').innerHTML = `
+        ${r.img ? `<img src="${PM.esc(r.img)}" style="width:100%;max-height:400px;object-fit:cover;margin-bottom:16px" onerror="this.style.display='none'">` : ''}
+
+        <div style="font-size:.78rem;color:var(--text);line-height:1.7;margin-bottom:14px">
+            ${PM.esc(r.description || '')}
+        </div>
+
+        <div class="recipe-detail-meta">
+            <div class="meta-item">
+                <div class="meta-label">PREP</div>
+                <div class="meta-value">${PM.esc(r.prepTime || '—')}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">COOK</div>
+                <div class="meta-value">${PM.esc(r.cookTime || '—')}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">SERVES</div>
+                <div class="meta-value">${PM.esc(r.servings || '—')}</div>
+            </div>
+            <div class="meta-item">
+                <div class="meta-label">LEVEL</div>
+                <div class="meta-value">${PM.esc(r.difficulty || '—')}</div>
+            </div>
+        </div>
+
+        <div class="recipe-section-title">INGREDIENTS</div>
+        <ul class="ingredient-list">
+            ${(r.ingredients || []).map(i => `<li>${PM.esc(i)}</li>`).join('')}
+        </ul>
+
+        <div class="recipe-section-title">METHOD</div>
+        <ol class="step-list">
+            ${(r.steps || []).map(s => `<li>${PM.esc(s)}</li>`).join('')}
+        </ol>
+
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--panel-border);display:flex;gap:10px;justify-content:space-between;align-items:center">
+            <div style="font-size:.6rem;color:var(--text-dim)">
+                ${r.sourceUrl ? `Source: <a href="${PM.esc(r.sourceUrl)}" target="_blank" style="color:var(--accent)">${PM.esc(r.source)}</a>` : `Source: ${PM.esc(r.source || 'Custom')}`}
+            </div>
+            ${isSaved ? `<button class="pm-btn" onclick="deleteRecipe('${r.id}')" style="border-color:var(--accent4);color:var(--accent4)">DELETE</button>` : ''}
+        </div>`;
+
+    document.getElementById('recipeModal').classList.add('show');
+}
+
+function closeModal(e) {
+    if (e && e.target.id !== 'recipeModal') return;
+    document.getElementById('recipeModal').classList.remove('show');
+}
+
+function deleteRecipe(id) {
+    if (!confirm('Delete this recipe?')) return;
+    allRecipes = allRecipes.filter(r => r.id !== id);
+    saveCustom();
+    closeModal();
+    render();
+    renderCategories();
+    updateSavedCount();
+}
+
+function saveCustom() {
+    const custom = allRecipes.filter(r => !r.id.startsWith('default_'));
+    localStorage.setItem('pm_recipes_custom', JSON.stringify(custom));
+}
+
+// ── SCRAPE A RECIPE FROM A URL ───────────────────────────────────
+async function scrapeRecipe() {
+    const url = document.getElementById('urlInput').value.trim();
+    if (!url || !/^https?:\/\//.test(url)) {
+        alert('Paste a valid URL starting with http:// or https://');
+        return;
+    }
+
+    const input = document.getElementById('urlInput');
+    const origPlaceholder = input.placeholder;
+    input.placeholder = 'Scraping...';
+    input.value = '';
+    input.disabled = true;
+
+    try {
+        // Try to fetch the page via CORS proxy
+        let html = null;
+        for (const makeUrl of PM.CORS_PROXIES) {
+            try {
+                const resp = await PM.fetchWithTimeout(makeUrl(url), {}, 15000);
+                if (resp.ok) {
+                    html = await resp.text();
+                    break;
+                }
+            } catch(e) {}
+        }
+
+        if (!html) throw new Error('Could not fetch recipe page — try a different URL');
+
+        // Parse for JSON-LD structured data (most recipe sites use this)
+        const recipe = parseRecipeJsonLd(html, url);
+        if (!recipe) throw new Error('No structured recipe data found on this page. Try a major recipe site.');
+
+        // Save
+        recipe.id = 'custom_' + Date.now();
+        recipe.category = recipe.category || 'custom';
+        allRecipes.push(recipe);
+        saveCustom();
+
+        render();
+        renderCategories();
+        updateSavedCount();
+
+        // Open it
+        openRecipe(recipe.id);
+
+        input.placeholder = origPlaceholder;
+        input.disabled = false;
+    } catch (e) {
+        alert('Scrape failed: ' + e.message);
+        input.placeholder = origPlaceholder;
+        input.disabled = false;
+    }
+}
+
+function parseRecipeJsonLd(html, sourceUrl) {
+    // Find all JSON-LD script tags
+    const matches = html.matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi);
+
+    for (const m of matches) {
+        try {
+            let data = JSON.parse(m[1]);
+
+            // Unwrap graphs
+            if (data['@graph']) data = data['@graph'];
+            if (!Array.isArray(data)) data = [data];
+
+            for (const item of data) {
+                // Unwrap further nested graphs
+                const candidates = item['@graph'] ? item['@graph'] : [item];
+                for (const c of candidates) {
+                    const type = c['@type'];
+                    const isRecipe = type === 'Recipe' ||
+                                    (Array.isArray(type) && type.includes('Recipe'));
+                    if (isRecipe) {
+                        return extractRecipe(c, sourceUrl);
+                    }
+                }
+            }
+        } catch (e) {}
+    }
+
+    return null;
+}
+
+function extractRecipe(data, sourceUrl) {
+    const title = data.name || 'Untitled Recipe';
+
+    let img = data.image;
+    if (Array.isArray(img)) img = img[0];
+    if (img && typeof img === 'object') img = img.url || img['@id'] || null;
+
+    const description = (data.description || '').replace(/<[^>]*>/g, '').substring(0, 280);
+
+    // Ingredients
+    let ingredients = data.recipeIngredient || data.ingredients || [];
+    if (!Array.isArray(ingredients)) ingredients = [];
+
+    // Instructions
+    let steps = [];
+    const instr = data.recipeInstructions;
+    if (Array.isArray(instr)) {
+        instr.forEach(s => {
+            if (typeof s === 'string') steps.push(s);
+            else if (s.text) steps.push(s.text);
+            else if (s['@type'] === 'HowToSection' && Array.isArray(s.itemListElement)) {
+                s.itemListElement.forEach(sub => {
+                    if (sub.text) steps.push(sub.text);
+                });
+            }
+        });
+    } else if (typeof instr === 'string') {
+        steps = instr.split(/\n+|(?<=\.\s)(?=[A-Z])/).map(s => s.trim()).filter(Boolean);
+    }
+
+    // Times
+    const prepTime = parseDuration(data.prepTime);
+    const cookTime = parseDuration(data.cookTime);
+    const totalTime = parseDuration(data.totalTime);
+
+    // Servings
+    let servings = data.recipeYield || '—';
+    if (Array.isArray(servings)) servings = servings[0];
+    servings = String(servings).replace(/^\D+/, '').split(' ')[0] || String(servings);
+
+    // Source
+    const domain = new URL(sourceUrl).hostname.replace('www.', '');
+
+    // Guess category from title
+    const tLower = title.toLowerCase();
+    let category = 'custom';
+    if (/pasta|noodle|lasagna|ravioli|spaghetti/.test(tLower)) category = 'pasta';
+    else if (/bread|loaf|focaccia|sourdough|biscuit|roll/.test(tLower)) category = 'bread';
+    else if (/stew|chili|braise|pot roast|soup/.test(tLower)) category = 'stews';
+    else if (/pad|stir.fry|curry|ramen|pho|sushi|asian|chinese|thai|korean|japanese/.test(tLower)) category = 'asian';
+    else if (/cookie|cake|pie|tart|brownie|dessert|ice cream|chocolate/.test(tLower)) category = 'desserts';
+
+    return {
+        title,
+        description,
+        img,
+        ingredients: ingredients.map(i => typeof i === 'string' ? i : (i.text || '')),
+        steps: steps.filter(Boolean),
+        prepTime: prepTime || '—',
+        cookTime: cookTime || totalTime || '—',
+        servings,
+        difficulty: '—',
+        category,
+        source: domain,
+        sourceUrl
+    };
+}
+
+function parseDuration(iso) {
+    if (!iso) return null;
+    // PT30M, PT1H30M format
+    const m = String(iso).match(/PT(?:(\d+)H)?(?:(\d+)M)?/);
+    if (!m) return iso; // If not ISO format, return as-is
+    const hours = parseInt(m[1] || 0);
+    const mins = parseInt(m[2] || 0);
+    if (hours && mins) return `${hours} hr ${mins} min`;
+    if (hours) return `${hours} hr`;
+    if (mins) return `${mins} min`;
+    return null;
+}
+
+// ── AI CHEF ──────────────────────────────────────────────────────
+async function askAI() {
+    const input = document.getElementById('aiInput');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    await sendToAI(q);
+}
+
+async function quickAsk(q) { await sendToAI(q); }
+
+async function sendToAI(prompt) {
+    const el = document.getElementById('aiResponse');
+
+    if (!geminiKey) {
+        el.innerHTML = `
+            <div style="padding:24px;text-align:center;color:var(--text-dim)">
+                <div style="color:var(--accent4);font-family:Orbitron,monospace;font-size:.58rem;margin-bottom:10px;letter-spacing:2px">NO API KEY</div>
+                <input type="password" class="pm-input" id="quickKey" placeholder="Gemini API key..." style="margin-top:10px">
+                <button class="pm-btn" onclick="saveKey()" style="margin-top:8px">SAVE</button>
+            </div>`;
+        return;
+    }
+
+    el.innerHTML = '<div class="pm-thinking"><span></span><span></span><span></span></div>';
+
+    const context = allRecipes.slice(0, 10).map(r => `- ${r.title} (${r.category})`).join('\n');
+
+    const fullPrompt = `You are a professional chef assistant for Pisces Moon OS.
+The user's recipe book contains:
+${context}
+
+USER: ${prompt}
+
+Give practical, concise culinary advice. Include specific techniques, ratios, and timing when relevant. Reference recipes from their book when applicable.`;
+
+    try {
+        const response = await PM.gemini(fullPrompt, {apiKey: geminiKey, temperature: 0.7});
+        el.innerHTML = `<div>${PM.esc(response)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n\n/g, '</p><p style="margin-top:10px">')
+            .replace(/^/, '<p>') + '</p>'}</div>`;
+    } catch (e) {
+        el.innerHTML = `<div style="padding:14px;color:var(--accent4);font-size:.7rem">AI error: ${PM.esc(e.message)}</div>`;
+    }
+}
+
+function saveKey() {
+    const k = document.getElementById('quickKey').value.trim();
+    if (k) {
+        geminiKey = k;
+        localStorage.setItem('gemini_key', k);
+        document.getElementById('aiResponse').innerHTML = `<div style="padding:24px;text-align:center;color:var(--accent3);font-size:.7rem">Key saved.</div>`;
+    }
+}
+
+window.addEventListener('load', init);
+</script>
+</body></html>

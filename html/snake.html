@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — snake.html v2
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // SNAKE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050a0e;display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;overflow:hidden;font-family:'Courier New',monospace;touch-action:none;}
+#hdr{color:#00ff88;font-size:.7rem;letter-spacing:3px;margin-bottom:8px;display:flex;gap:20px;}
+#hdr span{color:#fff;}
+canvas{display:block;border:1px solid #1a3a50;}
+#msg{color:#00ff88;font-size:1rem;letter-spacing:4px;margin-top:10px;min-height:24px;text-align:center;}
+#hint{color:#2a5870;font-size:.55rem;letter-spacing:2px;margin-top:4px;}
+</style>
+</head><body>
+<div id="hdr">
+  <span>SCORE <span id="score">0</span></span>
+  <span>HI <span id="hi">0</span></span>
+  <span>LVL <span id="level">1</span></span>
+  <span>LEN <span id="len">3</span></span>
+</div>
+<canvas id="c"></canvas>
+<div id="msg">TAP TO START</div>
+<div id="hint">SWIPE TO TURN</div>
+
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+const CELL=18;
+let W,H,cols,rows;
+
+function resize(){
+  const s=Math.min(window.innerWidth*.95,window.innerHeight*.72);
+  cols=Math.floor(s/CELL); rows=cols;
+  W=canvas.width=cols*CELL; H=canvas.height=rows*CELL;
+}
+resize(); window.addEventListener('resize',resize);
+
+let snake,dir,nextDir,food,obstacles,score,hiScore,level,state,speed,moveTimer;
+hiScore=parseInt(localStorage.getItem('pm_snake_hi')||'0');
+
+function init(){
+  const mid=Math.floor(cols/2);
+  snake=[{x:mid,y:mid},{x:mid-1,y:mid},{x:mid-2,y:mid}];
+  dir={x:1,y:0}; nextDir={x:1,y:0};
+  score=0; level=1; speed=150; obstacles=[];
+  placeFood(); state='playing';
+  document.getElementById('msg').textContent='';
+  if(moveTimer) clearInterval(moveTimer);
+  moveTimer=setInterval(gameLoop,speed);
+}
+
+function placeFood(){
+  let p;
+  do { p={x:Math.floor(Math.random()*cols),y:Math.floor(Math.random()*rows)}; }
+  while(snake.some(s=>s.x===p.x&&s.y===p.y)||obstacles.some(o=>o.x===p.x&&o.y===p.y));
+  food=p;
+}
+
+function addObstacles(){
+  const count=(level-1)*2;
+  for(let i=0;i<count;i++){
+    let p;
+    do { p={x:Math.floor(Math.random()*cols),y:Math.floor(Math.random()*rows)}; }
+    while(snake.some(s=>s.x===p.x&&s.y===p.y)||obstacles.some(o=>o.x===p.x&&o.y===p.y)||(p.x===food.x&&p.y===food.y));
+    obstacles.push(p);
+  }
+}
+
+function gameLoop(){
+  if(state!=='playing') return;
+  dir=nextDir;
+  const head={x:((snake[0].x+dir.x)+cols)%cols,y:((snake[0].y+dir.y)+rows)%rows};
+  if(snake.some(s=>s.x===head.x&&s.y===head.y)||obstacles.some(o=>o.x===head.x&&o.y===head.y)){die();return;}
+  snake.unshift(head);
+  if(head.x===food.x&&head.y===food.y){
+    score+=10*level;
+    document.getElementById('score').textContent=score;
+    document.getElementById('len').textContent=snake.length;
+    if(score>hiScore){hiScore=score;localStorage.setItem('pm_snake_hi',hiScore);document.getElementById('hi').textContent=hiScore;}
+    placeFood();
+    if(score>=level*60){level++;document.getElementById('level').textContent=level;speed=Math.max(60,150-level*15);clearInterval(moveTimer);moveTimer=setInterval(gameLoop,speed);addObstacles();}
+  } else { snake.pop(); }
+}
+
+function die(){
+  state='dead'; clearInterval(moveTimer);
+  document.getElementById('msg').textContent=`SCORE ${score} — TAP TO RESTART`;
+}
+
+function render(){
+  ctx.fillStyle='#050a0e'; ctx.fillRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle='#0a1820'; ctx.lineWidth=0.5;
+  for(let x=0;x<=cols;x++){ctx.beginPath();ctx.moveTo(x*CELL,0);ctx.lineTo(x*CELL,H);ctx.stroke();}
+  for(let y=0;y<=rows;y++){ctx.beginPath();ctx.moveTo(0,y*CELL);ctx.lineTo(W,y*CELL);ctx.stroke();}
+  // Obstacles
+  obstacles.forEach(o=>{
+    ctx.fillStyle='#1a3a50'; ctx.fillRect(o.x*CELL+1,o.y*CELL+1,CELL-2,CELL-2);
+    ctx.fillStyle='#2a5870'; ctx.fillRect(o.x*CELL+4,o.y*CELL+4,CELL-8,CELL-8);
+  });
+  // Food
+  const pulse=0.7+0.3*Math.sin(Date.now()*.006);
+  ctx.fillStyle=`rgba(255,51,102,${pulse})`;
+  ctx.beginPath(); ctx.arc(food.x*CELL+CELL/2,food.y*CELL+CELL/2,(CELL/2-2)*pulse,0,Math.PI*2); ctx.fill();
+  // Snake
+  snake.forEach((seg,i)=>{
+    const t=1-i/snake.length;
+    ctx.fillStyle=`rgb(0,${Math.floor(180+t*75)},${Math.floor(80+t*56)})`;
+    if(i===0){
+      ctx.beginPath(); ctx.roundRect(seg.x*CELL+1,seg.y*CELL+1,CELL-2,CELL-2,4); ctx.fill();
+      ctx.fillStyle='#000';
+      const cx=seg.x*CELL+CELL/2,cy=seg.y*CELL+CELL/2;
+      ctx.beginPath(); ctx.arc(cx+dir.x*3+dir.y*3,cy+dir.y*3+dir.x*3,2,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(cx+dir.x*3-dir.y*3,cy+dir.y*3-dir.x*3,2,0,Math.PI*2); ctx.fill();
+    } else {
+      ctx.beginPath(); ctx.roundRect(seg.x*CELL+2,seg.y*CELL+2,CELL-4,CELL-4,3); ctx.fill();
+    }
+  });
+  if(state==='title'){
+    ctx.fillStyle='rgba(5,10,14,.85)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#00ff88'; ctx.font='bold 28px Courier New'; ctx.textAlign='center';
+    ctx.fillText('SNAKE',W/2,H/2-10);
+    ctx.fillStyle='#7ab8d4'; ctx.font='13px Courier New';
+    ctx.fillText('TAP TO START',W/2,H/2+20);
+  }
+}
+
+// Touch
+let tx0,ty0;
+document.addEventListener('touchstart',e=>{tx0=e.touches[0].clientX;ty0=e.touches[0].clientY;if(state==='title'||state==='dead'){init();}},{passive:true});
+document.addEventListener('touchend',e=>{
+  if(state!=='playing') return;
+  const dx=e.changedTouches[0].clientX-tx0,dy=e.changedTouches[0].clientY-ty0;
+  if(Math.abs(dx)<10&&Math.abs(dy)<10) return;
+  if(Math.abs(dx)>Math.abs(dy)){if(dx>0&&dir.x!==-1)nextDir={x:1,y:0};else if(dx<0&&dir.x!==1)nextDir={x:-1,y:0};}
+  else{if(dy>0&&dir.y!==-1)nextDir={x:0,y:1};else if(dy<0&&dir.y!==1)nextDir={x:0,y:-1};}
+},{passive:true});
+document.addEventListener('keydown',e=>{
+  if(state==='title'||state==='dead'){init();return;}
+  if(e.key==='ArrowRight'&&dir.x!==-1)nextDir={x:1,y:0};
+  if(e.key==='ArrowLeft'&&dir.x!==1)nextDir={x:-1,y:0};
+  if(e.key==='ArrowDown'&&dir.y!==-1)nextDir={x:0,y:1};
+  if(e.key==='ArrowUp'&&dir.y!==1)nextDir={x:0,y:-1};
+});
+canvas.addEventListener('click',()=>{if(state==='title'||state==='dead')init();});
+
+function animLoop(){render();requestAnimationFrame(animLoop);}
+state='title'; document.getElementById('hi').textContent=hiScore;
+render(); animLoop();
+</script>
+</body></html>

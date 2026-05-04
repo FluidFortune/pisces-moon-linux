@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — barcode.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Barcode scanner: 1D (EAN, UPC, Code128, Code39, ITF, ISBN)
+  Uses ZXing-js for 1D codes (QR handled by qr_tool.html)
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // BARCODE</title>
+<style>
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;--accent4:#ff3366;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--gold);letter-spacing:3px;}
+.main{flex:1;display:grid;grid-template-columns:1fr 1fr;overflow:hidden;}
+.panel{display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--panel-border);}
+.panel:last-child{border-right:none;}
+.ph{padding:9px 14px;border-bottom:1px solid var(--panel-border);background:var(--bg2);font-family:Orbitron,monospace;font-size:.58rem;letter-spacing:2px;color:var(--text-dim);}
+.pbody{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px;align-items:center;}
+.video-wrap{width:100%;max-width:360px;position:relative;border:2px solid var(--panel-border);background:#000;overflow:hidden;}
+#scanVid{width:100%;display:block;}
+.scan-line-h{position:absolute;left:10%;right:10%;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);top:50%;animation:scanH 1.8s linear infinite;}
+@keyframes scanH{0%{top:20%}100%{top:80%}}
+.scan-corners{position:absolute;inset:0;pointer-events:none;}
+.scan-corners::before,.scan-corners::after{content:'';position:absolute;width:20px;height:20px;border-color:var(--gold);border-style:solid;}
+.scan-corners::before{top:8px;left:8px;border-width:2px 0 0 2px;}
+.scan-corners::after{bottom:8px;right:8px;border-width:0 2px 2px 0;}
+.result-box{width:100%;max-width:360px;background:var(--bg3);border:1px solid var(--panel-border);padding:12px;}
+.res-label{font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px;}
+.res-code{font-size:.8rem;color:var(--accent3);font-family:Orbitron,monospace;word-break:break-all;margin-bottom:4px;}
+.res-type{font-size:.55rem;color:var(--text-dim);}
+.res-product{margin-top:8px;padding-top:8px;border-top:1px solid var(--panel-border);}
+.prod-name{font-size:.72rem;color:var(--text-bright);margin-bottom:4px;}
+.prod-detail{font-size:.58rem;color:var(--text-dim);line-height:1.7;}
+.action-row{display:flex;gap:6px;flex-wrap:wrap;width:100%;max-width:360px;}
+.pm-btn{padding:6px 12px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.5rem;cursor:pointer;letter-spacing:1px;}
+.pm-btn:hover{border-color:var(--accent);color:var(--accent);}
+.pm-btn.primary{border-color:var(--accent3);color:var(--accent3);}
+.hist-item{padding:8px 12px;border-bottom:1px solid rgba(28,46,58,.3);cursor:pointer;}
+.hist-item:hover{background:rgba(0,212,255,.03);}
+.hist-code{font-size:.65rem;color:var(--text-bright);font-family:'Share Tech Mono',monospace;}
+.hist-meta{font-size:.52rem;color:var(--text-dim);margin-top:2px;display:flex;gap:8px;}
+.manual-row{width:100%;max-width:360px;display:flex;gap:6px;}
+.m-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:7px 10px;outline:none;flex:1;}
+.m-input:focus{border-color:var(--gold);}
+</style>
+</head><body>
+<header>
+  <div class="logo">▌▌▌ BARCODE</div>
+  <div style="display:flex;gap:6px">
+    <button class="pm-btn primary" id="camBtn" onclick="toggleCamera()">START CAMERA</button>
+    <label class="pm-btn" style="cursor:pointer">UPLOAD IMG<input type="file" accept="image/*" style="display:none" onchange="scanFromImage(this)"></label>
+  </div>
+</header>
+<div class="main">
+  <!-- Scanner -->
+  <div class="panel">
+    <div class="ph">📷 SCANNER</div>
+    <div class="pbody">
+      <div class="video-wrap" id="videoWrap" style="display:none">
+        <video id="scanVid" autoplay muted playsinline></video>
+        <div class="scan-line-h"></div>
+        <div class="scan-corners"></div>
+      </div>
+      <canvas id="scanCanvas" style="display:none"></canvas>
+      <div id="noCam" style="text-align:center;color:var(--text-dim);font-size:.62rem;padding:20px;width:100%;max-width:360px">
+        <div style="font-size:3rem;opacity:.3;margin-bottom:10px">▌▌▌▌▌</div>
+        Press START CAMERA to scan barcodes.<br><br>
+        Supports: EAN-13, EAN-8, UPC-A, UPC-E,<br>Code 128, Code 39, ITF, ISBN, QR<br><br>
+        <div class="manual-row">
+          <input class="m-input" id="manInput" placeholder="Enter barcode manually..." onkeydown="if(event.key==='Enter')manualLookup()">
+          <button class="pm-btn primary" onclick="manualLookup()">LOOK UP</button>
+        </div>
+      </div>
+      <div class="result-box" id="resultBox">
+        <div class="res-label">SCAN RESULT</div>
+        <div id="resCode" style="color:var(--text-dim);font-size:.62rem">Waiting for scan...</div>
+        <div id="resType"></div>
+        <div class="res-product" id="resProduct" style="display:none"></div>
+      </div>
+      <div class="action-row" id="actionRow" style="display:none">
+        <button class="pm-btn primary" onclick="copyCode()">COPY</button>
+        <button class="pm-btn" id="lookupBtn" onclick="lookupProduct()">🔍 LOOKUP</button>
+        <button class="pm-btn" onclick="saveToHistory()">SAVE</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="panel">
+    <div class="ph">SCAN HISTORY <span style="float:right;cursor:pointer;color:var(--accent4)" onclick="clearHistory()">CLEAR</span></div>
+    <div id="historyList" style="flex:1;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- ZXing for 1D barcodes -->
+<script src="lib/zxing.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// BARCODE SCANNER
+// ZXing-js: 1D barcodes (EAN, UPC, Code128, Code39, ITF)
+// Open Food Facts API for product lookup (free, no key)
+// ═══════════════════════════════════════════════════════════════════
+
+const STORE = 'pm_barcode_hist';
+let cameraActive = false;
+let videoStream = null;
+let scanResult = null;
+let codeReader = null;
+let history = [];
+
+try { history = JSON.parse(localStorage.getItem(STORE)||'[]'); } catch {}
+
+async function toggleCamera() {
+  if (cameraActive) { stopCamera(); return; }
+  try {
+    // Init ZXing reader
+    codeReader = new ZXing.BrowserMultiFormatReader();
+    const devices = await ZXing.BrowserMultiFormatReader.listVideoInputDevices();
+    const backCam = devices.find(d => /back|rear|environment/i.test(d.label)) || devices[devices.length-1];
+    const deviceId = backCam?.deviceId;
+
+    videoStream = await navigator.mediaDevices.getUserMedia({
+      video: deviceId ? { deviceId, width:{ideal:640}, height:{ideal:480} } : { facingMode:'environment' }
+    });
+    const vid = document.getElementById('scanVid');
+    vid.srcObject = videoStream;
+    document.getElementById('videoWrap').style.display = 'block';
+    document.getElementById('noCam').style.display = 'none';
+    document.getElementById('camBtn').textContent = 'STOP CAMERA';
+    cameraActive = true;
+
+    // Start decoding
+    codeReader.decodeFromStream(videoStream, vid, (result, err) => {
+      if (result) {
+        displayResult(result.getText(), result.getBarcodeFormat().toString());
+        stopCamera();
+      }
+    });
+  } catch(e) {
+    alert('Camera access denied or ZXing not available.\n\nTry uploading an image or enter barcode manually.');
+  }
+}
+
+function stopCamera() {
+  if (codeReader) { try { codeReader.reset(); } catch {} codeReader = null; }
+  if (videoStream) { videoStream.getTracks().forEach(t=>t.stop()); videoStream = null; }
+  cameraActive = false;
+  document.getElementById('videoWrap').style.display = 'none';
+  document.getElementById('noCam').style.display = 'block';
+  document.getElementById('camBtn').textContent = 'START CAMERA';
+}
+
+async function scanFromImage(input) {
+  const file = input.files[0]; if (!file) return;
+  const img = new Image();
+  img.onload = async () => {
+    const canvas = document.getElementById('scanCanvas');
+    canvas.width = img.width; canvas.height = img.height;
+    canvas.getContext('2d').drawImage(img,0,0);
+    try {
+      const reader = new ZXing.BrowserMultiFormatReader();
+      const result = await reader.decodeFromCanvas(canvas);
+      displayResult(result.getText(), result.getBarcodeFormat().toString());
+    } catch {
+      // Try jsQR for QR codes as fallback
+      const ctx = canvas.getContext('2d');
+      const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+      if (typeof jsQR !== 'undefined') {
+        const qr = jsQR(imageData.data, canvas.width, canvas.height);
+        if (qr) displayResult(qr.data, 'QR_CODE');
+        else setResult('No barcode found in image.', '', false);
+      } else {
+        setResult('No barcode found in image.', '', false);
+      }
+    }
+  };
+  img.src = URL.createObjectURL(file);
+  input.value='';
+}
+
+function manualLookup() {
+  const code = document.getElementById('manInput').value.trim();
+  if (!code) return;
+  displayResult(code, detectFormat(code));
+  lookupProduct();
+}
+
+function detectFormat(code) {
+  if (/^\d{13}$/.test(code)) return 'EAN_13';
+  if (/^\d{12}$/.test(code)) return 'UPC_A';
+  if (/^\d{8}$/.test(code)) return 'EAN_8';
+  if (/^\d{10}$/.test(code)) return 'ISBN_10';
+  return 'CODE_128';
+}
+
+function displayResult(code, format) {
+  scanResult = { code, format };
+  setResult(code, format, true);
+}
+
+function setResult(code, format, showActions) {
+  document.getElementById('resCode').textContent = code;
+  document.getElementById('resCode').style.color = showActions ? 'var(--accent3)' : 'var(--text-dim)';
+  document.getElementById('resType').textContent = format ? 'Format: ' + format.replace(/_/g,' ') : '';
+  document.getElementById('resType').style.color = 'var(--text-dim)';
+  document.getElementById('resType').style.fontSize = '.58rem';
+  document.getElementById('actionRow').style.display = showActions ? 'flex' : 'none';
+  document.getElementById('resProduct').style.display = 'none';
+}
+
+function copyCode() { if (scanResult) navigator.clipboard.writeText(scanResult.code).catch(()=>{}); }
+
+async function lookupProduct() {
+  if (!scanResult) return;
+  const code = scanResult.code;
+  // Only EAN/UPC for product lookup
+  if (!/^\d{8,13}$/.test(code)) { showProductInfo(null, 'Not a product barcode'); return; }
+  document.getElementById('lookupBtn').textContent = 'LOOKING UP...';
+  try {
+    const url = `https://world.openfoodfacts.org/api/v0/product/${code}.json`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.status === 1 && data.product) {
+      const p = data.product;
+      showProductInfo(p);
+    } else {
+      // Try UPC database
+      showProductInfo(null, 'Product not found in Open Food Facts.');
+    }
+  } catch {
+    showProductInfo(null, 'Lookup failed (offline?)');
+  }
+  document.getElementById('lookupBtn').textContent = '🔍 LOOKUP';
+}
+
+function showProductInfo(p, fallback) {
+  const el = document.getElementById('resProduct');
+  el.style.display = 'block';
+  if (!p) { el.innerHTML = `<div class="prod-detail" style="color:var(--text-dim)">${fallback}</div>`; return; }
+  el.innerHTML = `
+    <div class="prod-name">${esc(p.product_name || p.product_name_en || 'Unknown product')}</div>
+    <div class="prod-detail">
+      ${p.brands ? `Brand: ${esc(p.brands)}<br>` : ''}
+      ${p.quantity ? `Size: ${esc(p.quantity)}<br>` : ''}
+      ${p.categories ? `Category: ${esc(p.categories.split(',')[0])}<br>` : ''}
+      ${p.nutriments?.['energy-kcal_100g'] ? `Cal/100g: ${Math.round(p.nutriments['energy-kcal_100g'])}<br>` : ''}
+      ${p.nutriments?.proteins_100g ? `Protein/100g: ${p.nutriments.proteins_100g}g<br>` : ''}
+      ${p.countries ? `Country: ${esc(p.countries.split(',')[0])}` : ''}
+    </div>`;
+}
+
+function saveToHistory() {
+  if (!scanResult) return;
+  history.unshift({ ...scanResult, ts: Date.now() });
+  history = history.filter((v,i,a) => a.findIndex(x=>x.code===v.code)===i).slice(0,50);
+  localStorage.setItem(STORE, JSON.stringify(history));
+  renderHistory();
+}
+
+function clearHistory() {
+  history = []; localStorage.removeItem(STORE); renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!history.length) { el.innerHTML='<div style="padding:16px;text-align:center;color:var(--text-dim);font-size:.62rem">No scans yet</div>'; return; }
+  el.innerHTML = history.map(h =>
+    `<div class="hist-item" onclick="reloadScan('${h.code}','${h.format}')">
+      <div class="hist-code">${esc(h.code)}</div>
+      <div class="hist-meta">
+        <span>${h.format?.replace(/_/g,' ')||''}</span>
+        <span>${new Date(h.ts).toLocaleDateString()}</span>
+      </div>
+    </div>`
+  ).join('');
+}
+
+function reloadScan(code, format) { displayResult(code, format); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+renderHistory();
+</script>
+<!-- jsQR fallback for QR in images -->
+<script src="lib/jsQR.js"></script>
+</body></html>

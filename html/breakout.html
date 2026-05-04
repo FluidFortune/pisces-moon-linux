@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — breakout.html v1
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // BREAKOUT</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#050a0e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;font-family:'Courier New',monospace;touch-action:none;user-select:none;}
+#hdr{color:#00d4ff;font-size:.65rem;letter-spacing:3px;margin-bottom:6px;display:flex;gap:18px;}
+#hdr span{color:#fff;}
+canvas{display:block;border:1px solid #1a3a50;}
+#msg{color:#00ff88;font-size:.85rem;letter-spacing:4px;margin-top:8px;min-height:20px;text-align:center;}
+#hint{color:#2a5870;font-size:.5rem;letter-spacing:2px;margin-top:3px;text-align:center;}
+</style>
+</head><body>
+<div id="hdr">
+  <span>SCORE <span id="score">0</span></span>
+  <span>BEST <span id="best">0</span></span>
+  <span>LIVES <span id="lives">3</span></span>
+  <span>LVL <span id="level">1</span></span>
+</div>
+<canvas id="c"></canvas>
+<div id="msg">TAP / CLICK TO LAUNCH</div>
+<div id="hint">MOUSE OR TOUCH TO MOVE PADDLE</div>
+
+<script>
+const canvas=document.getElementById('c'),ctx=canvas.getContext('2d');
+let W,H;
+
+// layout constants (set after resize)
+let PW,PH,PR,BALL_R,BRICK_ROWS,BRICK_COLS,BRICK_W,BRICK_H,BRICK_PAD,BRICK_TOP;
+
+function resize(){
+  const maxW=Math.min(window.innerWidth*.95,480);
+  const maxH=Math.min(window.innerHeight*.7,520);
+  W=canvas.width=Math.floor(maxW);
+  H=canvas.height=Math.floor(maxH);
+  PW=Math.floor(W*.2); PH=10; PR=H-30;
+  BALL_R=7;
+  BRICK_COLS=10; BRICK_ROWS=6;
+  BRICK_PAD=3;
+  BRICK_W=Math.floor((W-BRICK_PAD*(BRICK_COLS+1))/BRICK_COLS);
+  BRICK_H=14; BRICK_TOP=40;
+}
+resize(); window.addEventListener('resize',()=>{resize();if(!started)init();});
+
+const COLORS=['#ff3366','#ff6b00','#f4a820','#00ff88','#00d4ff','#9b59b6'];
+const POWERUPS=['WIDE','MULTI','FAST','SLOW','LIFE'];
+const PU_COLOR={'WIDE':'#00ff88','MULTI':'#00d4ff','FAST':'#ff3366','SLOW':'#f4a820','LIFE':'#ff3366'};
+
+let bricks,balls,paddle,score,best,lives,level,gameOver,started,won,particles,powerups;
+
+function makeBricks(lvl){
+  const b=[];
+  for(let r=0;r<BRICK_ROWS;r++){
+    for(let c=0;c<BRICK_COLS;c++){
+      const hp=r<2?2:1;
+      // skip some bricks at higher levels for patterns
+      if(lvl>=3&&r===3&&c%3===1)continue;
+      if(lvl>=5&&r===5&&c%2===0)continue;
+      b.push({
+        x:BRICK_PAD+(BRICK_W+BRICK_PAD)*c,
+        y:BRICK_TOP+BRICK_PAD+(BRICK_H+BRICK_PAD)*r,
+        w:BRICK_W,h:BRICK_H,hp,maxHp:hp,
+        color:COLORS[r%COLORS.length],
+        pu:Math.random()<.12?POWERUPS[Math.floor(Math.random()*POWERUPS.length)]:null
+      });
+    }
+  }
+  return b;
+}
+
+function makeBall(vx,vy){
+  return {x:W/2,y:PR-PH-BALL_R-2,vx:vx||0,vy:vy||-(3+level*.4),launched:false};
+}
+
+function init(){
+  bricks=makeBricks(level);
+  balls=[makeBall()];
+  paddle={x:W/2-PW/2,y:PR,w:PW,h:PH};
+  particles=[]; powerups=[];
+  gameOver=false; won=false; started=false;
+  document.getElementById('msg').textContent='TAP / CLICK TO LAUNCH';
+}
+
+function newGame(){
+  best=parseInt(localStorage.getItem('pm_brkout_best')||'0');
+  score=0; lives=3; level=1;
+  document.getElementById('best').textContent=best;
+  init();
+  loop();
+}
+
+let raf;
+function loop(){
+  cancelAnimationFrame(raf);
+  update(); draw();
+  raf=requestAnimationFrame(loop);
+}
+
+function update(){
+  if(gameOver||won)return;
+
+  // move un-launched balls with paddle
+  balls.forEach(b=>{if(!b.launched){b.x=paddle.x+paddle.w/2;b.y=PR-PH-BALL_R-2;}});
+
+  // powerup drops
+  powerups.forEach(p=>{p.y+=2;});
+  for(let i=powerups.length-1;i>=0;i--){
+    const p=powerups[i];
+    if(p.y>H){powerups.splice(i,1);continue;}
+    if(p.y+10>paddle.y&&p.y<paddle.y+PH&&p.x>paddle.x&&p.x<paddle.x+paddle.w){
+      applyPU(p.type); powerups.splice(i,1);
+    }
+  }
+
+  // particles
+  particles.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.life--;p.vy+=.1;});
+  for(let i=particles.length-1;i>=0;i--)if(particles[i].life<=0)particles.splice(i,1);
+
+  // balls
+  let anyLaunched=false;
+  balls.forEach(b=>{if(b.launched)anyLaunched=true;});
+
+  for(let bi=balls.length-1;bi>=0;bi--){
+    const b=balls[bi];
+    if(!b.launched)continue;
+    b.x+=b.vx; b.y+=b.vy;
+
+    // walls
+    if(b.x-BALL_R<0){b.x=BALL_R;b.vx=Math.abs(b.vx);}
+    if(b.x+BALL_R>W){b.x=W-BALL_R;b.vx=-Math.abs(b.vx);}
+    if(b.y-BALL_R<0){b.y=BALL_R;b.vy=Math.abs(b.vy);}
+
+    // paddle
+    if(b.vy>0&&b.y+BALL_R>=paddle.y&&b.y+BALL_R<=paddle.y+PH+b.vy&&b.x>paddle.x&&b.x<paddle.x+paddle.w){
+      const rel=(b.x-(paddle.x+paddle.w/2))/(paddle.w/2);
+      const spd=Math.hypot(b.vx,b.vy);
+      b.vx=rel*spd*.9;
+      b.vy=-Math.sqrt(spd*spd-b.vx*b.vx);
+      b.y=paddle.y-BALL_R;
+    }
+
+    // lost ball
+    if(b.y-BALL_R>H){
+      balls.splice(bi,1);
+      if(balls.length===0){
+        lives--;
+        document.getElementById('lives').textContent=lives;
+        if(lives<=0){endGame();}
+        else{init();document.getElementById('msg').textContent='LOST BALL — CLICK TO LAUNCH';}
+        return;
+      }
+    }
+
+    // bricks
+    for(let i=bricks.length-1;i>=0;i--){
+      const bk=bricks[i];
+      if(b.x+BALL_R>bk.x&&b.x-BALL_R<bk.x+bk.w&&b.y+BALL_R>bk.y&&b.y-BALL_R<bk.y+bk.h){
+        // which face?
+        const overlapL=b.x+BALL_R-bk.x, overlapR=bk.x+bk.w-b.x+BALL_R;
+        const overlapT=b.y+BALL_R-bk.y, overlapB=bk.y+bk.h-b.y+BALL_R;
+        const minH=Math.min(overlapL,overlapR), minV=Math.min(overlapT,overlapB);
+        if(minH<minV)b.vx=-b.vx; else b.vy=-b.vy;
+        bk.hp--;
+        // particles
+        for(let k=0;k<5;k++)particles.push({x:bk.x+bk.w/2,y:bk.y+bk.h/2,
+          vx:(Math.random()-.5)*4,vy:(Math.random()-.5)*4,life:20,color:bk.color});
+        if(bk.hp<=0){
+          const pts=bk.maxHp===2?30:10;
+          score+=pts;
+          document.getElementById('score').textContent=score;
+          if(bk.pu)powerups.push({x:bk.x+bk.w/2,y:bk.y,type:bk.pu});
+          bricks.splice(i,1);
+        }
+        break;
+      }
+    }
+  }
+
+  if(bricks.length===0){
+    level++;
+    document.getElementById('level').textContent=level;
+    init();
+    document.getElementById('msg').textContent=`LEVEL ${level} — CLICK TO LAUNCH`;
+    if(score>best){best=score;localStorage.setItem('pm_brkout_best',best);document.getElementById('best').textContent=best;}
+  }
+}
+
+function applyPU(type){
+  switch(type){
+    case'WIDE': paddle.w=Math.min(W*.4,PW*1.6); setTimeout(()=>paddle.w=PW,8000); break;
+    case'MULTI':
+      const b=balls.find(b=>b.launched);
+      if(b){
+        balls.push({...b,vx:b.vx+1.5,launched:true});
+        balls.push({...b,vx:b.vx-1.5,launched:true});
+      }
+      break;
+    case'FAST': balls.forEach(b=>{b.vx*=1.3;b.vy*=1.3;}); break;
+    case'SLOW': balls.forEach(b=>{b.vx*=.7;b.vy*=.7;if(Math.abs(b.vy)<1)b.vy=-1;}); break;
+    case'LIFE': lives++;document.getElementById('lives').textContent=lives; break;
+  }
+}
+
+function endGame(){
+  gameOver=true;
+  if(score>best){best=score;localStorage.setItem('pm_brkout_best',best);document.getElementById('best').textContent=best;}
+  document.getElementById('msg').textContent='GAME OVER — CLICK TO RESTART';
+}
+
+function draw(){
+  ctx.fillStyle='#050a0e';ctx.fillRect(0,0,W,H);
+
+  // bricks
+  bricks.forEach(bk=>{
+    const fade=bk.hp<bk.maxHp?.55:1;
+    ctx.globalAlpha=fade;
+    ctx.fillStyle=bk.color; ctx.fillRect(bk.x,bk.y,bk.w,bk.h);
+    ctx.fillStyle='rgba(255,255,255,.15)'; ctx.fillRect(bk.x,bk.y,bk.w,4);
+    if(bk.hp>1){ctx.fillStyle='rgba(0,0,0,.4)';ctx.fillRect(bk.x+2,bk.y+2,bk.w-4,bk.h-4);}
+    ctx.globalAlpha=1;
+    if(bk.pu){ctx.fillStyle='rgba(255,255,255,.3)';ctx.fillRect(bk.x+bk.w-6,bk.y+2,4,4);}
+  });
+
+  // powerups
+  powerups.forEach(p=>{
+    ctx.fillStyle=PU_COLOR[p.type]||'#fff';
+    ctx.font='.45rem Courier New'; ctx.textAlign='center';
+    ctx.fillText(p.type,p.x,p.y);
+  });
+
+  // particles
+  particles.forEach(p=>{
+    ctx.globalAlpha=p.life/20;
+    ctx.fillStyle=p.color;
+    ctx.fillRect(p.x-2,p.y-2,4,4);
+    ctx.globalAlpha=1;
+  });
+
+  // paddle
+  const grad=ctx.createLinearGradient(paddle.x,paddle.y,paddle.x,paddle.y+PH);
+  grad.addColorStop(0,'#00d4ff'); grad.addColorStop(1,'#005577');
+  ctx.fillStyle=grad; ctx.fillRect(paddle.x,paddle.y,paddle.w,PH);
+
+  // balls
+  balls.forEach(b=>{
+    ctx.beginPath(); ctx.arc(b.x,b.y,BALL_R,0,Math.PI*2);
+    ctx.fillStyle='#fff'; ctx.fill();
+    ctx.strokeStyle='#00d4ff'; ctx.lineWidth=1; ctx.stroke();
+  });
+}
+
+// input
+function movePaddle(clientX){
+  const rect=canvas.getBoundingClientRect();
+  const x=clientX-rect.left;
+  paddle.x=Math.max(0,Math.min(W-paddle.w,x-paddle.w/2));
+}
+
+canvas.addEventListener('mousemove',e=>movePaddle(e.clientX));
+canvas.addEventListener('touchmove',e=>{e.preventDefault();movePaddle(e.touches[0].clientX);},{passive:false});
+
+canvas.addEventListener('click',()=>{
+  if(gameOver){score=0;lives=3;level=1;newGame();return;}
+  const unl=balls.filter(b=>!b.launched);
+  if(unl.length){
+    unl.forEach(b=>{
+      const ang=(Math.random()-.5)*.6;
+      const spd=3+level*.4;
+      b.vx=Math.sin(ang)*spd; b.vy=-Math.cos(ang)*spd;
+      b.launched=true;
+    });
+    document.getElementById('msg').textContent='';
+    started=true;
+  }
+});
+canvas.addEventListener('touchend',e=>{
+  if(gameOver){score=0;lives=3;level=1;newGame();return;}
+  const unl=balls.filter(b=>!b.launched);
+  if(unl.length){
+    unl.forEach(b=>{
+      const ang=(Math.random()-.5)*.6;
+      const spd=3+level*.4;
+      b.vx=Math.sin(ang)*spd; b.vy=-Math.cos(ang)*spd;
+      b.launched=true;
+    });
+    document.getElementById('msg').textContent='';
+    started=true;
+  }
+},{passive:true});
+
+newGame();
+</script>
+</body></html>

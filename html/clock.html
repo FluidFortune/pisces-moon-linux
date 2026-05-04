@@ -1,233 +1,413 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — clock.html
+<!--
+  Pisces Moon OS — clock.html v3
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
 -->
-<!-- PISCES MOON OS // CLOCK -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PISCES MOON // CLOCK</title>
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // CLOCK v3</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);--glow-gold:0 0 20px rgba(244,168,32,.4);}
+:root{
+  --bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;
+  --panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;
+  --accent4:#ff3366;--gold:#f4a820;
+  --text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;
+}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-.tabs{display:flex;background:var(--bg2);border-bottom:2px solid var(--panel-border);}
-.tab{flex:1;padding:12px;text-align:center;cursor:pointer;font-family:'Orbitron',monospace;font-size:.62rem;color:var(--text-dim);letter-spacing:2px;border-bottom:2px solid transparent;transition:all .2s;}
-.tab:hover{color:var(--text);}
-.tab.active{color:var(--accent);border-bottom-color:var(--accent);}
-.page{display:none;flex:1;align-items:center;justify-content:center;flex-direction:column;padding:20px;}
-.page.active{display:flex;}
+header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--accent3);letter-spacing:3px;}
+.tabs{display:flex;gap:0;}
+.tab{padding:5px 16px;font-size:.55rem;font-family:'Orbitron',monospace;letter-spacing:1px;cursor:pointer;border:1px solid var(--panel-border);background:transparent;color:var(--text-dim);transition:all .15s;margin-left:-1px;}
+.tab:hover{color:var(--accent3);}
+.tab.active{background:var(--bg3);color:var(--accent3);border-color:var(--accent3);}
+.content{flex:1;display:flex;align-items:center;justify-content:center;overflow-y:auto;}
+/* CLOCK */
+.clock-wrap{display:flex;flex-direction:column;align-items:center;gap:20px;padding:20px;}
+canvas#clockCanvas{border-radius:50%;}
+.digital{font-family:'Orbitron',monospace;font-size:2.8rem;color:var(--accent3);letter-spacing:6px;text-align:center;}
+.digital-sub{font-family:'Orbitron',monospace;font-size:.75rem;color:var(--text-dim);letter-spacing:4px;text-align:center;margin-top:4px;}
+.date-str{font-size:.7rem;color:var(--text-dim);letter-spacing:2px;text-align:center;margin-top:2px;}
+/* STOPWATCH */
+.sw-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px;width:100%;max-width:480px;}
+.sw-display{font-family:'Orbitron',monospace;font-size:3.4rem;color:var(--accent3);letter-spacing:4px;text-align:center;}
+.sw-ms{font-family:'Orbitron',monospace;font-size:1.6rem;color:var(--text-dim);text-align:center;margin-top:-8px;}
+.btn-row{display:flex;gap:10px;}
+.ctrl-btn{padding:12px 28px;background:var(--bg2);border:1px solid var(--panel-border);color:var(--text);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:2px;cursor:pointer;transition:all .15s;}
+.ctrl-btn:hover{border-color:var(--accent3);color:var(--accent3);}
+.ctrl-btn.start{border-color:var(--accent3);color:var(--accent3);}
+.ctrl-btn.stop{border-color:var(--accent4);color:var(--accent4);}
+.ctrl-btn.reset{border-color:var(--text-dim);}
+.laps{width:100%;max-height:240px;overflow-y:auto;border:1px solid var(--panel-border);}
+.lap{display:flex;gap:8px;padding:6px 12px;border-bottom:1px solid rgba(28,46,58,.3);font-size:.65rem;}
+.lap:first-child{border-left:3px solid var(--accent3);}
+.lap-n{color:var(--text-dim);width:40px;}
+.lap-time{flex:1;color:var(--text-bright);font-family:'Orbitron',monospace;}
+.lap-delta{color:var(--text-dim);}
+/* COUNTDOWN */
+.cd-wrap{display:flex;flex-direction:column;align-items:center;gap:16px;padding:20px;width:100%;max-width:400px;}
+.cd-display{font-family:'Orbitron',monospace;font-size:3.2rem;color:var(--gold);letter-spacing:6px;text-align:center;}
+.cd-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;width:100%;}
+.cd-field{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.cd-label{font-size:.52rem;color:var(--text-dim);font-family:'Orbitron',monospace;letter-spacing:2px;}
+.cd-spin{display:flex;align-items:center;gap:4px;}
+.cd-num{font-family:'Orbitron',monospace;font-size:1.4rem;color:var(--text-bright);width:48px;text-align:center;background:var(--bg3);border:1px solid var(--panel-border);padding:5px;}
+.cd-arrow{background:none;border:1px solid var(--panel-border);color:var(--text-dim);cursor:pointer;font-size:.7rem;padding:4px 7px;transition:all .15s;}
+.cd-arrow:hover{border-color:var(--gold);color:var(--gold);}
+/* WORLD CLOCK */
+.wc-wrap{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;padding:16px;width:100%;}
+.wc-card{background:var(--bg2);border:1px solid var(--panel-border);padding:12px;}
+.wc-city{font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;color:var(--text-dim);}
+.wc-time{font-family:'Orbitron',monospace;font-size:1.5rem;color:var(--accent3);margin:5px 0 2px;letter-spacing:2px;}
+.wc-date{font-size:.58rem;color:var(--text-dim);}
+.wc-tz{font-size:.55rem;color:var(--accent);margin-top:3px;}
+.wc-daynight{font-size:.8rem;}
+</style>
+</head><body>
 
-/* Clock */
-.time-big{font-family:'Orbitron',monospace;font-size:clamp(3rem,12vw,7rem);font-weight:900;color:var(--text-bright);text-shadow:var(--glow);letter-spacing:4px;line-height:1;}
-.time-sep{color:var(--accent);animation:blink 1s infinite;}
-@keyframes blink{0%,49%{opacity:1}50%,100%{opacity:.2}}
-.date-line{font-size:.85rem;color:var(--gold);text-shadow:var(--glow-gold);letter-spacing:4px;margin-top:12px;font-family:'Orbitron',monospace;}
-.tz-line{font-size:.65rem;color:var(--text-dim);letter-spacing:3px;margin-top:8px;}
-
-/* Stopwatch */
-.sw-display{font-family:'Orbitron',monospace;font-size:clamp(2.5rem,10vw,5.5rem);font-weight:900;color:var(--accent);text-shadow:var(--glow);letter-spacing:4px;margin-bottom:20px;}
-.sw-ms{font-size:.4em;color:var(--text-dim);}
-.btn-row{display:flex;gap:14px;margin-top:10px;}
-.btn{padding:12px 28px;background:transparent;border:2px solid var(--accent);color:var(--accent);font-family:'Orbitron',monospace;font-size:.72rem;cursor:pointer;letter-spacing:2px;transition:all .2s;}
-.btn:hover{background:var(--accent);color:var(--bg);box-shadow:var(--glow);}
-.btn.orange{border-color:var(--accent2);color:var(--accent2);}
-.btn.orange:hover{background:var(--accent2);color:var(--bg);}
-.btn.red{border-color:var(--accent4);color:var(--accent4);}
-.btn.red:hover{background:var(--accent4);color:var(--bg);}
-.btn.green{border-color:var(--accent3);color:var(--accent3);}
-.btn.green:hover{background:var(--accent3);color:var(--bg);}
-.splits{margin-top:16px;max-height:200px;overflow-y:auto;width:100%;max-width:400px;}
-.split{display:flex;justify-content:space-between;padding:6px 12px;border-bottom:1px solid rgba(26,58,80,.3);font-size:.7rem;}
-.split-n{color:var(--text-dim);}
-.split-t{color:var(--text-bright);}
-.split-d{color:var(--accent2);}
-
-/* Timer */
-.timer-setup{display:flex;gap:10px;align-items:center;margin-bottom:20px;}
-.timer-input{background:var(--bg3);border:2px solid var(--panel-border);color:var(--text-bright);font-family:'Orbitron',monospace;font-size:1.5rem;width:70px;text-align:center;padding:10px;outline:none;}
-.timer-input:focus{border-color:var(--accent);}
-.timer-lbl{font-size:.6rem;color:var(--text-dim);letter-spacing:2px;display:block;text-align:center;margin-top:2px;}
-.timer-display{font-family:'Orbitron',monospace;font-size:clamp(3rem,11vw,6rem);font-weight:900;letter-spacing:4px;margin-bottom:16px;transition:color .3s;}
-.timer-display.running{color:var(--accent3);text-shadow:0 0 20px rgba(0,255,136,.4);}
-.timer-display.done{color:var(--accent4);animation:flash 0.5s infinite;}
-@keyframes flash{0%,100%{opacity:1}50%{opacity:.3}}
-
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<div class="tabs">
-  <div class="tab active" onclick="setTab('clock')">CLOCK</div>
-  <div class="tab" onclick="setTab('stopwatch')">STOPWATCH</div>
-  <div class="tab" onclick="setTab('timer')">TIMER</div>
-</div>
-
-<!-- CLOCK -->
-<div class="page active" id="pg-clock">
-  <div class="time-big" id="clockDisplay">00<span class="time-sep">:</span>00<span class="time-sep">:</span>00</div>
-  <div class="date-line" id="dateDisplay"></div>
-  <div class="tz-line" id="tzDisplay"></div>
-</div>
-
-<!-- STOPWATCH -->
-<div class="page" id="pg-stopwatch">
-  <div class="sw-display" id="swDisplay">00:00<span class="sw-ms">.00</span></div>
-  <div class="btn-row">
-    <button class="btn green" id="swStart" onclick="swToggle()">START</button>
-    <button class="btn orange" onclick="swLap()">LAP</button>
-    <button class="btn red" onclick="swReset()">RESET</button>
+<header>
+  <div class="logo">🕐 CLOCK <span style="color:var(--text-dim);font-size:.6rem">v3</span></div>
+  <div class="tabs">
+    <button class="tab active" id="tClock" onclick="setTab('clock')">CLOCK</button>
+    <button class="tab" id="tSW" onclick="setTab('stopwatch')">STOPWATCH</button>
+    <button class="tab" id="tCD" onclick="setTab('countdown')">COUNTDOWN</button>
+    <button class="tab" id="tWC" onclick="setTab('worldclock')">WORLD</button>
   </div>
-  <div class="splits" id="swSplits"></div>
-</div>
-
-<!-- TIMER -->
-<div class="page" id="pg-timer">
-  <div class="timer-setup" id="timerSetup">
-    <div><input class="timer-input" id="tH" type="number" min="0" max="99" value="0" placeholder="HH"><span class="timer-lbl">HOURS</span></div>
-    <div style="font-family:'Orbitron',monospace;font-size:2rem;color:var(--text-dim);padding-top:4px">:</div>
-    <div><input class="timer-input" id="tM" type="number" min="0" max="59" value="0" placeholder="MM"><span class="timer-lbl">MIN</span></div>
-    <div style="font-family:'Orbitron',monospace;font-size:2rem;color:var(--text-dim);padding-top:4px">:</div>
-    <div><input class="timer-input" id="tS" type="number" min="0" max="59" value="0" placeholder="SS"><span class="timer-lbl">SEC</span></div>
-  </div>
-  <div class="timer-display" id="timerDisplay">00:00:00</div>
-  <div class="btn-row">
-    <button class="btn green" id="timerStart" onclick="timerToggle()">START</button>
-    <button class="btn red" onclick="timerReset()">RESET</button>
-  </div>
-</div>
+</header>
+<div class="content" id="content"></div>
 
 <script>
-// ── Tab ────────────────────────────────────────────────
-function setTab(t){
-  document.querySelectorAll('.tab,.page').forEach(el=>el.classList.remove('active'));
-  document.querySelector(`.tab:nth-child(${t==='clock'?1:t==='stopwatch'?2:3})`).classList.add('active');
-  document.getElementById('pg-'+t).classList.add('active');
+// ═══════════════════════════════════════════════════════════════════
+// PISCES MOON CLOCK v3
+// ═══════════════════════════════════════════════════════════════════
+
+let activeTab = 'clock';
+let rafId = null;
+
+// Stopwatch state
+let swRunning = false, swStart = 0, swElapsed = 0, swLaps = [], swLapStart = 0;
+let swInterval = null;
+
+// Countdown state
+let cdH = 0, cdM = 5, cdS = 0;
+let cdRemaining = 0, cdRunning = false, cdInterval = null;
+
+const CITIES = [
+  {name:'LOS ANGELES',   tz:'America/Los_Angeles'},
+  {name:'NEW YORK',      tz:'America/New_York'},
+  {name:'LONDON',        tz:'Europe/London'},
+  {name:'PARIS',         tz:'Europe/Paris'},
+  {name:'DUBAI',         tz:'Asia/Dubai'},
+  {name:'MUMBAI',        tz:'Asia/Kolkata'},
+  {name:'SINGAPORE',     tz:'Asia/Singapore'},
+  {name:'TOKYO',         tz:'Asia/Tokyo'},
+  {name:'SYDNEY',        tz:'Australia/Sydney'},
+  {name:'SÃO PAULO',    tz:'America/Sao_Paulo'},
+  {name:'TORONTO',       tz:'America/Toronto'},
+  {name:'REYKJAVIK',     tz:'Atlantic/Reykjavik'},
+];
+
+// ── Tab switch ────────────────────────────────────────────────────
+function setTab(t) {
+  activeTab = t;
+  ['tClock','tSW','tCD','tWC'].forEach(id => document.getElementById(id).classList.remove('active'));
+  document.getElementById({clock:'tClock',stopwatch:'tSW',countdown:'tCD',worldclock:'tWC'}[t]).classList.add('active');
+  if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+  renderTab();
 }
 
-// ── Clock ──────────────────────────────────────────────
-function tickClock(){
-  const n=new Date();
-  const p=n=>String(n).padStart(2,'0');
-  document.getElementById('clockDisplay').innerHTML=
-    `${p(n.getHours())}<span class="time-sep">:</span>${p(n.getMinutes())}<span class="time-sep">:</span>${p(n.getSeconds())}`;
-  document.getElementById('dateDisplay').textContent=
-    n.toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'}).toUpperCase();
-  document.getElementById('tzDisplay').textContent=
-    Intl.DateTimeFormat().resolvedOptions().timeZone+' · UTC'+
-    (n.getTimezoneOffset()<=0?'+':'-')+String(Math.abs(n.getTimezoneOffset()/60)).padStart(2,'0')+':00';
-}
-setInterval(tickClock,1000); tickClock();
-
-// ── Stopwatch ──────────────────────────────────────────
-let swRunning=false, swStart=0, swElapsed=0, swInterval=null, swLaps=[], swLapStart=0;
-
-function swToggle(){
-  if(swRunning){
-    clearInterval(swInterval); swElapsed+=Date.now()-swStart; swRunning=false;
-    document.getElementById('swStart').textContent='RESUME';
-    document.getElementById('swStart').className='btn orange';
-  }else{
-    swStart=Date.now(); swRunning=true;
-    document.getElementById('swStart').textContent='STOP';
-    document.getElementById('swStart').className='btn red';
-    swInterval=setInterval(swTick,50);
-    if(!swLapStart)swLapStart=swStart;
+function renderTab() {
+  const c = document.getElementById('content');
+  if (activeTab === 'clock') {
+    c.innerHTML = `<div class="clock-wrap">
+      <canvas id="clockCanvas" width="280" height="280"></canvas>
+      <div>
+        <div class="digital" id="digitalTime">00:00:00</div>
+        <div class="digital-sub" id="digitalAmPm">AM</div>
+        <div class="date-str" id="dateStr"></div>
+      </div>
+    </div>`;
+    tickClock();
+  } else if (activeTab === 'stopwatch') {
+    c.innerHTML = `<div class="sw-wrap">
+      <div class="sw-display" id="swDisplay">00:00:00</div>
+      <div class="sw-ms" id="swMs">.000</div>
+      <div class="btn-row">
+        <button class="ctrl-btn start" id="swBtn" onclick="swToggle()">START</button>
+        <button class="ctrl-btn" onclick="swLap()">LAP</button>
+        <button class="ctrl-btn reset" onclick="swReset()">RESET</button>
+      </div>
+      <div class="laps" id="lapList"></div>
+    </div>`;
+    updateSwDisplay();
+  } else if (activeTab === 'countdown') {
+    c.innerHTML = `<div class="cd-wrap">
+      <div class="cd-display" id="cdDisplay">00:05:00</div>
+      <div class="cd-inputs">
+        ${['H','M','S'].map((u,i) => `
+          <div class="cd-field">
+            <div class="cd-label">${u==='H'?'HOURS':u==='M'?'MINUTES':'SECONDS'}</div>
+            <div class="cd-spin">
+              <button class="cd-arrow" onclick="adjCd('${u}',-1)">▼</button>
+              <div class="cd-num" id="cd${u}">${String(u==='H'?cdH:u==='M'?cdM:cdS).padStart(2,'0')}</div>
+              <button class="cd-arrow" onclick="adjCd('${u}',1)">▲</button>
+            </div>
+          </div>`).join('')}
+      </div>
+      <div class="btn-row">
+        <button class="ctrl-btn start" id="cdBtn" onclick="cdToggle()">START</button>
+        <button class="ctrl-btn reset" onclick="cdReset()">RESET</button>
+      </div>
+    </div>`;
+    updateCdDisplay();
+  } else if (activeTab === 'worldclock') {
+    c.innerHTML = `<div class="wc-wrap" id="wcWrap"></div>`;
+    tickWorldClock();
   }
 }
 
-function swTick(){
-  const total=swElapsed+(Date.now()-swStart);
-  document.getElementById('swDisplay').innerHTML=formatSW(total)+'<span class="sw-ms">.'+String(Math.floor((total%1000)/10)).padStart(2,'0')+'</span>';
+// ── ANALOG CLOCK ──────────────────────────────────────────────────
+function tickClock() {
+  if (activeTab !== 'clock') return;
+  const canvas = document.getElementById('clockCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const now = new Date();
+  const W = 280, R = 128, cx = W/2, cy = W/2;
+
+  ctx.clearRect(0,0,W,W);
+
+  // Background
+  ctx.fillStyle = '#080f14';
+  ctx.beginPath(); ctx.arc(cx,cy,R+4,0,Math.PI*2); ctx.fill();
+
+  // Outer ring
+  ctx.strokeStyle = '#1a3a50'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.stroke();
+
+  // Accent ring
+  ctx.strokeStyle = '#00ff8822'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.arc(cx,cy,R-8,0,Math.PI*2); ctx.stroke();
+
+  // Hour markers
+  for (let i=0;i<12;i++) {
+    const a = (i/12)*Math.PI*2 - Math.PI/2;
+    const r1 = R-6, r2 = i%3===0 ? R-18 : R-13;
+    ctx.strokeStyle = i%3===0 ? '#00d4ff' : '#2a5870';
+    ctx.lineWidth = i%3===0 ? 2 : 1;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*r1, cy+Math.sin(a)*r1);
+    ctx.lineTo(cx+Math.cos(a)*r2, cy+Math.sin(a)*r2);
+    ctx.stroke();
+  }
+
+  // Minute markers
+  for (let i=0;i<60;i++) {
+    if (i%5===0) continue;
+    const a=(i/60)*Math.PI*2-Math.PI/2;
+    ctx.strokeStyle='#1a3a50'; ctx.lineWidth=1;
+    ctx.beginPath();
+    ctx.moveTo(cx+Math.cos(a)*(R-6),cy+Math.sin(a)*(R-6));
+    ctx.lineTo(cx+Math.cos(a)*(R-10),cy+Math.sin(a)*(R-10));
+    ctx.stroke();
+  }
+
+  const s = now.getSeconds()+now.getMilliseconds()/1000;
+  const m = now.getMinutes()+s/60;
+  const h = (now.getHours()%12)+m/60;
+
+  // Hour hand
+  drawHand(ctx,cx,cy,(h/12)*Math.PI*2-Math.PI/2,R*0.52,'#c8e8f5',5,8);
+  // Minute hand
+  drawHand(ctx,cx,cy,(m/60)*Math.PI*2-Math.PI/2,R*0.75,'#00d4ff',3,6);
+  // Second hand
+  drawHand(ctx,cx,cy,(s/60)*Math.PI*2-Math.PI/2,R*0.88,'#ff3366',1.5,4);
+
+  // Center dot
+  ctx.fillStyle='#c8e8f5';
+  ctx.beginPath(); ctx.arc(cx,cy,5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ff3366';
+  ctx.beginPath(); ctx.arc(cx,cy,2.5,0,Math.PI*2); ctx.fill();
+
+  // Digital readout
+  const h12 = now.getHours()%12||12;
+  const pad2 = n=>String(n).padStart(2,'0');
+  document.getElementById('digitalTime').textContent = `${pad2(h12)}:${pad2(now.getMinutes())}:${pad2(now.getSeconds())}`;
+  document.getElementById('digitalAmPm').textContent = now.getHours()>=12?'PM':'AM';
+  document.getElementById('dateStr').textContent = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+
+  rafId = requestAnimationFrame(tickClock);
 }
 
-function swLap(){
-  if(!swRunning)return;
-  const total=swElapsed+(Date.now()-swStart);
-  const lapTime=total-(swLaps.reduce((a,l)=>a+l.t,0));
-  swLaps.unshift({n:swLaps.length+1,total,t:lapTime});
+function drawHand(ctx,cx,cy,angle,len,color,width,backLen) {
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(angle);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(0,-backLen);
+  ctx.lineTo(0,len);
+  ctx.stroke();
+  ctx.restore();
+}
+
+// ── STOPWATCH ─────────────────────────────────────────────────────
+function swToggle() {
+  swRunning = !swRunning;
+  const btn = document.getElementById('swBtn');
+  if (swRunning) {
+    swStart = Date.now() - swElapsed;
+    swLapStart = swLapStart || swStart;
+    swInterval = setInterval(updateSwDisplay, 33);
+    btn.textContent = 'PAUSE';
+    btn.className = 'ctrl-btn stop';
+  } else {
+    clearInterval(swInterval);
+    swElapsed = Date.now() - swStart;
+    btn.textContent = 'RESUME';
+    btn.className = 'ctrl-btn start';
+  }
+}
+
+function swLap() {
+  if (!swRunning) return;
+  const total = Date.now() - swStart;
+  const lapTime = total - (swLaps.length ? swLaps[swLaps.length-1].total : 0);
+  swLaps.push({total, lapTime, n: swLaps.length+1});
   renderLaps();
 }
 
-function swReset(){
-  clearInterval(swInterval); swRunning=false; swElapsed=0; swLaps=[];swLapStart=0;
-  document.getElementById('swDisplay').innerHTML='00:00<span class="sw-ms">.00</span>';
-  document.getElementById('swStart').textContent='START';
-  document.getElementById('swStart').className='btn green';
-  document.getElementById('swSplits').innerHTML='';
+function swReset() {
+  swRunning = false; clearInterval(swInterval);
+  swStart = 0; swElapsed = 0; swLaps = []; swLapStart = 0;
+  document.getElementById('swBtn').textContent = 'START';
+  document.getElementById('swBtn').className = 'ctrl-btn start';
+  updateSwDisplay(); renderLaps();
 }
 
-function renderLaps(){
-  document.getElementById('swSplits').innerHTML=swLaps.map((l,i)=>`
-    <div class="split">
-      <span class="split-n">LAP ${l.n}</span>
-      <span class="split-d">${formatSW(l.t)}</span>
-      <span class="split-t">${formatSW(l.total)}</span>
+function updateSwDisplay() {
+  const t = swRunning ? Date.now() - swStart : swElapsed;
+  document.getElementById('swDisplay').textContent = fmtTime(t);
+  document.getElementById('swMs').textContent = '.' + String(Math.floor((t%1000))).padStart(3,'0');
+}
+
+function renderLaps() {
+  const el = document.getElementById('lapList');
+  if (!el) return;
+  el.innerHTML = [...swLaps].reverse().map(l => `
+    <div class="lap">
+      <span class="lap-n">LAP ${l.n}</span>
+      <span class="lap-time">${fmtTime(l.total)}</span>
+      <span class="lap-delta">+${fmtTime(l.lapTime)}</span>
     </div>`).join('');
 }
 
-function formatSW(ms){
-  const m=Math.floor(ms/60000),s=Math.floor((ms%60000)/1000);
-  return String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+function fmtTime(ms) {
+  const h = Math.floor(ms/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  const s = Math.floor((ms%60000)/1000);
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
-// ── Timer ──────────────────────────────────────────────
-let timerRunning=false, timerRemain=0, timerTotal=0, timerInterval=null;
+// ── COUNTDOWN ────────────────────────────────────────────────────
+function adjCd(unit, delta) {
+  if (cdRunning) return;
+  if (unit === 'H') cdH = Math.max(0, Math.min(23, cdH+delta));
+  if (unit === 'M') cdM = Math.max(0, Math.min(59, cdM+delta));
+  if (unit === 'S') cdS = Math.max(0, Math.min(59, cdS+delta));
+  document.getElementById('cdH').textContent = String(cdH).padStart(2,'0');
+  document.getElementById('cdM').textContent = String(cdM).padStart(2,'0');
+  document.getElementById('cdS').textContent = String(cdS).padStart(2,'0');
+  cdRemaining = (cdH*3600 + cdM*60 + cdS) * 1000;
+  updateCdDisplay();
+}
 
-function timerToggle(){
-  if(timerRunning){
-    clearInterval(timerInterval); timerRunning=false;
-    document.getElementById('timerStart').textContent='RESUME';
-    document.getElementById('timerStart').className='btn orange';
-  }else{
-    if(timerRemain===0){
-      const h=parseInt(document.getElementById('tH').value)||0;
-      const m=parseInt(document.getElementById('tM').value)||0;
-      const s=parseInt(document.getElementById('tS').value)||0;
-      timerTotal=timerRemain=(h*3600+m*60+s)*1000;
-      if(!timerRemain)return;
-    }
-    timerRunning=true;
-    document.getElementById('timerStart').textContent='PAUSE';
-    document.getElementById('timerStart').className='btn red';
-    const target=Date.now()+timerRemain;
-    timerInterval=setInterval(()=>{
-      timerRemain=Math.max(0,target-Date.now());
-      const d=document.getElementById('timerDisplay');
-      d.textContent=formatTimer(timerRemain);
-      d.className='timer-display running';
-      if(timerRemain===0){
-        clearInterval(timerInterval); timerRunning=false;
-        d.className='timer-display done';
-        document.getElementById('timerStart').textContent='START';
-        document.getElementById('timerStart').className='btn green';
-        if('Notification' in window && Notification.permission==='granted')
-          new Notification('Pisces Moon Timer','Timer finished!');
+function cdToggle() {
+  cdRunning = !cdRunning;
+  const btn = document.getElementById('cdBtn');
+  if (cdRunning) {
+    if (!cdRemaining) cdRemaining = (cdH*3600+cdM*60+cdS)*1000;
+    const endTime = Date.now() + cdRemaining;
+    cdInterval = setInterval(() => {
+      cdRemaining = Math.max(0, endTime - Date.now());
+      updateCdDisplay();
+      if (cdRemaining <= 0) {
+        clearInterval(cdInterval); cdRunning = false;
+        document.getElementById('cdBtn').textContent = 'START';
+        document.getElementById('cdBtn').className = 'ctrl-btn start';
+        cdDone();
       }
-    },100);
+    }, 100);
+    btn.textContent = 'PAUSE';
+    btn.className = 'ctrl-btn stop';
+  } else {
+    clearInterval(cdInterval);
+    btn.textContent = 'RESUME';
+    btn.className = 'ctrl-btn start';
   }
 }
 
-function timerReset(){
-  clearInterval(timerInterval); timerRunning=false; timerRemain=0;
-  document.getElementById('timerDisplay').textContent='00:00:00';
-  document.getElementById('timerDisplay').className='timer-display';
-  document.getElementById('timerStart').textContent='START';
-  document.getElementById('timerStart').className='btn green';
+function cdReset() {
+  cdRunning = false; clearInterval(cdInterval);
+  cdRemaining = (cdH*3600+cdM*60+cdS)*1000;
+  document.getElementById('cdBtn').textContent = 'START';
+  document.getElementById('cdBtn').className = 'ctrl-btn start';
+  updateCdDisplay();
 }
 
-function formatTimer(ms){
-  const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000),s=Math.floor((ms%60000)/1000);
-  return [h,m,s].map(n=>String(n).padStart(2,'0')).join(':');
+function updateCdDisplay() {
+  const t = cdRemaining;
+  const h = Math.floor(t/3600000);
+  const m = Math.floor((t%3600000)/60000);
+  const s = Math.floor((t%60000)/1000);
+  const el = document.getElementById('cdDisplay');
+  if (el) el.textContent = `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
 }
 
-if('Notification' in window) Notification.requestPermission();
+function cdDone() {
+  if ('vibrate' in navigator) navigator.vibrate([500,200,500,200,500]);
+  const el = document.getElementById('cdDisplay');
+  if (el) {
+    el.style.color = 'var(--accent4)';
+    el.textContent = 'TIME UP!';
+    setTimeout(()=>{ el.style.color='var(--gold)'; updateCdDisplay(); }, 3000);
+  }
+}
+
+// ── WORLD CLOCK ───────────────────────────────────────────────────
+function tickWorldClock() {
+  if (activeTab !== 'worldclock') return;
+  const wrap = document.getElementById('wcWrap');
+  if (!wrap) return;
+  const now = new Date();
+  wrap.innerHTML = CITIES.map(city => {
+    try {
+      const t = new Date(now.toLocaleString('en-US',{timeZone:city.tz}));
+      const h24 = t.getHours();
+      const h12 = h24%12||12;
+      const m = String(t.getMinutes()).padStart(2,'0');
+      const s = String(t.getSeconds()).padStart(2,'0');
+      const ampm = h24>=12?'PM':'AM';
+      const isDay = h24>=6&&h24<20;
+      const date = t.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+      const diff = Math.round((t-new Date(now.toLocaleString('en-US',{timeZone:'America/Los_Angeles'})))/3600000);
+      const diffStr = diff===0?'local':diff>0?`+${diff}h`:`${diff}h`;
+      return `<div class="wc-card">
+        <div class="wc-city">${city.name} <span class="wc-daynight">${isDay?'☀':'🌙'}</span></div>
+        <div class="wc-time">${String(h12).padStart(2,'0')}:${m}:${s} <span style="font-size:.7rem;color:var(--text-dim)">${ampm}</span></div>
+        <div class="wc-date">${date}</div>
+        <div class="wc-tz">${diffStr} vs LA</div>
+      </div>`;
+    } catch { return ''; }
+  }).join('');
+  setTimeout(tickWorldClock, 1000);
+}
+
+// ── Init ──────────────────────────────────────────────────────────
+renderTab();
 </script>
 </body></html>

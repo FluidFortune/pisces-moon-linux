@@ -1,225 +1,562 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — gps_app.html
+<!--
+  Pisces Moon OS — gps_app.html v2
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
-
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  SPDX-License-Identifier: AGPL-3.0-or-later
 -->
-<!-- PISCES MOON OS // GPS -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // GPS</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="lib/leaflet.min.css">
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);--glow-gold:0 0 20px rgba(244,168,32,.4);}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;letter-spacing:3px;}
-.content{padding:20px;max-width:1100px;margin:0 auto;}
-.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
-.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;letter-spacing:3px;display:flex;justify-content:space-between;align-items:center;}
-.pb{padding:14px 16px;}
-.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent);color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-.btn:hover{background:var(--accent);color:var(--bg);box-shadow:var(--glow);}
-.btn.sm{padding:4px 10px;font-size:.6rem;}
-.btn.orange{border-color:var(--accent2);color:var(--accent2);}
-.btn.orange:hover{background:var(--accent2);color:var(--bg);}
-.btn.green{border-color:var(--accent3);color:var(--accent3);}
-.btn.green:hover{background:var(--accent3);color:var(--bg);}
-.btn.red{border-color:var(--accent4);color:var(--accent4);}
-.btn.red:hover{background:var(--accent4);color:var(--bg);}
-.btn.gold{border-color:var(--gold);color:var(--gold);}
-.btn.gold:hover{background:var(--gold);color:var(--bg);}
-.btn:disabled{opacity:.4;cursor:not-allowed;}
-.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;transition:border-color .2s;}
-.pm-input:focus{border-color:var(--accent);}
-.pm-input::placeholder{color:var(--text-dim);}
-.pm-select{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:6px 8px;outline:none;cursor:pointer;}
-.pm-select:focus{border-color:var(--accent);}
-.dt{width:100%;border-collapse:collapse;font-size:.7rem;}
-.dt th{text-align:left;padding:7px 10px;color:var(--text-dim);font-size:.58rem;letter-spacing:2px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;}
-.dt td{padding:7px 10px;border-bottom:1px solid rgba(26,58,80,.3);}
-.dt tr:hover td{background:rgba(0,212,255,.04);}
-.ts{max-height:380px;overflow-y:auto;}
-.badge{display:inline-block;padding:1px 6px;font-size:.57rem;border-radius:2px;}
-.bc{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid var(--accent);}
-.bo{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid var(--accent2);}
-.bg{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
-.br{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
-.bw{background:rgba(255,204,0,.1);color:var(--warn);border:1px solid var(--warn);}
-.bgo{background:rgba(244,168,32,.1);color:var(--gold);border:1px solid var(--gold);}
-.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:16px;}
-.sc{background:var(--panel);border:1px solid var(--panel-border);padding:13px;position:relative;overflow:hidden;}
-.sc::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--accent);}
-.sc.o::before{background:var(--accent2);}.sc.g::before{background:var(--accent3);}.sc.r::before{background:var(--accent4);}.sc.w::before{background:var(--warn);}.sc.gold::before{background:var(--gold);}
-.slbl{font-size:.58rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:4px;font-family:'Orbitron',monospace;}
-.sval{font-family:'Orbitron',monospace;font-size:1.3rem;color:var(--text-bright);font-weight:700;}
-.ssub{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-body{display:flex;flex-direction:column;height:100vh;overflow:hidden;}
-.header-inner{display:flex;align-items:center;justify-content:space-between;width:100%;}
-#map{flex:1;background:var(--bg3);}
-.overlay{position:absolute;z-index:400;background:rgba(8,15,20,.9);border:1px solid var(--panel-border);padding:10px 14px;}
-.pos-panel{top:80px;left:16px;min-width:230px;}
-.stats-panel{top:80px;right:16px;}
-.coord{font-family:'Orbitron',monospace;font-size:1rem;color:var(--accent);}
-.coord-lbl{font-size:.55rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:2px;}
-.fix-badge{display:inline-block;padding:2px 8px;font-size:.6rem;border-radius:2px;margin-top:8px;}
-.sat-row{display:flex;gap:8px;align-items:center;margin-top:8px;font-size:.68rem;}
-.waypoints{position:absolute;bottom:0;left:0;right:0;z-index:400;background:rgba(8,15,20,.95);border-top:1px solid var(--panel-border);max-height:180px;overflow-y:auto;}
-.wp-head{padding:8px 16px;border-bottom:1px solid var(--panel-border);display:flex;justify-content:space-between;align-items:center;}
-.wp-head-t{font-family:'Orbitron',monospace;font-size:.6rem;color:var(--accent);letter-spacing:2px;}
-.wpi{display:flex;justify-content:space-between;padding:6px 16px;border-bottom:1px solid rgba(26,58,80,.3);font-size:.68rem;cursor:pointer;}
-.wpi:hover{background:rgba(0,212,255,.05);}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;animation:pulse 2s infinite;}
-.dot.fix{background:var(--accent3);}.dot.search{background:var(--warn);}.dot.none{background:var(--text-dim);}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-</style></head><body>
-<header>
-  <div class="header-inner">
-    <div class="logo" style="color:var(--accent)">PISCES MOON // <span style="color:var(--gold)">GPS</span></div>
-    <div style="display:flex;gap:10px">
-      <button class="btn sm" onclick="addWaypoint()">+ WAYPOINT</button>
-      <button class="btn sm orange" onclick="clearTrack()">CLEAR TRACK</button>
-      <button class="btn sm green" onclick="exportGPX()">EXPORT GPX</button>
+.gps-layout { display:grid; grid-template-columns:280px 1fr 260px; height:calc(100vh - 52px); overflow:hidden; }
+.gps-left  { border-right:1px solid var(--panel-border); overflow-y:auto; }
+.gps-right { border-left:1px solid var(--panel-border); overflow-y:auto; }
+.gps-center { position:relative; }
+#gps-map { width:100%; height:100%; }
+
+/* Stats bar */
+.gps-stats { grid-column:1/-1; display:grid; grid-template-columns:repeat(6,1fr); border-bottom:1px solid var(--panel-border); background:var(--bg2); }
+.gps-stat { padding:8px 12px; border-right:1px solid var(--panel-border); text-align:center; }
+.gps-stat:last-child { border-right:none; }
+.gps-stat-label { font-family:Orbitron,monospace; font-size:.45rem; letter-spacing:2px; color:var(--text-dim); }
+.gps-stat-value { font-family:Orbitron,monospace; font-size:1rem; color:var(--text-bright); font-weight:700; }
+
+/* Waypoint list */
+.wp-item { padding:10px 12px; border-bottom:1px solid rgba(28,46,58,.4); cursor:pointer; transition:background .15s; }
+.wp-item:hover { background:rgba(244,168,32,.04); }
+.wp-item.selected { background:rgba(244,168,32,.08); border-left:2px solid var(--gold); }
+.wp-name { font-size:.72rem; color:var(--text-bright); margin-bottom:3px; }
+.wp-coords { font-family:Share\ Tech\ Mono,monospace; font-size:.58rem; color:var(--text-dim); }
+.wp-meta { font-size:.55rem; color:var(--text-dim); display:flex; gap:8px; margin-top:2px; }
+
+/* Map controls */
+.gps-controls { position:absolute; top:8px; right:8px; z-index:1000; display:flex; flex-direction:column; gap:6px; }
+.gps-btn { padding:6px 12px; background:var(--bg2); border:1px solid var(--panel-border); color:var(--text-dim); font-family:Share\ Tech\ Mono,monospace; font-size:.6rem; cursor:pointer; transition:all .15s; white-space:nowrap; }
+.gps-btn:hover { border-color:var(--gold); color:var(--gold); }
+.gps-btn.active { border-color:var(--accent3); color:var(--accent3); background:rgba(0,255,136,.1); }
+.gps-btn.record { border-color:var(--accent4); color:var(--accent4); }
+.gps-btn.record.active { background:rgba(255,51,102,.1); animation:pulse 1s infinite; }
+
+/* Coordinate formats */
+.coord-row { padding:6px 12px; border-bottom:1px solid rgba(28,46,58,.3); font-size:.62rem; display:flex; justify-content:space-between; }
+.coord-label { color:var(--text-dim); font-family:Orbitron,monospace; font-size:.5rem; letter-spacing:1px; }
+.coord-value { color:var(--text-bright); font-family:Share\ Tech\ Mono,monospace; }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">🛰 <em>GPS</em> NAVIGATOR</div>
+    <div class="pm-hdr-right">
+        <div class="pm-live-badge" id="liveBadge" style="opacity:.3">
+            <div class="pm-live-dot"></div>GPS
+        </div>
+        <span class="pm-last-update" id="lastUpdate"></span>
     </div>
-  </div>
 </header>
-<div id="map" style="position:relative">
-  <!-- Position overlay -->
-  <div class="overlay pos-panel">
-    <div class="coord-lbl">LATITUDE</div>
-    <div class="coord" id="lat">—</div>
-    <div class="coord-lbl" style="margin-top:6px">LONGITUDE</div>
-    <div class="coord" id="lon">—</div>
-    <div class="coord-lbl" style="margin-top:6px">ALTITUDE</div>
-    <div class="coord" id="alt" style="font-size:.8rem">—</div>
-    <div>
-      <span class="dot none" id="fixDot"></span>
-      <span id="fixLabel" style="font-size:.65rem;color:var(--text-dim)">NO FIX</span>
+
+<div style="display:grid;grid-template-rows:auto 1fr;height:calc(100vh - 52px)">
+    <div class="gps-stats">
+        <div class="gps-stat"><div class="gps-stat-label">LATITUDE</div><div class="gps-stat-value" id="statLat">—</div></div>
+        <div class="gps-stat"><div class="gps-stat-label">LONGITUDE</div><div class="gps-stat-value" id="statLon">—</div></div>
+        <div class="gps-stat"><div class="gps-stat-label">ALTITUDE</div><div class="gps-stat-value" id="statAlt">—</div></div>
+        <div class="gps-stat"><div class="gps-stat-label">SPEED</div><div class="gps-stat-value" id="statSpeed">—</div></div>
+        <div class="gps-stat"><div class="gps-stat-label">SATELLITES</div><div class="gps-stat-value" id="statSats">—</div></div>
+        <div class="gps-stat"><div class="gps-stat-label">HDOP</div><div class="gps-stat-value" id="statHdop">—</div></div>
     </div>
-  </div>
-  <!-- Stats overlay -->
-  <div class="overlay stats-panel" style="text-align:right">
-    <div class="coord-lbl">SPEED</div>
-    <div class="coord" id="speed">— km/h</div>
-    <div class="coord-lbl" style="margin-top:6px">HEADING</div>
-    <div class="coord" id="heading">—°</div>
-    <div class="coord-lbl" style="margin-top:6px">ACCURACY</div>
-    <div style="font-size:.8rem;color:var(--text-bright)" id="accuracy">—</div>
-    <div class="sat-row" style="justify-content:flex-end">
-      <span style="color:var(--text-dim);font-size:.6rem">SOURCE:</span>
-      <span class="badge bc" id="source" style="font-size:.6rem">BROWSER</span>
+
+    <div class="gps-layout" style="overflow:hidden">
+        <!-- Left: waypoints -->
+        <div class="gps-left">
+            <div class="pm-sh" style="position:sticky;top:0;z-index:10">
+                WAYPOINTS
+                <span class="pm-sh-sub" id="wpCount"></span>
+            </div>
+            <div style="padding:8px;border-bottom:1px solid var(--panel-border);display:flex;gap:6px">
+                <button class="pm-refresh" style="flex:1" onclick="addWaypoint()">+ ADD</button>
+                <button class="pm-refresh" style="flex:1" onclick="clearWaypoints()">CLEAR</button>
+            </div>
+            <div id="waypointList"></div>
+
+            <div class="pm-sh">TRACK</div>
+            <div style="padding:10px 12px">
+                <div style="font-size:.6rem;color:var(--text-dim);margin-bottom:8px">
+                    Track points: <span style="color:var(--text-bright)" id="trackCount">0</span>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:6px">
+                    <button class="pm-refresh" style="width:100%" id="btnRecord" onclick="toggleRecord()">⬤ START RECORDING</button>
+                    <button class="pm-refresh" style="width:100%" onclick="exportGPX()">⬇ EXPORT GPX</button>
+                    <button class="pm-refresh" style="width:100%" onclick="clearTrack()">CLEAR TRACK</button>
+                </div>
+            </div>
+
+            <div class="pm-sh">DISTANCE</div>
+            <div id="distPanel" style="padding:12px;font-size:.65rem;color:var(--text-dim)">
+                Track: <span id="distTrack">—</span><br>
+                To selected waypoint: <span id="distWP">—</span>
+            </div>
+        </div>
+
+        <!-- Center: map -->
+        <div class="gps-center">
+            <div class="gps-controls">
+                <button class="gps-btn active" id="btnFollow" onclick="toggleFollow()">📍 FOLLOW</button>
+                <button class="gps-btn" id="btnSat" onclick="toggleSatellite()">🛰 SAT VIEW</button>
+                <button class="gps-btn" onclick="centerMap()">⊕ CENTER</button>
+                <button class="gps-btn" onclick="addWaypoint()">+ WAYPOINT</button>
+            </div>
+            <div id="gps-map"></div>
+        </div>
+
+        <!-- Right: coordinates + compass -->
+        <div class="gps-right">
+            <div class="pm-sh">COORDINATES</div>
+            <div class="coord-row"><span class="coord-label">DECIMAL</span><span class="coord-value" id="coordDecimal">—</span></div>
+            <div class="coord-row"><span class="coord-label">DMS</span><span class="coord-value" id="coordDMS">—</span></div>
+            <div class="coord-row"><span class="coord-label">MGRS</span><span class="coord-value" id="coordMGRS">—</span></div>
+            <div class="coord-row"><span class="coord-label">HEADING</span><span class="coord-value" id="coordHeading">—</span></div>
+
+            <div class="pm-sh">COMPASS</div>
+            <div style="display:flex;justify-content:center;padding:16px">
+                <canvas id="compass" width="200" height="200"></canvas>
+            </div>
+
+            <div class="pm-sh">ALTITUDE PROFILE</div>
+            <canvas id="alt-spark" width="238" height="70" style="padding:8px"></canvas>
+
+            <div class="pm-sh">SPEED HISTORY</div>
+            <canvas id="spd-spark" width="238" height="60" style="padding:8px"></canvas>
+
+            <div class="pm-sh">SATELLITE INFO</div>
+            <canvas id="sat-chart" width="238" height="140" style="padding:8px"></canvas>
+
+            <div class="pm-sh">FIX QUALITY</div>
+            <canvas id="hdop-gauge" width="238" height="100" style="padding:8px"></canvas>
+        </div>
     </div>
-  </div>
 </div>
-<!-- Waypoints panel -->
-<div class="waypoints" id="wpPanel" style="display:none">
-  <div class="wp-head">
-    <span class="wp-head-t">WAYPOINTS</span>
-    <button class="btn sm red" onclick="document.getElementById('wpPanel').style.display='none'">CLOSE</button>
-  </div>
-  <div id="wpList"></div>
-</div>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+<script src="lib/leaflet.min.js"></script>
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_utils.js"></script>
+<script src="pm_transport.js"></script>
 <script>
-const map=L.map('map',{zoomControl:true,attributionControl:false}).setView([36.1,-115.2],13);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
+// ═══════════════════════════════════════════════════════════════════
+// GPS NAVIGATOR — Full field navigation with track recording and waypoints
+// ═══════════════════════════════════════════════════════════════════
 
-let marker=null, trackLine=L.polyline([],{color:'#00d4ff',weight:3,opacity:.8}).addTo(map);
-let track=[],waypoints=[],watching=false,ws=null,wsConn=false;
-let posData={lat:null,lon:null,alt:null,speed:null,heading:null,accuracy:null};
+let lat = null, lon = null, alt = 0, speed = 0, heading = 0, sats = 0, hdop = 99;
+let trackPoints  = PM.load('gps_track')     || [];
+let waypoints    = PM.load('gps_waypoints') || [];
+let recording    = false;
+let followGPS    = true;
+let selectedWP   = null;
+let satTile      = false;
 
-// Try browser GPS first
-function startGPS(){
-  if(navigator.geolocation){
-    navigator.geolocation.watchPosition(onPos,onErr,{enableHighAccuracy:true,timeout:10000,maximumAge:1000});
-    document.getElementById('fixDot').className='dot search';
-    document.getElementById('fixLabel').textContent='ACQUIRING...';
-  }
-}
+// Viz
+let liveMap, gpsMarker, trackPolyline, altSpark, spdSpark, satChart, hdopGauge;
 
-// Connect to edge bridge for T-Deck GPS
-function connectBridge(){
-  try{
-    ws=new WebSocket('ws://localhost:5006');
-    ws.onopen=()=>{wsConn=true;document.getElementById('source').textContent='T-DECK';};
-    ws.onclose=()=>{wsConn=false;ws=null;setTimeout(connectBridge,3000);};
-    ws.onerror=()=>{ws=null;};
-    ws.onmessage=(e)=>{
-      try{
-        const d=JSON.parse(e.data);
-        if(d.type==='gps'&&d.lat&&d.lon){
-          onPos({coords:{latitude:d.lat,longitude:d.lon,altitude:d.alt||null,speed:d.speed||null,heading:d.heading||null,accuracy:d.accuracy||5}});
-          document.getElementById('source').textContent='T-DECK';
+function initMap() {
+    liveMap = new PMViz.LiveMap('gps-map', {
+        center: [34.0617, -118.2380],
+        zoom:   14,
+        track:  false, // we handle follow ourselves
+    });
+
+    // Draw existing track
+    if (trackPoints.length > 1) {
+        trackPolyline = L.polyline(
+            trackPoints.map(p => [p.lat, p.lon]),
+            {color: '#00ff88', weight: 2, opacity: 0.7}
+        ).addTo(liveMap.map);
+    }
+
+    // Add existing waypoints
+    waypoints.forEach(wp => addWaypointMarker(wp));
+
+    // Click to add waypoint
+    liveMap.map.on('click', (e) => {
+        if (confirm(`Add waypoint at ${e.latlng.lat.toFixed(5)}, ${e.latlng.lng.toFixed(5)}?`)) {
+            addWaypointAt(e.latlng.lat, e.latlng.lng);
         }
-      }catch{}
+    });
+}
+
+function initViz() {
+    altSpark  = new PMViz.Sparkline('alt-spark',  {color: PMViz.C.gold,    maxPts: 60});
+    spdSpark  = new PMViz.Sparkline('spd-spark',  {color: PMViz.C.accent2, maxPts: 60});
+    satChart  = new PMViz.BarChart('sat-chart',   {horizontal: false, colorFn: () => PMViz.C.accent});
+    hdopGauge = new PMViz.GaugeArc('hdop-gauge',  {min: 0, max: 10, label: 'HDOP'});
+}
+
+// ── Transport ─────────────────────────────────────────────────────
+const beam = new PMTransport({
+    onMessage: handleData,
+    onStatus: (s) => {
+        document.getElementById('liveBadge').style.opacity = s.state === 'connected' ? '1' : '0.3';
+        document.getElementById('lastUpdate').textContent  = s.message;
+    }
+});
+
+function handleData(msg) {
+    if (msg.type === 'GPS_FIX') {
+        handleFix(msg);
+    } else if (msg.type === 'GPS_NOFIX') {
+        document.getElementById('statSats').textContent = `${msg.sats_visible||0} (NO FIX)`;
+        document.getElementById('statSats').style.color = 'var(--accent4)';
+    }
+}
+
+function handleFix(g) {
+    lat     = parseFloat(g.lat);
+    lon     = parseFloat(g.lon);
+    alt     = parseFloat(g.alt_m || 0);
+    speed   = parseFloat(g.speed_kmh || 0);
+    heading = parseFloat(g.heading || 0);
+    sats    = parseInt(g.sats || 0);
+    hdop    = parseFloat(g.hdop || 1);
+
+    // Stats bar
+    document.getElementById('statLat').textContent   = lat.toFixed(5);
+    document.getElementById('statLon').textContent   = lon.toFixed(5);
+    document.getElementById('statAlt').textContent   = `${Math.round(alt)}m`;
+    document.getElementById('statSpeed').textContent = `${speed.toFixed(1)}km/h`;
+    document.getElementById('statSats').textContent  = sats;
+    document.getElementById('statSats').style.color  = sats >= 6 ? 'var(--accent3)' : sats >= 4 ? 'var(--warn)' : 'var(--accent4)';
+    document.getElementById('statHdop').textContent  = hdop.toFixed(1);
+
+    // Coordinate formats
+    document.getElementById('coordDecimal').textContent = `${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+    document.getElementById('coordDMS').textContent     = toDMS(lat, lon);
+    document.getElementById('coordMGRS').textContent    = toMGRS(lat, lon);
+    document.getElementById('coordHeading').textContent = heading ? `${heading.toFixed(0)}° ${headingName(heading)}` : '—';
+
+    // Map
+    liveMap.updateGPS(lat, lon);
+    if (followGPS) liveMap.map.setView([lat, lon], liveMap.map.getZoom());
+
+    // Charts
+    altSpark.push(alt);
+    spdSpark.push(speed);
+    hdopGauge.update(hdop);
+    drawCompass(heading);
+
+    // Satellite bar chart (mock — real sat data would come from NMEA GSV)
+    satChart.update(
+        Array.from({length: Math.min(sats, 12)}, (_, i) => ({
+            label: String(i+1),
+            value: Math.floor(30 + Math.random() * 40),
+        }))
+    );
+
+    // Track recording
+    if (recording) {
+        trackPoints.push({lat, lon, alt, speed, heading, ts: Date.now()});
+        PM.save('gps_track', trackPoints);
+        document.getElementById('trackCount').textContent = trackPoints.length;
+
+        // Update polyline
+        if (!trackPolyline) {
+            trackPolyline = L.polyline([[lat,lon]], {color:'#00ff88', weight:2, opacity:0.7}).addTo(liveMap.map);
+        } else {
+            trackPolyline.addLatLng([lat, lon]);
+        }
+    }
+
+    // Distance calculations
+    updateDistances();
+}
+
+// ── Compass ───────────────────────────────────────────────────────
+function drawCompass(hdg) {
+    const canvas = document.getElementById('compass');
+    const ctx    = canvas.getContext('2d');
+    const cx = 100, cy = 100, r = 85;
+    const C  = PMViz.C;
+
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, 200, 200);
+
+    // Outer ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI * 2);
+    ctx.strokeStyle = C.border;
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+
+    // Cardinal points
+    const cardinals = ['N', 'E', 'S', 'W'];
+    cardinals.forEach((c, i) => {
+        const a   = (i * 90 - 90) * Math.PI / 180;
+        const tx  = cx + (r - 15) * Math.cos(a);
+        const ty  = cy + (r - 15) * Math.sin(a);
+        ctx.fillStyle  = c === 'N' ? C.accent4 : C.textDim;
+        ctx.font       = c === 'N' ? 'bold 14px monospace' : '12px monospace';
+        ctx.textAlign  = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(c, tx, ty);
+    });
+
+    // Tick marks
+    for (let i = 0; i < 36; i++) {
+        const a    = (i * 10 - 90) * Math.PI / 180;
+        const len  = i % 9 === 0 ? 12 : 6;
+        ctx.beginPath();
+        ctx.moveTo(cx + (r - len - 20) * Math.cos(a), cy + (r - len - 20) * Math.sin(a));
+        ctx.lineTo(cx + (r - 20) * Math.cos(a),       cy + (r - 20) * Math.sin(a));
+        ctx.strokeStyle = C.border;
+        ctx.lineWidth   = i % 9 === 0 ? 2 : 1;
+        ctx.stroke();
+    }
+
+    // Heading needle
+    const needleA = (hdg - 90) * Math.PI / 180;
+    ctx.beginPath();
+    ctx.moveTo(cx + (r-25) * Math.cos(needleA), cy + (r-25) * Math.sin(needleA));
+    ctx.lineTo(cx - 10 * Math.cos(needleA),      cy - 10 * Math.sin(needleA));
+    ctx.strokeStyle = C.accent4;
+    ctx.lineWidth   = 3;
+    ctx.lineCap     = 'round';
+    ctx.stroke();
+
+    // South needle
+    ctx.beginPath();
+    ctx.moveTo(cx - 15 * Math.cos(needleA), cy - 15 * Math.sin(needleA));
+    ctx.lineTo(cx - (r-25) * Math.cos(needleA), cy - (r-25) * Math.sin(needleA));
+    ctx.strokeStyle = C.textDim;
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+
+    // Center dot
+    ctx.beginPath();
+    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
+    ctx.fillStyle = C.text;
+    ctx.fill();
+
+    // Heading text
+    ctx.fillStyle    = C.gold;
+    ctx.font         = 'bold 16px monospace';
+    ctx.textAlign    = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(`${Math.round(hdg)}°`, cx, cy + 40);
+}
+
+// ── Waypoints ─────────────────────────────────────────────────────
+function addWaypoint() {
+    if (lat === null) { alert('No GPS fix yet'); return; }
+    const name = prompt('Waypoint name:') || `WP${waypoints.length + 1}`;
+    addWaypointAt(lat, lon, name);
+}
+
+function addWaypointAt(wLat, wLon, name) {
+    name = name || `WP${waypoints.length + 1}`;
+    const wp = { id: PM.uid(), name, lat: wLat, lon: wLon, ts: Date.now() };
+    waypoints.push(wp);
+    PM.save('gps_waypoints', waypoints);
+    addWaypointMarker(wp);
+    renderWaypoints();
+}
+
+function addWaypointMarker(wp) {
+    L.marker([wp.lat, wp.lon], {
+        icon: L.divIcon({
+            html: `<div style="background:var(--gold,#f4a820);border:2px solid #fff;border-radius:50%;width:12px;height:12px;box-shadow:0 0 6px #f4a820"></div>`,
+            iconSize: [12,12], className: ''
+        })
+    }).addTo(liveMap.map)
+     .bindPopup(`<b>${wp.name}</b><br>${wp.lat.toFixed(5)}, ${wp.lon.toFixed(5)}`);
+}
+
+function renderWaypoints() {
+    document.getElementById('wpCount').textContent = `${waypoints.length}`;
+    document.getElementById('waypointList').innerHTML = waypoints.map(wp => {
+        const dist = lat ? haversine(lat, lon, wp.lat, wp.lon) : null;
+        return `
+        <div class="wp-item ${selectedWP===wp.id?'selected':''}" onclick="selectWP('${wp.id}')">
+            <div class="wp-name">📍 ${PM.esc(wp.name)}</div>
+            <div class="wp-coords">${wp.lat.toFixed(5)}, ${wp.lon.toFixed(5)}</div>
+            <div class="wp-meta">
+                ${dist !== null ? `<span style="color:var(--accent3)">${formatDist(dist)}</span>` : ''}
+                <span>${new Date(wp.ts).toLocaleTimeString()}</span>
+                <button style="margin-left:auto;background:none;border:none;color:var(--accent4);cursor:pointer;font-size:.6rem" onclick="removeWP('${wp.id}',event)">✕</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function selectWP(id) {
+    selectedWP = id;
+    renderWaypoints();
+    const wp = waypoints.find(w => w.id === id);
+    if (wp) liveMap.map.setView([wp.lat, wp.lon], 16);
+    updateDistances();
+}
+
+function removeWP(id, e) {
+    e.stopPropagation();
+    waypoints = waypoints.filter(w => w.id !== id);
+    PM.save('gps_waypoints', waypoints);
+    renderWaypoints();
+}
+
+function clearWaypoints() {
+    if (!confirm('Clear all waypoints?')) return;
+    waypoints = [];
+    PM.save('gps_waypoints', []);
+    renderWaypoints();
+}
+
+function updateDistances() {
+    if (lat === null) return;
+    const trackDist = trackPoints.reduce((total, pt, i) => {
+        if (i === 0) return 0;
+        return total + haversine(trackPoints[i-1].lat, trackPoints[i-1].lon, pt.lat, pt.lon);
+    }, 0);
+    document.getElementById('distTrack').textContent = formatDist(trackDist);
+
+    if (selectedWP) {
+        const wp = waypoints.find(w => w.id === selectedWP);
+        if (wp) {
+            const d = haversine(lat, lon, wp.lat, wp.lon);
+            document.getElementById('distWP').textContent =
+                `${formatDist(d)} — ${Math.round(bearing(lat, lon, wp.lat, wp.lon))}° ${headingName(bearing(lat, lon, wp.lat, wp.lon))}`;
+        }
+    }
+}
+
+// ── Track controls ────────────────────────────────────────────────
+function toggleRecord() {
+    recording = !recording;
+    const btn = document.getElementById('btnRecord');
+    btn.textContent = recording ? '◼ STOP RECORDING' : '⬤ START RECORDING';
+    btn.className   = 'pm-refresh' + (recording ? ' active' : '');
+    btn.style.color = recording ? 'var(--accent4)' : '';
+    btn.style.borderColor = recording ? 'var(--accent4)' : '';
+}
+
+function clearTrack() {
+    if (!confirm('Clear track?')) return;
+    trackPoints = [];
+    PM.save('gps_track', []);
+    if (trackPolyline) { trackPolyline.remove(); trackPolyline = null; }
+    document.getElementById('trackCount').textContent = '0';
+}
+
+function exportGPX() {
+    if (trackPoints.length === 0) { alert('No track to export'); return; }
+    const trkpts = trackPoints.map(p =>
+        `    <trkpt lat="${p.lat}" lon="${p.lon}">
+      <ele>${p.alt||0}</ele>
+      <time>${new Date(p.ts).toISOString()}</time>
+      <speed>${(p.speed||0)/3.6}</speed>
+    </trkpt>`).join('\n');
+
+    const gpx = `<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="Pisces Moon OS">
+  <metadata><name>Pisces Moon Track</name><time>${new Date().toISOString()}</time></metadata>
+  <trk>
+    <name>Track ${new Date().toLocaleDateString()}</name>
+    <trkseg>
+${trkpts}
+    </trkseg>
+  </trk>
+</gpx>`;
+    PMViz.Storage.save('gps_track', gpx, 'gpx');
+}
+
+// ── Map controls ──────────────────────────────────────────────────
+function toggleFollow() {
+    followGPS = !followGPS;
+    document.getElementById('btnFollow').className = 'gps-btn' + (followGPS ? ' active' : '');
+}
+
+function centerMap() {
+    if (lat) liveMap.map.setView([lat, lon], 16);
+}
+
+function toggleSatellite() {
+    satTile = !satTile;
+    document.getElementById('btnSat').className = 'gps-btn' + (satTile ? ' active' : '');
+    // Note: satellite tiles require a tile provider API key in production
+    // For now this toggles a visual indicator
+}
+
+// ── Coordinate format helpers ─────────────────────────────────────
+function toDMS(lat, lon) {
+    const fmt = (v, pos, neg) => {
+        const d   = Math.floor(Math.abs(v));
+        const mf  = (Math.abs(v) - d) * 60;
+        const m   = Math.floor(mf);
+        const s   = ((mf - m) * 60).toFixed(1);
+        return `${d}°${m}'${s}"${v >= 0 ? pos : neg}`;
     };
-  }catch{}
+    return `${fmt(lat,'N','S')} ${fmt(lon,'E','W')}`;
 }
 
-function onPos(pos){
-  const c=pos.coords;
-  posData={lat:c.latitude,lon:c.longitude,alt:c.altitude,speed:c.speed,heading:c.heading,accuracy:c.accuracy};
-  document.getElementById('lat').textContent=c.latitude.toFixed(6)+'°';
-  document.getElementById('lon').textContent=c.longitude.toFixed(6)+'°';
-  document.getElementById('alt').textContent=c.altitude?c.altitude.toFixed(1)+' m':'— m';
-  document.getElementById('speed').textContent=c.speed?(c.speed*3.6).toFixed(1)+' km/h':'0 km/h';
-  document.getElementById('heading').textContent=c.heading?c.heading.toFixed(0)+'°':'—°';
-  document.getElementById('accuracy').textContent='±'+c.accuracy.toFixed(0)+' m';
-  document.getElementById('fixDot').className='dot fix';
-  document.getElementById('fixLabel').textContent='GPS FIX';
-  const ll=[c.latitude,c.longitude];
-  track.push(ll); trackLine.setLatLngs(track);
-  if(!marker){
-    marker=L.circleMarker(ll,{radius:8,fillColor:'#00d4ff',color:'#fff',fillOpacity:1,weight:2}).addTo(map);
-    map.setView(ll,16);
-  }else{marker.setLatLng(ll);}
+function toMGRS(lat, lon) {
+    // Simplified MGRS — full implementation requires a library
+    // This gives the approximate grid zone designation
+    const band = 'CDEFGHJKLMNPQRSTUVWX'[Math.floor((lat + 80) / 8)] || '?';
+    const zone = Math.floor((lon + 180) / 6) + 1;
+    return `${zone}${band} (approx)`;
 }
 
-function onErr(err){
-  document.getElementById('fixDot').className='dot none';
-  document.getElementById('fixLabel').textContent='NO GPS: '+err.message.slice(0,30);
+function headingName(h) {
+    const dirs = ['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'];
+    return dirs[Math.round(h / 22.5) % 16];
 }
 
-function addWaypoint(){
-  if(!posData.lat){alert('No GPS fix yet');return;}
-  const name=prompt('Waypoint name:','WP'+(waypoints.length+1));
-  if(!name)return;
-  const wp={name,lat:posData.lat,lon:posData.lon,ts:Date.now()};
-  waypoints.push(wp);
-  L.marker([wp.lat,wp.lon],{title:wp.name}).addTo(map).bindPopup(wp.name);
-  renderWaypoints();
-  document.getElementById('wpPanel').style.display='block';
+function haversine(lat1, lon1, lat2, lon2) {
+    const R  = 6371000; // meters
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δφ = (lat2 - lat1) * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+    const a  = Math.sin(Δφ/2)**2 + Math.cos(φ1)*Math.cos(φ2)*Math.sin(Δλ/2)**2;
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
 
-function renderWaypoints(){
-  document.getElementById('wpList').innerHTML=waypoints.map((w,i)=>`
-    <div class="wpi" onclick="map.setView([${w.lat},${w.lon}],17)">
-      <span style="color:var(--gold)">${w.name}</span>
-      <span style="color:var(--text-dim)">${w.lat.toFixed(5)}, ${w.lon.toFixed(5)}</span>
-    </div>`).join('');
+function bearing(lat1, lon1, lat2, lon2) {
+    const φ1 = lat1 * Math.PI / 180;
+    const φ2 = lat2 * Math.PI / 180;
+    const Δλ = (lon2 - lon1) * Math.PI / 180;
+    const y  = Math.sin(Δλ) * Math.cos(φ2);
+    const x  = Math.cos(φ1)*Math.sin(φ2) - Math.sin(φ1)*Math.cos(φ2)*Math.cos(Δλ);
+    return ((Math.atan2(y, x) * 180 / Math.PI) + 360) % 360;
 }
 
-function clearTrack(){track=[];trackLine.setLatLngs([]);}
-
-function exportGPX(){
-  const pts=track.map(([lat,lon])=>`    <trkpt lat="${lat}" lon="${lon}"></trkpt>`).join('\n');
-  const wps=waypoints.map(w=>`  <wpt lat="${w.lat}" lon="${w.lon}"><name>${w.name}</name></wpt>`).join('\n');
-  const gpx=`<?xml version="1.0"?>\n<gpx version="1.1" creator="Pisces Moon OS">\n${wps}\n  <trk><trkseg>\n${pts}\n  </trkseg></trk>\n</gpx>`;
-  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([gpx],{type:'application/gpx+xml'}));
-  a.download='pisces_track_'+Date.now()+'.gpx';a.click();
+function formatDist(m) {
+    if (m < 1000) return `${Math.round(m)}m`;
+    return `${(m/1000).toFixed(2)}km`;
 }
 
-startGPS();
-connectBridge();
+window.addEventListener('load', async () => {
+    initMap();
+    initViz();
+    drawCompass(0);
+    renderWaypoints();
+    document.getElementById('trackCount').textContent = trackPoints.length;
+
+    try { await beam.connect(); }
+    catch(e) {
+        // Fall back to browser Geolocation API
+        if (navigator.geolocation) {
+            navigator.geolocation.watchPosition(pos => {
+                handleFix({
+                    lat:      pos.coords.latitude,
+                    lon:      pos.coords.longitude,
+                    alt_m:    pos.coords.altitude || 0,
+                    speed_kmh: (pos.coords.speed || 0) * 3.6,
+                    heading:  pos.coords.heading || 0,
+                    sats:     0,
+                    hdop:     pos.coords.accuracy / 10,
+                });
+            }, null, {enableHighAccuracy: true, maximumAge: 1000});
+        }
+    }
+});
 </script>
 </body></html>

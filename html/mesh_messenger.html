@@ -1,183 +1,846 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — mesh_messenger.html
+<!--
+  Pisces Moon OS — mesh_messenger.html v2
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
+  SPDX-License-Identifier: AGPL-3.0-or-later
 
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  Off-grid encrypted LoRa mesh communications.
+  No cell towers. No internet. No infrastructure.
+  Just radio.
 -->
-<!-- PISCES MOON OS // MESH MESSENGER -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PISCES MOON // MESH MSG</title>
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // MESH</title>
+<link rel="stylesheet" href="lib/leaflet.min.css">
+<link rel="stylesheet" href="pm_shared.css">
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:10px 20px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1rem;color:var(--accent3);letter-spacing:3px;}
-.logo span{color:var(--gold);}
-.layout{display:flex;flex:1;overflow:hidden;}
-.sidebar{width:200px;background:var(--bg2);border-right:1px solid var(--panel-border);display:flex;flex-direction:column;flex-shrink:0;}
-.sh{padding:8px 12px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.55rem;color:var(--accent3);letter-spacing:2px;}
-.node-list{flex:1;overflow-y:auto;}
-.ni{padding:9px 12px;cursor:pointer;border-bottom:1px solid rgba(26,58,80,.3);font-size:.68rem;display:flex;align-items:center;justify-content:space-between;}
-.ni:hover{background:rgba(0,255,136,.05);}
-.ni.active{background:rgba(0,255,136,.08);border-left:2px solid var(--accent3);}
-.ni-name{color:var(--text-bright);}
-.ni-meta{font-size:.58rem;color:var(--text-dim);margin-top:1px;}
-.dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;}
-.dot.on{background:var(--accent3);animation:pulse 2s infinite;}
-.dot.off{background:var(--text-dim);}
-.dot.relay{background:var(--warn);}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.main{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-.ch-header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:10px 16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0;}
-.ch-name{font-family:'Orbitron',monospace;font-size:.8rem;color:var(--accent3);letter-spacing:2px;}
-.ch-meta{font-size:.62rem;color:var(--text-dim);}
-.msgs{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;}
-.msg{max-width:80%;}
-.msg.me{align-self:flex-end;}
-.msg.them{align-self:flex-start;}
-.msg.system{align-self:center;max-width:60%;}
-.mr{font-size:.57rem;letter-spacing:2px;margin-bottom:2px;font-family:'Orbitron',monospace;}
-.msg.me .mr{color:var(--gold);text-align:right;}
-.msg.them .mr{color:var(--accent3);}
-.msg.system .mr{color:var(--text-dim);text-align:center;}
-.mb{padding:8px 12px;font-size:.73rem;line-height:1.6;}
-.msg.me .mb{background:rgba(244,168,32,.07);border:1px solid rgba(244,168,32,.2);color:var(--text-bright);}
-.msg.them .mb{background:var(--panel);border:1px solid var(--panel-border);color:var(--text-bright);}
-.msg.system .mb{background:rgba(0,212,255,.04);border:1px solid rgba(0,212,255,.15);color:var(--text-dim);font-size:.62rem;text-align:center;}
-.mt{font-size:.55rem;color:var(--text-dim);margin-top:2px;}
-.msg.me .mt{text-align:right;}
-.msg.relayed .mb{border-style:dashed;}
-.hop-badge{font-size:.55rem;color:var(--warn);margin-top:2px;}
-.ibar{background:var(--bg2);border-top:1px solid var(--panel-border);padding:10px 14px;flex-shrink:0;}
-.irow{display:flex;gap:8px;}
-textarea.ci{flex:1;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;resize:none;min-height:40px;max-height:100px;outline:none;line-height:1.5;}
-textarea.ci:focus{border-color:var(--accent3);}
-.sbtn{background:var(--accent3);border:none;color:var(--bg);font-family:'Orbitron',monospace;font-size:.62rem;padding:0 16px;cursor:pointer;height:40px;transition:all .2s;}
-.sbtn:hover{background:var(--text-bright);}
-.status-panel{padding:6px 14px;border-top:1px solid var(--panel-border);display:flex;gap:16px;font-size:.6rem;color:var(--text-dim);}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header>
-  <div class="logo">PISCES MOON // <span>MESH MSG</span></div>
-  <div style="display:flex;align-items:center;gap:10px">
-    <span class="dot on"></span>
-    <span id="nodeStatus" style="font-size:.65rem;color:var(--text-dim)">NODE: pisces-moon-1</span>
-    <span id="bridgeStatus" style="font-size:.62rem;color:var(--text-dim)">Bridge: offline</span>
-  </div>
+.mm-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 280px;
+    height: calc(100vh - 52px);
+    overflow: hidden;
+}
+.mm-left  { border-right: 1px solid var(--panel-border); display:flex; flex-direction:column; overflow:hidden; }
+.mm-right { border-left:  1px solid var(--panel-border); overflow-y:auto; }
+
+/* Node list */
+.mm-node { padding:10px 12px; border-bottom:1px solid rgba(28,46,58,.4); cursor:pointer; transition:background .15s; }
+.mm-node:hover { background:rgba(0,255,136,.04); }
+.mm-node.selected { background:rgba(0,255,136,.08); border-left:2px solid var(--accent3); }
+.mm-node.me { border-left:2px solid var(--gold); }
+.mm-node-name { font-size:.72rem; color:var(--text-bright); display:flex; align-items:center; gap:6px; }
+.mm-node-meta { font-size:.58rem; color:var(--text-dim); margin-top:3px; display:flex; gap:8px; flex-wrap:wrap; }
+.node-dot { width:8px; height:8px; border-radius:50%; flex-shrink:0; }
+.node-dot.online  { background:var(--accent3); animation:pulse 2s infinite; }
+.node-dot.relay   { background:var(--warn); }
+.node-dot.offline { background:var(--text-dim); }
+.node-dot.me      { background:var(--gold); }
+
+/* Center — tab system */
+.mm-center { display:flex; flex-direction:column; overflow:hidden; }
+.mm-tabs { display:flex; border-bottom:1px solid var(--panel-border); background:var(--bg2); flex-shrink:0; }
+.mm-tab { padding:8px 16px; font-family:Orbitron,monospace; font-size:.52rem; letter-spacing:2px; cursor:pointer; color:var(--text-dim); border-bottom:2px solid transparent; transition:all .15s; }
+.mm-tab:hover { color:var(--text-bright); }
+.mm-tab.active { color:var(--accent3); border-bottom-color:var(--accent3); }
+.mm-tab-pane { flex:1; overflow:hidden; display:none; }
+.mm-tab-pane.active { display:flex; flex-direction:column; }
+
+/* Chat */
+.mm-chat-header { padding:10px 14px; background:var(--bg2); border-bottom:1px solid var(--panel-border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+.mm-chat-title { font-family:Orbitron,monospace; font-size:.75rem; color:var(--accent3); letter-spacing:2px; }
+.mm-messages { flex:1; overflow-y:auto; padding:14px; display:flex; flex-direction:column; gap:10px; }
+.mm-msg { max-width:78%; }
+.mm-msg.me     { align-self:flex-end; }
+.mm-msg.them   { align-self:flex-start; }
+.mm-msg.system { align-self:center; max-width:70%; text-align:center; }
+.mm-msg-from { font-family:Orbitron,monospace; font-size:.5rem; letter-spacing:2px; margin-bottom:3px; }
+.mm-msg.me     .mm-msg-from { color:var(--gold); text-align:right; }
+.mm-msg.them   .mm-msg-from { color:var(--accent3); }
+.mm-msg.system .mm-msg-from { color:var(--text-dim); }
+.mm-msg-body { padding:8px 12px; font-size:.72rem; line-height:1.6; }
+.mm-msg.me     .mm-msg-body { background:rgba(244,168,32,.07); border:1px solid rgba(244,168,32,.2); color:var(--text-bright); }
+.mm-msg.them   .mm-msg-body { background:var(--bg2); border:1px solid var(--panel-border); color:var(--text-bright); }
+.mm-msg.system .mm-msg-body { background:rgba(0,212,255,.04); border:1px solid rgba(0,212,255,.15); color:var(--text-dim); font-size:.62rem; }
+.mm-msg.relayed .mm-msg-body { border-style:dashed; }
+.mm-msg-meta { font-size:.55rem; color:var(--text-dim); margin-top:3px; display:flex; gap:8px; }
+.mm-msg.me .mm-msg-meta { justify-content:flex-end; }
+.hop-badge { color:var(--warn); font-size:.55rem; }
+.enc-badge { color:var(--accent3); font-size:.55rem; }
+
+.mm-input-bar { background:var(--bg2); border-top:1px solid var(--panel-border); padding:10px 12px; flex-shrink:0; }
+.mm-input-row { display:flex; gap:8px; }
+textarea.mm-input { flex:1; background:var(--bg3); border:1px solid var(--panel-border); color:var(--text-bright); font-family:Share\ Tech\ Mono,monospace; font-size:.72rem; padding:8px 12px; resize:none; min-height:40px; max-height:100px; outline:none; line-height:1.5; }
+textarea.mm-input:focus { border-color:var(--accent3); }
+.mm-send-btn { background:var(--accent3); border:none; color:var(--bg); font-family:Orbitron,monospace; font-size:.6rem; padding:0 16px; cursor:pointer; transition:all .2s; letter-spacing:2px; }
+.mm-send-btn:hover { background:var(--text-bright); }
+
+.mm-status-bar { padding:6px 14px; border-top:1px solid var(--panel-border); display:flex; gap:16px; font-size:.58rem; color:var(--text-dim); flex-shrink:0; background:var(--bg2); }
+
+/* Topology canvas */
+#mm-topology { width:100%; height:100%; }
+
+/* Node detail */
+.mm-node-detail { padding:14px; }
+.mm-nd-name { font-family:Orbitron,monospace; font-size:.9rem; color:var(--accent3); margin-bottom:10px; }
+.mm-nd-row { display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid rgba(28,46,58,.4); font-size:.65rem; }
+.mm-nd-row .lbl { color:var(--text-dim); }
+.mm-nd-row .val { color:var(--text-bright); font-family:Share\ Tech\ Mono,monospace; }
+
+/* Signal charts */
+.mm-chart-section { padding:8px; border-bottom:1px solid var(--panel-border); }
+.mm-chart-title { font-family:Orbitron,monospace; font-size:.5rem; letter-spacing:2px; color:var(--gold); margin-bottom:6px; }
+
+/* Channel selector */
+.mm-channel-btn { padding:6px 12px; background:transparent; border:1px solid var(--panel-border); color:var(--text-dim); font-family:Orbitron,monospace; font-size:.52rem; cursor:pointer; letter-spacing:1px; transition:all .15s; }
+.mm-channel-btn:hover { border-color:var(--accent3); color:var(--accent3); }
+.mm-channel-btn.active { border-color:var(--accent3); color:var(--accent3); background:rgba(0,255,136,.1); }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">📡 <em>MESH</em> MESSENGER</div>
+    <div class="pm-hdr-right">
+        <div class="pm-live-badge" id="liveBadge" style="opacity:.3">
+            <div class="pm-live-dot" style="background:var(--accent3)"></div>MESH
+        </div>
+        <span style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:2px;color:var(--text-dim)" id="myNodeLabel">NODE: —</span>
+        <span class="pm-last-update" id="lastUpdate"></span>
+    </div>
 </header>
-<div class="layout">
-  <div class="sidebar">
-    <div class="sh">MESH NODES</div>
-    <div class="node-list" id="nodeList"></div>
-    <div style="padding:8px;border-top:1px solid var(--panel-border)">
-      <div style="font-size:.58rem;color:var(--text-dim);margin-bottom:6px">MY NODE ID</div>
-      <div style="font-size:.65rem;color:var(--accent3)" id="myNodeId">pisces-1</div>
+
+<div class="mm-layout">
+
+    <!-- Left: node list -->
+    <div class="mm-left">
+        <div class="pm-sh" style="position:sticky;top:0;z-index:10">
+            MESH NODES
+            <span class="pm-sh-sub" id="nodeCount"></span>
+        </div>
+        <div style="overflow-y:auto;flex:1" id="nodeList"></div>
+        <div style="padding:10px 12px;border-top:1px solid var(--panel-border);background:var(--bg2)">
+            <div style="font-size:.55rem;color:var(--text-dim);margin-bottom:6px;font-family:Orbitron,monospace;letter-spacing:2px">CHANNEL</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap" id="channelButtons"></div>
+        </div>
     </div>
-  </div>
-  <div class="main">
-    <div class="ch-header">
-      <div>
-        <div class="ch-name" id="chName">BROADCAST</div>
-        <div class="ch-meta" id="chMeta">All nodes on mesh</div>
-      </div>
-      <div id="chStats" style="font-size:.62rem;color:var(--text-dim)"></div>
+
+    <!-- Center: tabs -->
+    <div class="mm-center">
+        <div class="mm-tabs">
+            <div class="mm-tab active" onclick="setTab('chat')">💬 CHAT</div>
+            <div class="mm-tab" onclick="setTab('topology')">🌐 TOPOLOGY</div>
+            <div class="mm-tab" onclick="setTab('routing')">↗ ROUTING</div>
+        </div>
+
+        <!-- Chat pane -->
+        <div class="mm-tab-pane active" id="pane-chat">
+            <div class="mm-chat-header">
+                <div>
+                    <div class="mm-chat-title" id="chatTitle">BROADCAST</div>
+                    <div style="font-size:.58rem;color:var(--text-dim)" id="chatMeta">All nodes on mesh</div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center">
+                    <span style="font-size:.58rem;color:var(--accent3)" id="encStatus">🔒 AES-256</span>
+                    <button class="pm-refresh" onclick="clearChat()">CLEAR</button>
+                </div>
+            </div>
+            <div class="mm-messages" id="messages"></div>
+            <div class="mm-input-bar">
+                <div class="mm-input-row">
+                    <textarea class="mm-input" id="msgInput"
+                        placeholder="Send mesh message... (LoRa bridge required)"
+                        rows="1"
+                        onkeydown="onMsgKey(event)"
+                        oninput="autoResize(this)"></textarea>
+                    <button class="mm-send-btn" onclick="sendMessage()">SEND ↵</button>
+                </div>
+            </div>
+            <div class="mm-status-bar">
+                <span>Channel: <span style="color:var(--accent3)" id="statChannel">PM-DEFAULT</span></span>
+                <span>Encrypt: <span style="color:var(--accent3)">AES-256</span></span>
+                <span>Hops seen: <span style="color:var(--text-bright)" id="statHops">0</span></span>
+                <span>Messages: <span style="color:var(--text-bright)" id="statMsgs">0</span></span>
+                <span>Nodes: <span style="color:var(--text-bright)" id="statNodes">0</span></span>
+            </div>
+        </div>
+
+        <!-- Topology pane -->
+        <div class="mm-tab-pane" id="pane-topology">
+            <canvas id="mm-topology"></canvas>
+        </div>
+
+        <!-- Routing pane -->
+        <div class="mm-tab-pane" id="pane-routing" style="overflow-y:auto;padding:14px">
+            <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;color:var(--gold);margin-bottom:14px">MESSAGE ROUTING LOG</div>
+            <div id="routingLog"></div>
+        </div>
     </div>
-    <div class="msgs" id="msgs"></div>
-    <div class="ibar">
-      <div class="irow">
-        <textarea class="ci" id="ci" placeholder="Send mesh message... (T-Deck LoRa bridge required for real transmission)" rows="1" onkeydown="onKey(event)" oninput="resize(this)"></textarea>
-        <button class="sbtn" onclick="send()">SEND ↵</button>
-      </div>
+
+    <!-- Right: node detail + charts -->
+    <div class="mm-right">
+        <div class="pm-sh">NODE DETAIL</div>
+        <div class="mm-node-detail" id="nodeDetail">
+            <div style="text-align:center;padding:20px;color:var(--text-dim);font-size:.65rem">
+                Select a node to inspect
+            </div>
+        </div>
+
+        <div class="mm-chart-section">
+            <div class="mm-chart-title">SIGNAL QUALITY — SELECTED NODE</div>
+            <canvas id="mm-rssi-spark" width="256" height="60"></canvas>
+        </div>
+
+        <div class="mm-chart-section">
+            <div class="mm-chart-title">MESH TRAFFIC RATE</div>
+            <canvas id="mm-traffic-spark" width="256" height="60"></canvas>
+        </div>
+
+        <div class="mm-chart-section">
+            <div class="mm-chart-title">NODE STATUS DIST</div>
+            <canvas id="mm-status-chart" width="256" height="160"></canvas>
+        </div>
+
+        <div class="pm-sh">ENVIRONMENTAL</div>
+        <div id="envPanel" style="padding:12px;font-size:.65rem;color:var(--text-dim)">
+            Connect to a node to see sensor data
+        </div>
+
+        <div class="pm-sh">ACTIONS</div>
+        <div style="padding:12px;display:flex;flex-direction:column;gap:6px">
+            <button class="pm-refresh" style="width:100%;padding:8px" onclick="pingAll()">PING ALL NODES</button>
+            <button class="pm-refresh" style="width:100%;padding:8px" onclick="requestPositions()">REQUEST POSITIONS</button>
+            <button class="pm-refresh" style="width:100%;padding:8px" onclick="saveSession()">💾 SAVE SESSION</button>
+        </div>
     </div>
-    <div class="status-panel">
-      <span>Channel: <span style="color:var(--accent3)">PM-DEFAULT</span></span>
-      <span>Encryption: <span style="color:var(--accent3)">AES-256</span></span>
-      <span>Hops: <span style="color:var(--text-bright)" id="hopCount">0</span></span>
-      <span>Messages: <span style="color:var(--text-bright)" id="msgCount">0</span></span>
-    </div>
-  </div>
 </div>
+
+<script src="lib/leaflet.min.js"></script>
+<script src="pm_scraper.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_utils.js"></script>
+<script src="pm_transport.js"></script>
 <script>
-const MY_NODE = 'pisces-1';
-let ws = null, wsConn = false, messages = [], activeChannel = 'broadcast';
-let nodes = [
-  {id:'pisces-1', name:'pisces-moon-1 (YOU)', status:'online', rssi:-42, hops:0, last:'now'},
-  {id:'tdeck-1', name:'T-Deck Alpha', status:'relay', rssi:-67, hops:1, last:'2m ago'},
-  {id:'pi-1', name:'Pi 400 Node', status:'offline', rssi:null, hops:2, last:'15m ago'},
-];
+// ═══════════════════════════════════════════════════════════════════
+// MESH MESSENGER — Off-grid LoRa mesh communications
+// No cell towers. No internet. No infrastructure. Just radio.
+// ═══════════════════════════════════════════════════════════════════
 
-function connectBridge() {
-  try {
-    ws = new WebSocket('ws://localhost:5006');
-    ws.onopen = ()=>{ wsConn=true; document.getElementById('bridgeStatus').textContent='Bridge: CONNECTED'; document.getElementById('bridgeStatus').style.color='var(--accent3)'; };
-    ws.onclose = ()=>{ wsConn=false; ws=null; document.getElementById('bridgeStatus').textContent='Bridge: offline'; setTimeout(connectBridge,3000); };
-    ws.onerror = ()=>{ ws=null; };
-    ws.onmessage = (e)=>{
-      try {
-        const d=JSON.parse(e.data);
-        if(d.type==='lora_msg'){
-          ingestMsg({from:d.from||'unknown',text:d.text||d.msg,ts:Date.now(),hops:d.hops||1,rssi:d.rssi||null,encrypted:true});
-        }
-      } catch {}
+const MY_NODE_ID = PM.load('mesh_my_node') || 'pisces-' + Math.random().toString(36).substr(2,4);
+PM.save('mesh_my_node', MY_NODE_ID);
+
+const CHANNELS = ['PM-DEFAULT', 'PM-ALPHA', 'PM-BETA', 'PM-SECURE', 'BROADCAST'];
+let activeChannel = 'PM-DEFAULT';
+let activeNodeChat = 'broadcast';
+let messages = PM.load('mesh_messages') || [];
+let nodes     = new Map(); // nodeId → node object
+let routingLog = [];
+let selectedNode = null;
+
+// Viz
+let rssiSpark, trafficSpark, statusChart;
+let topoCanvas, topoCtx, topoFrame;
+let nodePositions = new Map(); // nodeId → {x, y, vx, vy}
+
+// ── Viz init ──────────────────────────────────────────────────────
+function initViz() {
+    rssiSpark     = new PMViz.Sparkline('mm-rssi-spark', {color: PMViz.C.accent3, maxPts: 60});
+    trafficSpark  = new PMViz.Sparkline('mm-traffic-spark', {color: PMViz.C.gold, maxPts: 60});
+    statusChart   = new PMViz.DonutChart('mm-status-chart');
+
+    topoCanvas    = document.getElementById('mm-topology');
+    topoCtx       = topoCanvas.getContext('2d');
+    resizeTopo();
+
+    // Add self to nodes
+    nodes.set(MY_NODE_ID, {
+        id:        MY_NODE_ID,
+        name:      MY_NODE_ID,
+        status:    'online',
+        rssi:      0,
+        hops:      0,
+        battery:   -1,
+        temp:      null,
+        lat:       null,
+        lon:       null,
+        lastSeen:  Date.now(),
+        msgCount:  0,
+        me:        true,
+    });
+
+    document.getElementById('myNodeLabel').textContent = 'NODE: ' + MY_NODE_ID;
+    renderChannelButtons();
+    renderAll();
+    drawTopology();
+}
+
+function resizeTopo() {
+    const pane = document.getElementById('pane-topology');
+    topoCanvas.width  = pane.offsetWidth  || 600;
+    topoCanvas.height = pane.offsetHeight || 400;
+}
+
+// ── Transport ─────────────────────────────────────────────────────
+const beam = new PMTransport({
+    onMessage: handleData,
+    onStatus: (s) => {
+        document.getElementById('liveBadge').style.opacity = s.state === 'connected' ? '1' : '0.3';
+        document.getElementById('lastUpdate').textContent  = s.message;
+    }
+});
+
+function handleData(msg) {
+    if (msg.type === 'LORA_MSG' || msg.type === 'MESH_MSG') {
+        ingestMessage(msg);
+    } else if (msg.type === 'MESH_NODE_UPDATE') {
+        updateNode(msg);
+    } else if (msg.type === 'MESH_ROUTING') {
+        ingestRouting(msg);
+    } else if (msg.type === 'GPS_FIX') {
+        // Update own node position
+        const me = nodes.get(MY_NODE_ID);
+        if (me) { me.lat = msg.lat; me.lon = msg.lon; }
+    } else if (msg.type === 'ENV_READING') {
+        const me = nodes.get(MY_NODE_ID);
+        if (me) { me.temp = msg.temp_c; me.humidity = msg.humidity_pct; }
+        updateEnvPanel(nodes.get(MY_NODE_ID));
+    } else if (msg.type === 'LORA_RX') {
+        // Raw LoRa packet — parse as mesh message if JSON
+        try {
+            const inner = JSON.parse(atob(msg.payload_b64 || ''));
+            if (inner.type === 'MESH_MSG') ingestMessage(inner);
+        } catch {}
+    }
+}
+
+// ── Message handling ──────────────────────────────────────────────
+function ingestMessage(msg) {
+    const m = {
+        id:        PM.uid(),
+        from:      msg.from || msg.src || 'unknown',
+        to:        msg.to || 'broadcast',
+        channel:   msg.channel || 'PM-DEFAULT',
+        text:      msg.text || msg.msg || '',
+        ts:        msg.ts ? msg.ts * 1000 : Date.now(),
+        hops:      msg.hops || 0,
+        rssi:      msg.rssi || null,
+        encrypted: msg.encrypted !== false,
+        me:        false,
     };
-  } catch {}
+
+    messages.push(m);
+    if (messages.length > 500) messages = messages.slice(-500);
+    PM.save('mesh_messages', messages);
+
+    // Update node if we don't have it
+    if (!nodes.has(m.from)) {
+        nodes.set(m.from, {
+            id: m.from, name: m.from, status: 'online',
+            rssi: m.rssi || -99, hops: m.hops,
+            lastSeen: Date.now(), msgCount: 1, me: false,
+        });
+    } else {
+        const n = nodes.get(m.from);
+        n.lastSeen = Date.now();
+        n.msgCount++;
+        if (m.rssi) n.rssi = m.rssi;
+        if (m.hops !== undefined) n.hops = m.hops;
+    }
+
+    document.getElementById('statMsgs').textContent = messages.length;
+    trafficSpark.push(messages.filter(x => Date.now() - x.ts < 60000).length);
+    renderMessages();
+    renderNodeList();
+    updateStatusChart();
 }
 
-function ingestMsg(msg) {
-  messages.push(msg);
-  document.getElementById('msgCount').textContent=messages.length;
-  render();
+function updateNode(msg) {
+    const id = msg.node_id || msg.id;
+    if (!id) return;
+
+    const existing = nodes.get(id) || { id, name: id, me: false };
+    Object.assign(existing, {
+        name:     msg.name     || existing.name,
+        status:   msg.status   || existing.status || 'online',
+        rssi:     msg.rssi     ?? existing.rssi,
+        hops:     msg.hops     ?? existing.hops,
+        battery:  msg.batt_pct ?? existing.battery,
+        temp:     msg.temp_c   ?? existing.temp,
+        lat:      msg.lat      ?? existing.lat,
+        lon:      msg.lon      ?? existing.lon,
+        lastSeen: Date.now(),
+    });
+    nodes.set(id, existing);
+
+    if (id === selectedNode) {
+        renderNodeDetail(existing);
+        if (msg.rssi) rssiSpark.push(msg.rssi);
+    }
+
+    renderNodeList();
+    updateStatusChart();
 }
 
-function send() {
-  const text = document.getElementById('ci').value.trim(); if(!text)return;
-  document.getElementById('ci').value='';
-  document.getElementById('ci').style.height='auto';
-  const msg = {from:MY_NODE,text,ts:Date.now(),hops:0,rssi:null,encrypted:true,me:true};
-  messages.push(msg);
-  // Send via bridge if connected
-  if(wsConn&&ws) ws.send(JSON.stringify({type:'lora_send',channel:activeChannel,text,from:MY_NODE}));
-  render();
+function ingestRouting(msg) {
+    routingLog.unshift({
+        ts:    Date.now(),
+        from:  msg.from,
+        to:    msg.to,
+        hops:  msg.hops,
+        path:  msg.path || [],
+        rssi:  msg.rssi,
+    });
+    if (routingLog.length > 50) routingLog.pop();
+    renderRoutingLog();
 }
 
-function render() {
-  document.getElementById('msgs').innerHTML = messages.map(m=>`
-    <div class="msg ${m.me?'me':'them'} ${m.hops>0?'relayed':''}">
-      <div class="mr">${m.me?'// YOU':'// '+esc(m.from)}</div>
-      <div class="mb">${esc(m.text)}</div>
-      ${m.hops>0?`<div class="hop-badge">⟲ ${m.hops} hop${m.hops>1?'s':''} relay${m.rssi?` · ${m.rssi} dBm`:''}</div>`:''}
-      <div class="mt">${new Date(m.ts).toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
-    </div>`).join('');
-  document.getElementById('msgs').scrollTop = 9999;
-  renderNodes();
+// ── Send message ──────────────────────────────────────────────────
+function sendMessage() {
+    const text = document.getElementById('msgInput').value.trim();
+    if (!text) return;
+    document.getElementById('msgInput').value = '';
+    document.getElementById('msgInput').style.height = 'auto';
+
+    const m = {
+        id:        PM.uid(),
+        from:      MY_NODE_ID,
+        to:        activeNodeChat,
+        channel:   activeChannel,
+        text,
+        ts:        Date.now(),
+        hops:      0,
+        encrypted: true,
+        me:        true,
+    };
+
+    messages.push(m);
+    PM.save('mesh_messages', messages);
+    document.getElementById('statMsgs').textContent = messages.length;
+
+    if (beam.connected) {
+        beam.send({
+            type:    'CMD_LORA_SEND',
+            src:     'app',
+            cmd_id:  'mm' + PM.uid(),
+            channel: activeChannel,
+            to:      activeNodeChat,
+            text,
+            from:    MY_NODE_ID,
+        });
+    }
+
+    renderMessages();
 }
 
-function renderNodes() {
-  document.getElementById('nodeList').innerHTML = nodes.map(n=>`
-    <div class="ni ${n.id===MY_NODE?'active':''}">
-      <div>
-        <div class="ni-name"><span class="dot ${n.status==='online'?'on':n.status==='relay'?'relay':'off'}"></span>${n.name}</div>
-        <div class="ni-meta">${n.rssi?n.rssi+' dBm · ':''} Hops: ${n.hops} · ${n.last}</div>
-      </div>
-    </div>`).join('');
+// ── Topology visualization ────────────────────────────────────────
+function drawTopology() {
+    if (!topoCtx) return;
+
+    const w   = topoCanvas.width;
+    const h   = topoCanvas.height;
+    const ctx = topoCtx;
+    const C   = PMViz.C;
+
+    ctx.fillStyle = C.bg;
+    ctx.fillRect(0, 0, w, h);
+
+    const nodeArr = Array.from(nodes.values());
+    if (nodeArr.length === 0) {
+        ctx.fillStyle  = C.textDim;
+        ctx.font       = '13px monospace';
+        ctx.textAlign  = 'center';
+        ctx.fillText('No mesh nodes detected', w/2, h/2);
+        ctx.fillText('Waiting for LoRa traffic...', w/2, h/2 + 20);
+        topoFrame = requestAnimationFrame(drawTopology);
+        return;
+    }
+
+    // Initialize positions for new nodes
+    nodeArr.forEach(n => {
+        if (!nodePositions.has(n.id)) {
+            const angle = (nodeArr.indexOf(n) / nodeArr.length) * Math.PI * 2;
+            const r     = Math.min(w, h) * 0.3;
+            nodePositions.set(n.id, {
+                x:  w/2 + r * Math.cos(angle),
+                y:  h/2 + r * Math.sin(angle),
+                vx: (Math.random() - 0.5) * 0.5,
+                vy: (Math.random() - 0.5) * 0.5,
+            });
+        }
+    });
+
+    // Force simulation
+    nodeArr.forEach(n => {
+        const pos = nodePositions.get(n.id);
+        if (!pos) return;
+
+        // Attract to center
+        pos.vx += (w/2 - pos.x) * 0.0003;
+        pos.vy += (h/2 - pos.y) * 0.0003;
+
+        // Repel from other nodes
+        nodeArr.forEach(n2 => {
+            if (n2.id === n.id) return;
+            const p2  = nodePositions.get(n2.id);
+            if (!p2) return;
+            const dx  = pos.x - p2.x;
+            const dy  = pos.y - p2.y;
+            const d   = Math.sqrt(dx*dx + dy*dy) || 1;
+            if (d < 120) {
+                pos.vx += (dx / d) * 0.6;
+                pos.vy += (dy / d) * 0.6;
+            }
+        });
+
+        pos.vx *= 0.92;
+        pos.vy *= 0.92;
+        pos.x  += pos.vx;
+        pos.y  += pos.vy;
+        pos.x   = Math.max(40, Math.min(w-40, pos.x));
+        pos.y   = Math.max(40, Math.min(h-40, pos.y));
+    });
+
+    // Draw edges between nodes that can hear each other
+    nodeArr.forEach(n => {
+        if (n.hops === 0 || n.me) return;
+        const p  = nodePositions.get(n.id);
+        const me = nodePositions.get(MY_NODE_ID);
+        if (!p || !me) return;
+
+        // Edge thickness = signal strength
+        const strength = Math.max(0, Math.min(1, (n.rssi + 100) / 60));
+        const hue      = 120 * strength;
+        ctx.strokeStyle = `hsla(${hue}, 80%, 50%, ${0.2 + strength * 0.5})`;
+        ctx.lineWidth   = 1 + strength * 3;
+        ctx.setLineDash(n.hops > 1 ? [4, 4] : []);
+        ctx.beginPath();
+        ctx.moveTo(me.x, me.y);
+        ctx.lineTo(p.x, p.y);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Signal label on edge midpoint
+        const mx = (me.x + p.x) / 2;
+        const my = (me.y + p.y) / 2;
+        ctx.fillStyle = C.textDim;
+        ctx.font      = '9px monospace';
+        ctx.textAlign = 'center';
+        if (n.rssi) ctx.fillText(`${n.rssi}dBm`, mx, my - 4);
+        if (n.hops > 1) ctx.fillText(`${n.hops}hop`, mx, my + 10);
+    });
+
+    // Draw nodes
+    nodeArr.forEach(n => {
+        const pos = nodePositions.get(n.id);
+        if (!pos) return;
+
+        const isMe       = n.me || n.id === MY_NODE_ID;
+        const isSelected = n.id === selectedNode;
+        const age        = Date.now() - (n.lastSeen || 0);
+        const stale      = age > 120000;
+
+        const color = isMe       ? C.gold :
+                      stale      ? C.textDim :
+                      n.status === 'relay' ? C.warn :
+                      C.accent3;
+
+        const r = isMe ? 18 : 12;
+
+        // Glow for selected/self
+        if (isSelected || isMe) {
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, r + 10, 0, Math.PI * 2);
+            ctx.fillStyle = color + '22';
+            ctx.fill();
+        }
+
+        // Node circle
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, r, 0, Math.PI * 2);
+        ctx.fillStyle   = color + '33';
+        ctx.fill();
+        ctx.strokeStyle = color;
+        ctx.lineWidth   = isSelected ? 2.5 : 1.5;
+        ctx.stroke();
+
+        // Icon
+        ctx.fillStyle  = color;
+        ctx.font       = `${r}px sans-serif`;
+        ctx.textAlign  = 'center';
+        ctx.fillText(isMe ? '★' : n.status === 'relay' ? '⬡' : '●',
+                     pos.x, pos.y + r * 0.4);
+
+        // Label
+        ctx.fillStyle  = isSelected ? C.textBright : C.textDim;
+        ctx.font       = '9px monospace';
+        ctx.textAlign  = 'center';
+        ctx.fillText(n.name.substring(0, 12), pos.x, pos.y + r + 12);
+
+        // Battery if known
+        if (n.battery >= 0) {
+            const bColor = n.battery > 50 ? C.accent3 : n.battery > 20 ? C.warn : C.accent4;
+            ctx.fillStyle = bColor;
+            ctx.fillText(`${n.battery}%`, pos.x, pos.y + r + 22);
+        }
+    });
+
+    topoFrame = requestAnimationFrame(drawTopology);
 }
 
-function onKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();}}
-function resize(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,100)+'px';}
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+// ── Render functions ──────────────────────────────────────────────
+function renderMessages() {
+    const relevant = messages.filter(m =>
+        m.channel === activeChannel &&
+        (activeNodeChat === 'broadcast' ||
+         m.from === activeNodeChat ||
+         m.to   === activeNodeChat ||
+         m.me));
 
-// System message
-ingestMsg({from:'system',text:'Mesh network initialized. LoRa bridge required for T-Deck communication. Connect edge bridge at ws://localhost:5006.',ts:Date.now(),hops:0,system:true});
-renderNodes();
-connectBridge();
-</script></body></html>
+    document.getElementById('messages').innerHTML = relevant.map(m => {
+        const cls  = m.me ? 'me' : m.from === 'system' ? 'system' : 'them';
+        const name = m.me ? '// YOU' : `// ${PM.esc(m.from)}`;
+        return `
+        <div class="mm-msg ${cls} ${m.hops > 0 ? 'relayed' : ''}">
+            <div class="mm-msg-from">${name}</div>
+            <div class="mm-msg-body">${PM.esc(m.text)}</div>
+            <div class="mm-msg-meta">
+                <span>${PM.formatTime(m.ts / 1000)}</span>
+                ${m.hops > 0 ? `<span class="hop-badge">⟲ ${m.hops} hop${m.hops > 1 ? 's' : ''}</span>` : ''}
+                ${m.rssi ? `<span>${m.rssi}dBm</span>` : ''}
+                ${m.encrypted ? `<span class="enc-badge">🔒</span>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+
+    const el = document.getElementById('messages');
+    el.scrollTop = el.scrollHeight;
+    document.getElementById('statHops').textContent =
+        relevant.reduce((max, m) => Math.max(max, m.hops || 0), 0);
+}
+
+function renderNodeList() {
+    const arr = Array.from(nodes.values())
+        .sort((a, b) => {
+            if (a.me) return -1;
+            if (b.me) return 1;
+            return (b.rssi || -120) - (a.rssi || -120);
+        });
+
+    document.getElementById('nodeCount').textContent = `${arr.length}`;
+    document.getElementById('statNodes').textContent = arr.filter(n => n.status === 'online' || n.me).length;
+
+    document.getElementById('nodeList').innerHTML = arr.map(n => {
+        const age   = Date.now() - (n.lastSeen || 0);
+        const stale = age > 120000;
+        const dotCls= n.me ? 'me' : stale ? 'offline' : n.status === 'relay' ? 'relay' : 'online';
+        const msgs  = messages.filter(m => m.from === n.id || (m.me && m.to === n.id)).length;
+
+        return `
+        <div class="mm-node ${selectedNode === n.id ? 'selected' : ''} ${n.me ? 'me' : ''}"
+             onclick="selectNode('${PM.esc(n.id)}')">
+            <div class="mm-node-name">
+                <span class="node-dot ${dotCls}"></span>
+                ${PM.esc(n.name)}
+                ${n.me ? '<span style="color:var(--gold);font-size:.5rem">(YOU)</span>' : ''}
+            </div>
+            <div class="mm-node-meta">
+                ${n.rssi ? `<span style="color:${PMViz.rssiColor(n.rssi)}">${n.rssi}dBm</span>` : ''}
+                ${n.hops !== undefined ? `<span>${n.hops}hop${n.hops !== 1 ? 's' : ''}</span>` : ''}
+                ${n.battery >= 0 ? `<span>🔋${n.battery}%</span>` : ''}
+                ${msgs > 0 ? `<span style="color:var(--accent3)">${msgs}msg</span>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function selectNode(id) {
+    selectedNode = id;
+    const n = nodes.get(id);
+    renderNodeList();
+    if (n) {
+        renderNodeDetail(n);
+        if (n.rssi) rssiSpark.push(n.rssi);
+    }
+}
+
+function renderNodeDetail(n) {
+    const age = PM.formatDuration(Date.now() - (n.lastSeen || Date.now()));
+    document.getElementById('nodeDetail').innerHTML = `
+        <div class="mm-nd-name">${PM.esc(n.name)}</div>
+        <div class="mm-nd-row"><span class="lbl">Status</span>
+            <span class="val" style="color:${n.me?'var(--gold)':n.status==='online'?'var(--accent3)':'var(--text-dim)'}">${n.me?'SELF':n.status?.toUpperCase()}</span></div>
+        <div class="mm-nd-row"><span class="lbl">Signal</span>
+            <span class="val" style="color:${PMViz.rssiColor(n.rssi||0)}">${n.rssi||'—'}dBm</span></div>
+        <div class="mm-nd-row"><span class="lbl">Hops</span><span class="val">${n.hops??'—'}</span></div>
+        <div class="mm-nd-row"><span class="lbl">Battery</span><span class="val">${n.battery>=0?n.battery+'%':'—'}</span></div>
+        <div class="mm-nd-row"><span class="lbl">Last seen</span><span class="val">${n.me?'now':age+' ago'}</span></div>
+        <div class="mm-nd-row"><span class="lbl">Messages</span>
+            <span class="val">${messages.filter(m=>m.from===n.id).length}</span></div>
+        ${n.lat&&n.lon?`<div class="mm-nd-row"><span class="lbl">GPS</span>
+            <span class="val">${parseFloat(n.lat).toFixed(4)},${parseFloat(n.lon).toFixed(4)}</span></div>`:''}
+        <div style="margin-top:10px">
+            <button class="pm-refresh" style="width:100%;padding:6px;margin-bottom:4px"
+                onclick="chatWith('${PM.esc(n.id)}')">💬 DIRECT MSG</button>
+        </div>
+    `;
+    updateEnvPanel(n);
+}
+
+function updateEnvPanel(n) {
+    if (!n) return;
+    document.getElementById('envPanel').innerHTML = `
+        ${n.temp != null ? `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(28,46,58,.4)"><span>Temp</span><span style="color:var(--accent3)">${n.temp}°C</span></div>` : ''}
+        ${n.humidity != null ? `<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(28,46,58,.4)"><span>Humidity</span><span style="color:var(--accent3)">${n.humidity}%</span></div>` : ''}
+        ${!n.temp && !n.humidity ? '<span>No sensor data</span>' : ''}
+    `;
+}
+
+function updateStatusChart() {
+    const arr = Array.from(nodes.values());
+    const counts = {Online:0, Relay:0, Offline:0};
+    arr.forEach(n => {
+        const age = Date.now() - (n.lastSeen || 0);
+        if (n.me || n.status === 'online') counts.Online++;
+        else if (n.status === 'relay')     counts.Relay++;
+        else                               counts.Offline++;
+    });
+    statusChart.update(Object.entries(counts).filter(([,v])=>v>0)
+        .map(([label,value])=>({label,value})));
+}
+
+function renderRoutingLog() {
+    document.getElementById('routingLog').innerHTML = routingLog.map(r => `
+        <div style="padding:10px 0;border-bottom:1px solid rgba(28,46,58,.4)">
+            <div style="font-size:.65rem;color:var(--text-bright);margin-bottom:4px">
+                <span style="color:var(--accent3)">${PM.esc(r.from)}</span>
+                → <span style="color:var(--gold)">${PM.esc(r.to)}</span>
+            </div>
+            <div style="font-size:.6rem;color:var(--text-dim)">
+                ${r.hops} hops
+                ${r.path.length > 0 ? ' via ' + r.path.map(p=>PM.esc(p)).join(' → ') : ''}
+                ${r.rssi ? ` · ${r.rssi}dBm` : ''}
+            </div>
+            <div style="font-size:.55rem;color:var(--text-dim)">${PM.formatTime(r.ts/1000)}</div>
+        </div>`).join('');
+}
+
+function renderChannelButtons() {
+    document.getElementById('channelButtons').innerHTML = CHANNELS.map(ch => `
+        <button class="mm-channel-btn ${activeChannel===ch?'active':''}"
+                onclick="setChannel('${ch}')">${ch}</button>`).join('');
+}
+
+function renderAll() {
+    renderMessages();
+    renderNodeList();
+    updateStatusChart();
+}
+
+// ── Controls ──────────────────────────────────────────────────────
+function setTab(tab) {
+    document.querySelectorAll('.mm-tab').forEach((t,i) => {
+        const tabs = ['chat','topology','routing'];
+        t.className = 'mm-tab' + (tabs[i] === tab ? ' active' : '');
+    });
+    document.querySelectorAll('.mm-tab-pane').forEach(p => {
+        p.className = 'mm-tab-pane' + (p.id === 'pane-'+tab ? ' active' : '');
+    });
+    if (tab === 'topology') {
+        resizeTopo();
+    }
+}
+
+function setChannel(ch) {
+    activeChannel = ch;
+    renderChannelButtons();
+    renderMessages();
+    document.getElementById('statChannel').textContent = ch;
+}
+
+function chatWith(nodeId) {
+    activeNodeChat = nodeId;
+    const n = nodes.get(nodeId);
+    document.getElementById('chatTitle').textContent =
+        nodeId === 'broadcast' ? 'BROADCAST' : PM.esc(n?.name || nodeId);
+    document.getElementById('chatMeta').textContent =
+        nodeId === 'broadcast' ? 'All nodes on mesh' : `Direct message — ${PM.esc(nodeId)}`;
+    setTab('chat');
+    renderMessages();
+}
+
+function pingAll() {
+    if (beam.connected) {
+        beam.send({type:'CMD_MESH_PING', src:'app', cmd_id:'mm_ping', from:MY_NODE_ID});
+    }
+    addSystemMessage('Ping sent to all nodes');
+}
+
+function requestPositions() {
+    if (beam.connected) {
+        beam.send({type:'CMD_MESH_POSITIONS', src:'app', cmd_id:'mm_pos', from:MY_NODE_ID});
+    }
+    addSystemMessage('Position request broadcast');
+}
+
+function saveSession() {
+    PMViz.Storage.save('mesh_session', {
+        nodes:    Array.from(nodes.values()),
+        messages: messages.slice(-100),
+        routing:  routingLog,
+    }, 'json');
+}
+
+function clearChat() {
+    messages = [];
+    PM.save('mesh_messages', []);
+    renderMessages();
+}
+
+function addSystemMessage(text) {
+    messages.push({
+        id: PM.uid(), from: 'system', to: 'broadcast',
+        channel: activeChannel, text, ts: Date.now(),
+        hops: 0, encrypted: false, me: false,
+    });
+    renderMessages();
+}
+
+function onMsgKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+}
+
+function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 100) + 'px';
+}
+
+window.addEventListener('load', async () => {
+    initViz();
+    addSystemMessage('Mesh network initialized. Waiting for LoRa traffic...');
+
+    try { await beam.connect(); }
+    catch(e) { console.log('No hardware — demo mode'); }
+
+    // Heartbeat — announce self on mesh every 60 seconds
+    setInterval(() => {
+        if (beam.connected) {
+            beam.send({
+                type: 'CMD_MESH_ANNOUNCE',
+                src:  'app',
+                cmd_id: 'mm_beat',
+                node_id: MY_NODE_ID,
+                channel: activeChannel,
+            });
+        }
+    }, 60000);
+
+    // Traffic rate tracker
+    setInterval(() => {
+        const recent = messages.filter(m => Date.now() - m.ts < 60000).length;
+        trafficSpark.push(recent);
+    }, 5000);
+});
+</script>
+</body></html>

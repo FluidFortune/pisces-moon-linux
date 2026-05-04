@@ -1,153 +1,630 @@
 <!DOCTYPE html>
-<!-- 
-  Pisces Moon OS — survival_ref.html
+<!--
+  Pisces Moon OS — survival_ref.html v3
   Copyright (C) 2026 Eric Becker / Fluid Fortune
-  SPDX-License-Identifier: MIT
-  fluidfortune.com
+  SPDX-License-Identifier: AGPL-3.0-or-later
 
-  Permission is hereby granted, free of charge, to any person obtaining
-  a copy of this software and associated documentation files, to deal in
-  the Software without restriction. See licenses/LICENSE-MIT.txt for full terms.
-
-  Dedicated to Jennifer Soto and Clark Beddows.
+  FULLY OFFLINE. All reference content hardcoded.
+  Personal notes per section + custom pages.
+  New sections: Urban Survival, Vehicle Survival, Power Outage,
+  Trauma Psychology, Communications.
 -->
-<!-- PISCES MOON OS // SURVIVAL REFERENCE -->
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>PISCES MOON // SURVIVAL REF</title>
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // SURVIVAL v3</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap');
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;}
-*{margin:0;padding:0;box-sizing:border-box;}
-body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
-body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
-header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:12px 24px;display:flex;align-items:center;justify-content:space-between;}
-.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:1.1rem;color:var(--accent2);letter-spacing:3px;}
-.content{padding:20px;max-width:1100px;margin:0 auto;}
-.panel{background:var(--panel);border:1px solid var(--panel-border);margin-bottom:16px;}
-.ph{padding:10px 16px;border-bottom:1px solid var(--panel-border);font-family:'Orbitron',monospace;font-size:.62rem;color:var(--accent2);letter-spacing:3px;}
-.pb{padding:14px 16px;}
-.btn{display:inline-block;padding:7px 16px;background:transparent;border:1px solid var(--accent2);color:var(--accent2);font-family:'Share Tech Mono',monospace;font-size:.68rem;cursor:pointer;letter-spacing:1px;transition:all .2s;}
-.btn:hover{background:var(--accent2);color:var(--bg);}
-.btn.sm{padding:4px 10px;font-size:.6rem;border-color:var(--accent);color:var(--accent);}
-.btn.sm:hover{background:var(--accent);color:var(--bg);}
-.pm-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.74rem;padding:8px 12px;outline:none;width:100%;}
-.pm-input:focus{border-color:var(--accent2);}
-.pm-input::placeholder{color:var(--text-dim);}
-.tabs{display:flex;border-bottom:1px solid var(--panel-border);flex-wrap:wrap;}
-.tab{padding:9px 14px;font-size:.58rem;color:var(--text-dim);cursor:pointer;letter-spacing:2px;border-bottom:2px solid transparent;margin-bottom:-1px;font-family:'Orbitron',monospace;}
-.tab:hover{color:var(--text);}
-.tab.active{color:var(--accent2);border-bottom-color:var(--accent2);}
-.tc{display:none;padding:16px;}.tc.active{display:block;}
-.surv-card{background:var(--bg2);border:1px solid var(--panel-border);padding:12px;margin-bottom:8px;border-left:3px solid var(--accent2);}
-.surv-card h3{font-family:'Orbitron',monospace;font-size:.65rem;color:var(--accent2);letter-spacing:2px;margin-bottom:6px;}
-.surv-card p{font-size:.7rem;color:var(--text);line-height:1.65;}
-.ai-answer{background:rgba(255,107,0,.04);border:1px solid rgba(255,107,0,.15);padding:14px;font-size:.73rem;line-height:1.75;white-space:pre-wrap;}
-.thinking{display:flex;gap:5px;padding:10px 0;}
-.thinking span{width:7px;height:7px;background:var(--accent2);border-radius:50%;animation:th 1.2s infinite;}
-.thinking span:nth-child(2){animation-delay:.2s;}.thinking span:nth-child(3){animation-delay:.4s;}
-@keyframes th{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
-.p1{color:var(--accent4)}.p2{color:var(--warn)}.p3{color:var(--accent3)}
-::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
-</style></head><body>
-<header>
-  <div class="logo">PISCES MOON // <span style="color:var(--gold)">SURVIVAL REF</span></div>
-  <div style="font-size:.62rem;color:var(--text-dim)">Offline-capable field reference</div>
-</header>
-<div class="content">
-  <div class="panel">
-    <div class="ph">AI FIELD CONSULTANT — Powered by Gemini</div>
-    <div class="pb">
-      <input class="pm-input" id="survQ" placeholder="Ask: how to start fire, find water in desert, build shelter...">
-      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">
-        <button class="btn sm" onclick="q('Water purification in wilderness')">WATER</button>
-        <button class="btn sm" onclick="q('Emergency shelter building techniques')">SHELTER</button>
-        <button class="btn sm" onclick="q('Fire starting without matches')">FIRE</button>
-        <button class="btn sm" onclick="q('Navigation without GPS compass')">NAVIGATE</button>
-        <button class="btn sm" onclick="q('Edible plants North America')">FOOD</button>
-        <button class="btn sm" onclick="q('Rescue signaling techniques')">SIGNAL</button>
-      </div>
-      <button class="btn" style="margin-top:8px" onclick="askSurv()">ASK GEMINI ↵</button>
-      <div id="survResult" style="margin-top:12px"></div>
-    </div>
-  </div>
-
-  <div class="tabs">
-    <div class="tab active" onclick="st(0)">RULE OF 3s</div>
-    <div class="tab" onclick="st(1)">FIRE</div>
-    <div class="tab" onclick="st(2)">WATER</div>
-    <div class="tab" onclick="st(3)">SHELTER</div>
-    <div class="tab" onclick="st(4)">SIGNALS</div>
-    <div class="tab" onclick="st(5)">NAVIGATION</div>
-    <div class="tab" onclick="st(6)">KNOTS</div>
-  </div>
-
-  <div class="tc active" id="tc0">
-    <div class="surv-card"><h3 class="p1">3 MINUTES — AIR / BLEEDING</h3><p>Without oxygen, brain damage begins in 3-5 minutes. Uncontrolled arterial bleeding kills in minutes. Secure airway. Apply tourniquet for limb bleeding.</p></div>
-    <div class="surv-card"><h3 class="p1">3 HOURS — CORE TEMPERATURE</h3><p>Hypothermia kills in 3 hours in harsh conditions. Get out of wind/rain/cold. Small shelter retains body heat. Ground insulation critical — ground steals heat 25x faster than air.</p></div>
-    <div class="surv-card"><h3 class="p2">3 DAYS — WATER</h3><p>Dehydration rapidly impairs judgment. Find/purify water within 3 days. Drink before thirsty. 1L/day minimum survival, 3L+ normal activity, 6L in heat/exertion.</p></div>
-    <div class="surv-card"><h3 class="p3">3 WEEKS — FOOD</h3><p>Body survives weeks without food (with water). Food is lowest survival priority. Focus on shelter, water, signaling first. Foraging or trapping for calories.</p></div>
-    <div class="surv-card"><h3>PRIORITIES IN ORDER</h3><p>1. Stay calm — panic kills. 2. Stop/stabilize injuries. 3. Signal for rescue (start early). 4. Find/build shelter. 5. Find water. 6. Find food. Most rescues happen within 72 hours — stay put if possible.</p></div>
-  </div>
-
-  <div class="tc" id="tc1">
-    <div class="surv-card"><h3>FIRE TRIANGLE</h3><p>Fuel + Heat + Oxygen. Remove any element to extinguish. Build wind-protected structure. Start small, grow the fire. Have tinder, kindling, and fuel ready before lighting.</p></div>
-    <div class="surv-card"><h3>TINDER MATERIALS</h3><p>Best: birch bark, dry grass, cattail fluff, pine resin, fatwood shavings, cedar bark shredded fine, dry fungi. Must be bone dry. Prepare more than you think you need.</p></div>
-    <div class="surv-card"><h3>FIRE STARTING — PRIORITY ORDER</h3><p>1. Lighter or waterproof matches (always carry both)<br>2. Ferro rod — works when wet, lasts 12,000+ strikes<br>3. Magnifying lens (sun only)<br>4. Friction: bow drill (willow/cedar board, willow spindle)<br>5. Battery + steel wool</p></div>
-    <div class="surv-card"><h3>BOW DRILL TECHNIQUE</h3><p>Board: dry softwood. Spindle: same wood. Cut notch to edge of burn circle. Tinder bundle under notch. Consistent downward pressure + speed. Coal forms in 30-60 seconds of sustained effort. Transfer to bundle gently, blow softly from below.</p></div>
-  </div>
-
-  <div class="tc" id="tc2">
-    <div class="surv-card"><h3>WATER SOURCE PRIORITY</h3><p>Running water > spring > still water > ground seepage > dew/rain collection > transpiration bags. Avoid stagnant pools. Higher elevation = cleaner. Moving water = safer.</p></div>
-    <div class="surv-card"><h3>PURIFICATION METHODS</h3><p>Boiling: rolling boil 1 min (3 min at altitude). Chemical: 8 drops unscented bleach/gallon or iodine tablets. UV: clear container in direct sunlight 6+ hours. Filter: improvised charcoal-sand-gravel layers (sediment only, still purify).</p></div>
-    <div class="surv-card"><h3>FINDING WATER</h3><p>Follow drainages downhill. Look for animal trails converging. Birds fly toward water at dawn/dusk. Vegetation: willows, cottonwoods, cattails = water nearby. Dig in dry stream bed at outside of bend.</p></div>
-    <div class="surv-card"><h3>DEHYDRATION SIGNS</h3><p>Dark urine, dry mouth, fatigue (early) → headache, dizziness, rapid pulse (moderate) → confusion, no urination, rapid breathing (severe — emergency). Drink before you're thirsty in hot conditions.</p></div>
-  </div>
-
-  <div class="tc" id="tc3">
-    <div class="surv-card"><h3>SHELTER PRIORITIES</h3><p>1. Wind protection. 2. Waterproofing. 3. Ground insulation (CRITICAL). 4. Size: small retains body heat better. Location: avoid drainages (flash floods), widow-makers, hilltops (lightning). Slope for drainage.</p></div>
-    <div class="surv-card"><h3>LEAN-TO</h3><p>Simplest. Ridge pole between two trees. Branches/debris at 45° angle. Layer leaves/bark 12"+ thick. Reflective fire in front multiplies heat. Open side faces fire, away from wind.</p></div>
-    <div class="surv-card"><h3>DEBRIS HUT</h3><p>Best all-weather shelter. 8-9ft ridgepole, ribbing at 45°, pile debris 3-4ft thick all sides. Crawl-in size only. Fill inside with dry debris bedding. One person generates enough heat to survive near-freezing with no fire.</p></div>
-    <div class="surv-card"><h3>GROUND INSULATION</h3><p>Minimum 4-6 inches dry debris under body. More in cold. Pine boughs, dry leaves, dry grass. A sleeping bag or space blanket loses 80% insulation when compressed against cold ground without padding.</p></div>
-  </div>
-
-  <div class="tc" id="tc4">
-    <div class="surv-card"><h3>UNIVERSAL DISTRESS: GROUPS OF 3</h3><p>3 fires, 3 whistle blasts, 3 gunshots, 3 flashes. Repeat after pause. Internationally recognized. Ground-to-air: X = need medical. V = need help. Arrow = traveling direction. Use rocks, logs, trampled vegetation visible from air.</p></div>
-    <div class="surv-card"><h3>SIGNAL MIRROR</h3><p>Most effective daytime signal — visible 10+ miles. Aim: hold mirror near eye, see reflection dot on target. Angle to catch sun. Flash slowly. Works on cloudy days with diffuse light.</p></div>
-    <div class="surv-card"><h3>FIRE SIGNALS</h3><p>3 fires in triangle 60ft apart = distress. Day: add green vegetation for white smoke. Night: maintain bright flame. Clear debris in 20-30ft diameter opening for visibility. Mark with reflective material.</p></div>
-    <div class="surv-card"><h3>STAY PUT vs MOVE</h3><p>Stay put if: someone knows your plan, you have shelter/water, injured/weak. Move if: certain rescue isn't coming, know route to safety, no water at current location. Leave trail markers if moving.</p></div>
-  </div>
-
-  <div class="tc" id="tc5">
-    <div class="surv-card"><h3>NATURAL COMPASS</h3><p>Sun: rises E, sets W, due south at noon (N hemisphere). Shadows point N at noon. North Star (Polaris): find Big Dipper, follow the pointer stars 5x their distance = Polaris = true north. Moss: heaviest growth on north side.</p></div>
-    <div class="surv-card"><h3>STICK SHADOW METHOD</h3><p>Place vertical stick. Mark shadow tip (A). Wait 15 minutes, mark new tip (B). Line A to B = east-west (A=west, B=east). Perpendicular = north-south. Works anywhere with sun.</p></div>
-    <div class="surv-card"><h3>TERRAIN READING</h3><p>Water flows to valleys/rivers, rivers to civilization. Ridgelines lead to passes. Powerlines and cut lines lead to roads. Follow streams — they merge and grow. Avoid crossing ridgelines unnecessarily — exhausting.</p></div>
-    <div class="surv-card"><h3>MAINTAIN DIRECTION</h3><p>Pick distant landmark, walk to it, pick next. Look back frequently to check your back trail stays straight. Leave trail markers: cairns, broken branches, scratched arrows on trees. Without landmarks: count steps, maintain compass bearing.</p></div>
-  </div>
-
-  <div class="tc" id="tc6">
-    <div class="surv-card"><h3>SQUARE KNOT (Joining Two Ropes)</h3><p>Right over left, then left over right. Flat and symmetric. Good for bandages. Slips under load — not for critical loads. "Square" shape = correct. "Granny" shape = wrong (asymmetric).</p></div>
-    <div class="surv-card"><h3>BOWLINE (Fixed Loop)</h3><p>"Rabbit comes up out of hole, around the tree, back in hole." Makes non-slipping loop. Used for rescue, tying to anchor. Pull knot tight after forming. Cannot be untied under load.</p></div>
-    <div class="surv-card"><h3>CLOVE HITCH (Fastening to Post)</h3><p>Two half hitches around a pole. Quick to tie/untie. Use as start for lashing. Add extra half hitch for security. Good for temporary anchors. Slips under constant lateral load.</p></div>
-    <div class="surv-card"><h3>PRUSIK (Ascending a Rope)</h3><p>Loop around main rope 3x, pass through itself. Grips under load, slides when unweighted. Useful for ascending rope, foot loops. Must be smaller diameter than main rope.</p></div>
-  </div>
-</div>
-<script>
-function st(i){document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));document.querySelectorAll('.tc').forEach((t,j)=>t.classList.toggle('active',i===j));}
-function q(question){document.getElementById('survQ').value=question;}
-async function askSurv(){
-  const query=document.getElementById('survQ').value.trim();if(!query)return;
-  const el=document.getElementById('survResult');
-  el.innerHTML='<div class="thinking"><span></span><span></span><span></span></div>';
-  const key=localStorage.getItem('pm_gemini_key')||'';
-  if(!key){el.innerHTML='<div class="ai-answer" style="color:var(--accent4)">No API key. Set one in Gemini Terminal.</div>';return;}
-  try{
-    const r=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-04-17:generateContent?key='+key,{
-      method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({contents:[{role:'user',parts:[{text:'You are a wilderness survival expert. Give direct, practical, actionable advice. Question: '+query}]}],generationConfig:{maxOutputTokens:700}})
-    });
-    const data=await r.json();
-    el.innerHTML='<div class="ai-answer">'+esc(data.candidates?.[0]?.content?.parts?.[0]?.text||'No response')+'</div>';
-  }catch(e){el.innerHTML='<div class="ai-answer" style="color:var(--accent4)">'+e.message+'</div>';}
+:root{
+  --bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;
+  --panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;
+  --accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;
+  --text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;
 }
-function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-</script></body></html>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
+header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding:8px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.logo{font-family:'Orbitron',monospace;font-weight:900;font-size:.9rem;color:var(--accent3);letter-spacing:3px;}
+.hdr-badge{font-size:.52rem;color:var(--accent3);font-family:'Orbitron',monospace;letter-spacing:2px;border:1px solid var(--accent3);padding:3px 8px;}
+.layout{display:grid;grid-template-columns:256px 1fr;flex:1;overflow:hidden;}
+.nav{background:var(--bg2);border-right:1px solid var(--panel-border);overflow-y:auto;display:flex;flex-direction:column;}
+.nav-section{padding:6px 10px 3px;font-family:'Orbitron',monospace;font-size:.48rem;letter-spacing:3px;color:var(--text-dim);background:var(--bg);border-bottom:1px solid var(--panel-border);position:sticky;top:0;z-index:2;}
+.nav-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.3);cursor:pointer;transition:background .15s;display:flex;gap:8px;align-items:center;position:relative;}
+.nav-item:hover{background:rgba(0,255,136,.04);}
+.nav-item.active{background:rgba(0,255,136,.1);border-left:3px solid var(--accent3);}
+.nav-icon{font-size:1.1rem;flex-shrink:0;}
+.nav-label{font-size:.68rem;color:var(--text-bright);}
+.nav-sub{font-size:.52rem;color:var(--text-dim);margin-top:1px;}
+.note-dot{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:var(--gold);}
+.custom-dot{position:absolute;right:8px;top:50%;transform:translateY(-50%);width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.content{overflow-y:auto;display:flex;flex-direction:column;}
+.priority-banner{background:rgba(255,204,0,.08);border-bottom:2px solid var(--warn);padding:10px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.pb-icon{font-size:1.4rem;}
+.pb-title{font-family:'Orbitron',monospace;font-size:.72rem;letter-spacing:2px;color:var(--warn);}
+.pb-sub{font-size:.58rem;color:var(--text-dim);margin-top:2px;}
+.content-body{padding:16px;flex:1;}
+.sec-title{font-family:'Orbitron',monospace;font-size:.9rem;color:var(--accent3);letter-spacing:3px;margin-bottom:14px;}
+.sec-title.gold{color:var(--gold);}
+.sec-title.red{color:var(--accent4);}
+.steps{list-style:none;}
+.step{display:flex;gap:10px;margin-bottom:10px;padding:10px;background:var(--bg2);border:1px solid var(--panel-border);border-left:3px solid var(--accent3);}
+.step-n{font-family:'Orbitron',monospace;font-size:1rem;color:var(--accent3);font-weight:900;min-width:20px;flex-shrink:0;}
+.step-body{font-size:.7rem;color:var(--text-bright);line-height:1.75;}
+.step-sub{font-size:.6rem;color:var(--text-dim);margin-top:3px;line-height:1.6;}
+.tip{background:rgba(0,255,136,.06);border:1px solid var(--accent3);padding:10px;margin:8px 0;font-size:.67rem;color:var(--text);line-height:1.7;}
+.warn{background:rgba(255,204,0,.06);border:1px solid var(--warn);padding:10px;margin:8px 0;font-size:.67rem;color:var(--warn);line-height:1.7;}
+.danger{background:rgba(255,51,102,.06);border:1px solid var(--accent4);padding:10px;margin:8px 0;font-size:.67rem;color:var(--accent4);line-height:1.7;}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0;}
+.card{background:var(--bg2);border:1px solid var(--panel-border);padding:10px;text-align:center;}
+.card-icon{font-size:1.6rem;}
+.card-title{font-family:'Orbitron',monospace;font-size:.52rem;letter-spacing:2px;margin:4px 0 2px;}
+.card-body{font-size:.62rem;color:var(--text-dim);line-height:1.5;}
+.plant-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin:10px 0;}
+.plant-card{background:var(--bg2);border:1px solid var(--panel-border);padding:10px;}
+.pname{font-size:.72rem;color:var(--text-bright);margin-bottom:3px;}
+.pedible{font-size:.6rem;color:var(--accent3);}
+.pavoid{font-size:.6rem;color:var(--accent4);}
+.pnote{font-size:.57rem;color:var(--text-dim);margin-top:3px;line-height:1.5;}
+.signal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin:10px 0;}
+.signal-card{background:var(--bg2);border:1px solid var(--panel-border);padding:10px;}
+.stype{font-family:'Orbitron',monospace;font-size:.5rem;letter-spacing:2px;color:var(--accent);margin-bottom:5px;}
+.sbody{font-size:.63rem;color:var(--text);line-height:1.6;}
+.knot-item{padding:10px;background:var(--bg2);border:1px solid var(--panel-border);border-left:3px solid var(--gold);margin-bottom:8px;}
+.kname{font-size:.78rem;color:var(--text-bright);font-weight:bold;margin-bottom:3px;}
+.kuse{font-size:.62rem;color:var(--gold);margin-bottom:3px;}
+.khow{font-size:.65rem;color:var(--text);line-height:1.6;}
+.notes-panel{background:var(--bg2);border-top:2px solid var(--gold);padding:12px 16px;flex-shrink:0;}
+.notes-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;}
+.notes-title{font-family:'Orbitron',monospace;font-size:.55rem;letter-spacing:2px;color:var(--gold);}
+.notes-ta{width:100%;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.65rem;padding:8px;resize:vertical;min-height:70px;outline:none;line-height:1.7;}
+.notes-ta:focus{border-color:var(--gold);}
+.notes-saved{font-size:.52rem;color:var(--text-dim);}
+.page-editor{padding:16px;display:flex;flex-direction:column;gap:10px;height:100%;}
+.pe-input{width:100%;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.7rem;padding:8px;outline:none;}
+.pe-input:focus{border-color:var(--accent3);}
+.pe-ta{flex:1;width:100%;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:.68rem;padding:10px;resize:none;outline:none;line-height:1.75;min-height:280px;}
+.pe-ta:focus{border-color:var(--accent3);}
+.btn-row{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{padding:7px 16px;background:transparent;border:1px solid var(--panel-border);color:var(--text);font-family:'Orbitron',monospace;font-size:.52rem;cursor:pointer;letter-spacing:1px;transition:all .15s;}
+.btn:hover{border-color:var(--accent3);color:var(--accent3);}
+.btn.green{border-color:var(--accent3);color:var(--accent3);}
+.btn.green:hover{background:var(--accent3);color:var(--bg);}
+.btn.red{border-color:var(--accent4);color:var(--accent4);}
+.btn.red:hover{background:var(--accent4);color:var(--bg);}
+.btn.gold{border-color:var(--gold);color:var(--gold);}
+.btn.gold:hover{background:var(--gold);color:var(--bg);}
+</style>
+</head><body>
+
+<header>
+  <div class="logo">🏕 SURVIVAL REFERENCE <span style="color:var(--text-dim);font-size:.6rem">v3</span></div>
+  <div class="hdr-badge">OFFLINE CAPABLE</div>
+</header>
+
+<div class="layout">
+  <div class="nav" id="nav"></div>
+  <div class="content" id="content"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// SURVIVAL REFERENCE v3
+// ═══════════════════════════════════════════════════════════════════
+
+const BUILT_IN = {
+
+stop: {
+  icon:'🛑', label:'STOP PROTOCOL', sub:'First response priorities',
+  priority: {title:'IN ANY SURVIVAL SITUATION — STOP BEFORE YOU ACT', sub:'Panic is the #1 killer. Assessment saves lives.'},
+  html:`<div class="sec-title">🛑 STOP — FIRST RESPONSE</div>
+<div class="grid2" style="margin-bottom:14px">
+  <div class="card"><div class="card-icon">🛑</div><div class="card-title" style="color:var(--accent4)">STOP</div><div class="card-body">Halt all movement. Sit down. Take 3 slow deep breaths. Do not run. Do not panic.</div></div>
+  <div class="card"><div class="card-icon">🤔</div><div class="card-title" style="color:var(--gold)">THINK</div><div class="card-body">What are my immediate dangers? What resources do I have? What does rescue expect?</div></div>
+  <div class="card"><div class="card-icon">👀</div><div class="card-title" style="color:var(--accent3)">OBSERVE</div><div class="card-body">360° survey. Weather. Terrain. Water sources. Material resources. Sun position and time.</div></div>
+  <div class="card"><div class="card-icon">📋</div><div class="card-title" style="color:var(--accent)">PLAN</div><div class="card-body">Concrete actionable plan. Address immediate threats first. Then shelter → water → fire → signals → food.</div></div>
+</div>
+<div class="tip"><strong>RULE OF 3s — Survival Priorities:</strong><br>
+3 <em>minutes</em> without air (or in icy water)<br>
+3 <em>hours</em> without shelter in harsh weather<br>
+3 <em>days</em> without water<br>
+3 <em>weeks</em> without food</div>
+<div class="tip"><strong>PRIORITY ORDER:</strong><br>
+1. Address immediate medical emergencies<br>
+2. Signal for rescue (if cell/radio available, do it NOW)<br>
+3. Find or build shelter<br>
+4. Find and purify water<br>
+5. Make fire (warmth, water purification, signaling, morale)<br>
+6. Find food (lowest priority — can wait weeks)</div>
+<div class="warn">⚠ STAY PUT unless: you are in immediate danger, you know exactly where you are and where safety is, you have the fitness and equipment to get there. Searchers look for where you were last seen. Moving makes you much harder to find.</div>`
+},
+
+shelter: {
+  icon:'⛺', label:'SHELTER', sub:'Protection from elements',
+  priority: {title:'EXPOSURE KILLS IN 3 HOURS', sub:'In cold, wet, or windy conditions — shelter is your first priority after medical emergencies'},
+  html:`<div class="sec-title">⛺ SHELTER — FINDING AND BUILDING</div>
+<ul class="steps">
+<li class="step"><div class="step-n">1</div><div><div class="step-body"><strong>SITE SELECTION:</strong> Natural windbreak (large tree, rock face, cliff). Avoid: valley floors (cold air drainage), ridges (wind exposure), obvious flood paths, lone trees (lightning). Near resources but above water level.</div></div></li>
+<li class="step"><div class="step-n">2</div><div><div class="step-body"><strong>DEBRIS HUT:</strong> Ridgepole 9ft, fork resting ~30" high on notched stake. Rib branches against both sides. Cover with debris (leaves, bark, pine needles, moss) shingle-style 2–3ft thick. Fill inside with dry leaves 18" deep for bedding.</div><div class="step-sub">Thickness test: pile you cannot see your hand through at arm's length. Door: plug with leaf pile or pack.</div></div></li>
+<li class="step"><div class="step-n">3</div><div><div class="step-body"><strong>LEAN-TO:</strong> Horizontal pole 7ft high between two trees, 7ft apart. Angled poles leaning against crossbar. Layer debris like shingles. Faster but less wind protection. Orient back to prevailing wind. Reflective fire in front doubles warmth.</div></div></li>
+<li class="step"><div class="step-n">4</div><div><div class="step-body"><strong>SNOW CAVE:</strong> Into a slope 6ft of settled snow. Dig upward (cold air sinks, warm air rises inside). Ledge for sleeping above cold zone. Ventilation hole with stick. Mark with branches outside (don't let rescuers ski over you).</div></div></li>
+<li class="step"><div class="step-n">5</div><div><div class="step-body"><strong>QUINZHEE:</strong> Pile snow 7–8ft high dome. Poke 8" sticks all around (thickness gauge). Wait 2 hours (sinters). Hollow out until you hit the sticks. Poke ventilation hole in roof.</div></div></li>
+</ul>
+<div class="tip"><strong>Ground insulation is critical and often overlooked.</strong> Wet ground conducts heat away from your body 25× faster than air at the same temperature. 4–6 inches of debris underneath you matters more than the same insulation on top of you.</div>
+<div class="danger">🚫 Inside shelter: no open flames without adequate ventilation. CO poisoning kills silently. Small candle in a snow shelter significantly raises temperature but requires fresh air hole.</div>`
+},
+
+water: {
+  icon:'💧', label:'WATER', sub:'Finding and purifying',
+  priority: {title:'DEHYDRATION IMPAIRS JUDGMENT BEFORE PHYSICAL SYMPTOMS', sub:'Never ration water — ration activity instead. 2L minimum/day, more in heat/exertion'},
+  html:`<div class="sec-title">💧 WATER — FINDING AND PURIFYING</div>
+<div class="tip" style="margin-bottom:14px"><strong>FINDING WATER:</strong> Follow terrain downhill. Willows, cottonwood, cattails = water nearby. Morning dew: wipe vegetation with absorbent cloth, wring into container. Seeps below cliff faces. Animal trails and bird flight paths in the morning lead to water. Insects (bees fly within 3 miles of water). Listen for running water sounds.</div>
+<ul class="steps">
+<li class="step"><div class="step-n">1</div><div><div class="step-body"><strong>BOILING (most reliable):</strong> Rolling boil kills all biological pathogens. At altitude &gt;6,500ft: boil 3 minutes (lower boiling point). Filter sediment first through cloth for clarity.</div></div></li>
+<li class="step"><div class="step-n">2</div><div><div class="step-body"><strong>CHEMICAL — IODINE:</strong> 5 drops/L clear water, 10 drops/L cloudy. Tincture of iodine 2%. Wait 30 min (60 min cold water). Ineffective vs Cryptosporidium. Add vitamin C tablet to neutralize iodine taste after treatment.</div></div></li>
+<li class="step"><div class="step-n">3</div><div><div class="step-body"><strong>CHEMICAL — BLEACH (sodium hypochlorite 5–8%):</strong> 2 drops/L clear, 4 drops/L cloudy. Wait 30 min. Slight chlorine smell should remain — if not, repeat. Ineffective vs Cryptosporidium.</div></div></li>
+<li class="step"><div class="step-n">4</div><div><div class="step-body"><strong>SOLAR DISINFECTION (SODIS):</strong> Clear PET or glass bottle, fill with water. Lay in direct sun 6 hours (2 sunny days if partly cloudy). Kills bacteria and viruses. NOT effective vs Cryptosporidium. Not effective in turbid water.</div></div></li>
+<li class="step"><div class="step-n">5</div><div><div class="step-body"><strong>IMPROVISED FILTER:</strong> Container with holes in bottom. Layer from top: cloth → charcoal (from fire, crushed) → fine gravel → coarse gravel → grass/moss. Filters sediment and improves taste only — NOT disinfection. Must treat after filtering.</div></div></li>
+</ul>
+<div class="tip"><strong>Transpiration bag:</strong> Clear plastic bag over leafy branch in sunlight. Moisture transpires from leaves and collects in bag corner. 1–2 cups/day per bag.</div>
+<div class="danger">🚫 NEVER DRINK: Seawater (sodium load accelerates dehydration), urine (same reason), alcohol (diuretic), antifreeze (toxic), water from obvious industrial/mining contamination, any liquid from unknown plants with milky white sap.</div>
+<div class="tip"><strong>Hydration check:</strong> Clear/pale yellow urine = hydrated. Dark yellow = start drinking more. Amber/no urine for 8+ hours = severe dehydration — rest and rehydrate immediately.</div>`
+},
+
+fire: {
+  icon:'🔥', label:'FIRE', sub:'Starting and maintaining',
+  html:`<div class="sec-title">🔥 FIRE — START, BUILD, AND MAINTAIN</div>
+<div class="tip" style="margin-bottom:12px"><strong>FIRE TRIANGLE:</strong> Heat + Fuel + Oxygen. All three must be correct. Most failures: wet fuel, insufficient tinder, smothering by adding fuel too fast. Build small — fire earns its size.</div>
+<ul class="steps">
+<li class="step"><div class="step-n">1</div><div><div class="step-body"><strong>TINDER (catches first spark or coal):</strong> Dry grass, cattail fluff, birch bark inner layer, dried fungi (amadou), fine dry pine needles, dandelion fluff, dried mouse/bird nest material, shredded cedar bark. Must crumble to fine powder between fingers. Protect from ground moisture.</div></div></li>
+<li class="step"><div class="step-n">2</div><div><div class="step-body"><strong>KINDLING GRADUATION:</strong> Toothpick → pencil → thumb → wrist thickness. Collect 3× more than you think you need. Dead twigs still attached to tree are drier than those on the ground. Pine resin-soaked wood catches easily.</div></div></li>
+<li class="step"><div class="step-n">3</div><div><div class="step-body"><strong>STRUCTURE:</strong> Tepee (fast-starting, burns hot, good for cooking). Log cabin (long-burning, good coals). Star fire (large logs pushed to center as they burn, conserves fuel). Always build over tinder bundle with kindling above.</div></div></li>
+<li class="step"><div class="step-n">4</div><div><div class="step-body"><strong>BOW DRILL (friction):</strong> Dry softwood matched set: fireboard (flat, notched) and spindle (straight, smooth). Hardwood handhold. Tinder bundle. Bow maintains speed. Notch cut into depression to collect coal. Smoke → consistent thin smoke trail → ember in notch → transfer to tinder nest → blow gently until flame.</div><div class="step-sub">Good wood: willow, cottonwood, cedar, mullein, basswood. Avoid hard woods and green wood.</div></div></li>
+<li class="step"><div class="step-n">5</div><div><div class="step-body"><strong>FLINT AND STEEL:</strong> High-carbon steel (back of knife spine or dedicated striker). Sharp flint, chert, or quartz edge. Strike at 30° angle, glancing blow toward charcoal cloth or natural tinder. Direct spark into tinder bundle.</div></div></li>
+<li class="step"><div class="step-n">6</div><div><div class="step-body"><strong>LENS METHOD:</strong> Magnifying glass, eyeglasses, water-filled balloon, or ice lens. Focus sunlight to smallest possible point on dark tinder. Must have direct sunlight. Patience — can take 1–5 minutes.</div></div></li>
+</ul>
+<div class="danger">🚫 NEVER BURN: Poison ivy/oak/sumac (smoke is toxic), oleander, wood with unknown white sap, treated/painted lumber. Wet green wood produces toxic creosote. Avoid burning inside shelter without vetted ventilation.</div>
+<div class="tip"><strong>Wet conditions:</strong> Split wet logs to find dry interior. Dead standing wood is always drier than ground wood. Pine sap, birch bark, and animal fat are natural fire accelerants. Build platform of green logs under fire to keep it off wet ground.</div>`
+},
+
+food: {
+  icon:'🌿', label:'FOOD & FORAGING', sub:'Edible plants & hunting',
+  priority: {title:'YOU CAN SURVIVE 3 WEEKS WITHOUT FOOD', sub:'Do not risk eating unknown plants in the first 72 hours. The danger of starvation in a short survival situation is near zero.'},
+  html:`<div class="sec-title">🌿 FOOD — FORAGING, HUNTING, TRAPPING</div>
+<div class="tip" style="margin-bottom:12px"><strong>UNIVERSAL EDIBILITY TEST:</strong><br>
+1. Separate plant into parts (leaf/stem/root — test separately)<br>
+2. Touch part to lips — wait 15 min (itch/burn/numbness = avoid that part)<br>
+3. Hold small piece on tongue — wait 15 min<br>
+4. Chew, do not swallow — wait 15 min<br>
+5. Swallow small amount — wait 8 hours<br>
+If no reaction, that part is likely edible in moderate quantities.</div>
+<div class="sec-title" style="font-size:.75rem;margin-top:12px">COMMON EDIBLE PLANTS — NORTH AMERICA</div>
+<div class="plant-grid">
+  <div class="plant-card"><div class="pname">🌾 Cattail</div><div class="pedible">✓ Entire plant — all seasons</div><div class="pnote">Young shoots: eat raw like cucumber. Pollen: shake into container, add water, cook as porridge. Roots: pound in water to extract starch. Near water sources.</div></div>
+  <div class="plant-card"><div class="pname">🌼 Dandelion</div><div class="pedible">✓ All parts edible</div><div class="pnote">Young leaves raw (salad). Older leaves: boil to reduce bitterness. Roots: roast as coffee substitute. Flowers: raw or battered and fried. Common everywhere.</div></div>
+  <div class="plant-card"><div class="pname">🌲 Pine</div><div class="pedible">✓ Inner bark, needles, seeds</div><div class="pnote">Inner bark (cambium): strip outer bark, scrape pale layer, eat raw or dry and grind to flour. Needles: steep for Vitamin C-rich tea. Pine cones: seeds edible.</div></div>
+  <div class="plant-card"><div class="pname">🍀 Clover</div><div class="pedible">✓ Leaves and flowers</div><div class="pnote">Cook to avoid digestive issues from raw. Boiling recommended. Widely available in open areas. High in protein for a plant.</div></div>
+  <div class="plant-card"><div class="pname">🌰 Acorns</div><div class="pedible">✓ After leaching tannins</div><div class="pnote">Crack shells. Grind. Soak in running water or change water every few hours × 24h. Then boil or dry into flour. High in fat and carbs. From any oak species.</div></div>
+  <div class="plant-card"><div class="pname">🫐 Blueberries/Huckleberries</div><div class="pedible">✓ Blue/purple berries in clusters</div><div class="pnote">Generally safe. Grow in open, often disturbed or burned areas. Identify by small waxy berries, shrubby plant. Always verify — some look-alikes exist.</div></div>
+  <div class="plant-card"><div class="pname">🐛 Insects</div><div class="pedible">✓ Most insects — high protein</div><div class="pnote">Grasshoppers, ants, beetle grubs, earthworms. Always cook — raw insect can carry parasites. Remove wings/legs. Avoid brightly colored insects (often toxic). 100 calories per 100g.</div></div>
+  <div class="plant-card"><div class="pname">🌊 Seaweed</div><div class="pedible">✓ Most seaweeds — coastal</div><div class="pnote">Rinse in fresh water if available. Most are edible raw or cooked. Avoid if obviously decomposing. High in iodine and minerals. Do NOT drink seawater to compensate thirst.</div></div>
+</div>
+<div class="danger">🚫 NEVER EAT: Mushrooms (unless absolute expert), water hemlock (lacy white flowers, found near water — deadliest US plant), poison hemlock, jimsonweed (datura), nightshade (shiny black berries), any plant with milky white sap (usually toxic), anything that smells of almonds (cyanide compounds).</div>
+<div class="tip"><strong>"Leaves of three, let it be"</strong> — Poison ivy/oak. "Berries white, don't take a bite" — white berries almost always toxic. Individual red berries (vs clusters): high risk. Blue/black/purple clustered berries: usually edible.</div>
+<div class="tip"><strong>Trapping:</strong> Snares at game trails (2–4 finger widths off ground, loop 4–6" diameter for rabbits). Near dens and water sources. Check every 2–3 hours. Fishing: improvised hooks (bent thorn, safety pin, carved bone). Line from paracord inner strands. Bait with insects, worms, small fish strips.</div>`
+},
+
+nav_guide: {
+  icon:'🧭', label:'NAVIGATION', sub:'Without GPS',
+  html:`<div class="sec-title">🧭 NAVIGATION WITHOUT GPS</div>
+<ul class="steps">
+<li class="step"><div class="step-n">1</div><div><div class="step-body"><strong>SHADOW STICK METHOD:</strong> Push 3ft stick vertically into level ground. Mark shadow tip (Point A). Wait 15–20 minutes. Mark new tip (Point B). Line A→B points West→East. Perpendicular points North→South. Works anywhere on Earth.</div></div></li>
+<li class="step"><div class="step-n">2</div><div><div class="step-body"><strong>WATCH COMPASS (Northern hemisphere):</strong> Point hour hand at sun. Bisect the angle between the hour hand and 12 o'clock = South. If on daylight saving time, use the 1 o'clock position instead of 12.</div></div></li>
+<li class="step"><div class="step-n">3</div><div><div class="step-body"><strong>FOLLOW TERRAIN TO CIVILIZATION:</strong> Rivers flow downhill to larger rivers to sea. Follow downstream. In North America: roads follow rivers, power lines lead to cities. Fly lines and clearcuts lead to roads. Avoid drainages that end in canyons.</div></div></li>
+<li class="step"><div class="step-n">4</div><div><div class="step-body"><strong>NATURAL INDICATORS:</strong> Moss grows on north sides of trees (less direct sun) in Northern Hemisphere. Wind-shaped trees: heavier branches on sheltered (downwind) side. Snow melts first on south-facing slopes. Anthill: often on south side of trees.</div><div class="step-sub">These are tendencies, not absolute rules. Use multiple methods for verification.</div></div></li>
+<li class="step"><div class="step-n">5</div><div><div class="step-body"><strong>DEAD RECKONING:</strong> Track your starting point, direction of travel (by compass or sun), and distance (pace count: average adult = ~2.5ft/pace; measure on known distance). Update position estimate regularly.</div></div></li>
+</ul>
+<div class="tip"><strong>High ground first:</strong> If totally lost, gain elevation for perspective. Even 200ft can reveal roads, structures, water bodies, or power lines not visible at ground level. Assess before committing to a direction.</div>
+<div class="warn">⚠ IF YOU HAVE A PHONE WITH ANY BATTERY: Even without service, the GPS chip works. Google Maps offline maps, downloaded before the trip, will show your position with no cellular data required. Download maps for your area BEFORE you go.</div>`
+},
+
+stars: {
+  icon:'⭐', label:'CELESTIAL NAV', sub:'Navigate by stars/sun/moon',
+  html:`<div class="sec-title">⭐ CELESTIAL NAVIGATION</div>
+<ul class="steps">
+<li class="step"><div class="step-n">N</div><div><div class="step-body"><strong>POLARIS — Northern Hemisphere North:</strong> Find the Big Dipper. The two stars forming the outer edge of the cup (the "pointer stars") point directly to Polaris (North Star). Polaris sits within 1° of true North. Its altitude above the horizon equals your latitude.</div></div></li>
+<li class="step"><div class="step-n">S</div><div><div class="step-body"><strong>SOUTHERN CROSS — Southern Hemisphere South:</strong> The long axis of Crux extended 4.5× its own length points to the South Celestial Pole (no bright star marks it). Bisect line from Centauri pointer stars perpendicular to meet Crux extension = more precise South.</div></div></li>
+<li class="step"><div class="step-n">E/W</div><div><div class="step-body"><strong>ORION'S BELT:</strong> The three belt stars rise exactly due East and set exactly due West, worldwide, any time of year they're visible. One of the most reliable celestial navigation references.</div></div></li>
+<li class="step"><div class="step-n">☾</div><div><div class="step-body"><strong>QUARTER MOON COMPASS:</strong> First or last quarter moon (half lit). Connect the two horn tips with an imaginary line, extend to the horizon = roughly South (Northern Hemisphere). Works best when moon is high.</div></div></li>
+<li class="step"><div class="step-n">☀</div><div><div class="step-body"><strong>SUN MOVEMENT:</strong> Sun rises East, sets West (approximately, varies by season and latitude). Due South at solar noon in Northern Hemisphere (due North in Southern Hemisphere). Shadow shortens toward noon, lengthens after.</div></div></li>
+</ul>
+<div class="tip"><strong>Dark adaptation:</strong> Allow 20–30 minutes for full night vision. Cover one eye when using a flashlight to preserve night vision in the covered eye. Red light preserves night vision better than white.</div>
+<div class="tip"><strong>Milky Way:</strong> In the Northern Hemisphere, the dense core of the Milky Way is in the southern sky in summer. The galactic center is roughly south in July/August, useful supplementary reference.</div>`
+},
+
+signal: {
+  icon:'📡', label:'SIGNALING', sub:'Get rescued',
+  priority: {title:'THE GOAL IS RESCUE — SIGNAL EARLY AND CONTINUOUSLY', sub:'Most rescues happen within 72 hours. Signal aggressively.'},
+  html:`<div class="sec-title">📡 SIGNALING FOR RESCUE</div>
+<div class="signal-grid">
+  <div class="signal-card"><div class="stype">SIGNAL MIRROR</div><div class="sbody">Most effective daylight signal — visible 10–25 miles, even to aircraft 60+ miles away in clear conditions. Aim by holding at eye, create "V" with fingers between you and target, align sun reflection on your target. Flash in groups of 3. Practice the technique before you need it.</div></div>
+  <div class="signal-card"><div class="stype">GROUND-TO-AIR SIGNALS</div><div class="sbody">Minimum 10ft tall, contrast with surroundings. Use rocks, logs, debris, snow trenches.<br>X = Need medical help | V = Need help | → = Traveling this direction | SOS = General distress<br>Stomp into snow or arrange dark material on snow for visibility.</div></div>
+  <div class="signal-card"><div class="stype">SMOKE SIGNALS</div><div class="sbody">3 fires in triangle = international distress. White smoke (green leaves, wet wood) visible against dark forest. Black smoke (rubber, oil, plastic) visible against snow or desert. Visible 50+ miles from air. Time smoke for when aircraft are likely (daytime, after hearing aircraft).</div></div>
+  <div class="signal-card"><div class="stype">WHISTLE</div><div class="sbody">3 blasts = distress. Pea-less whistle only — peas freeze and jam. Audible 1+ mile. Carry one on every trip (attach to zipper). Far more effective than shouting. Sound funnels: cup hands, face into canyon walls to amplify.</div></div>
+  <div class="signal-card"><div class="stype">LIGHT / FLASHLIGHT</div><div class="sbody">SOS: 3 short-3 long-3 short flashes. Aim toward aircraft — avoid continuous bright flash (can blind pilot). Strobe lights are excellent signaling devices. Chemical light sticks visible at night. IR chemlights visible to NVG-equipped military/SAR aircraft.</div></div>
+  <div class="signal-card"><div class="stype">BRIGHT COLOR / PANELS</div><div class="sbody">Spread bright orange/yellow/red gear in open area visible from above. Signal panels: 18"×36" minimum. Your tent fly may be highly visible. Remove camouflage — survival is not the time for concealment.</div></div>
+</div>
+<div class="warn">⚠ When you hear aircraft: activate all signals simultaneously. Signal mirrors during the day. Bright colors always out. Fires/smoke ready to light. One shot at a passing aircraft.</div>`
+},
+
+knots: {
+  icon:'🪢', label:'KNOTS', sub:'Essential field knots',
+  html:`<div class="sec-title gold">🪢 ESSENTIAL KNOTS</div>
+<div class="knot-item">
+  <div class="kname">BOWLINE — "The Rescue Knot"</div>
+  <div class="kuse">Use: Fixed non-slip loop, rescue loops, securing tarps, hammock suspension | Strength: ~60% rope strength</div>
+  <div class="khow">Mnemonic: "The rabbit comes out of the hole, around the tree, and back into the hole." Make small loop in standing line (the hole). Pass working end up through loop (rabbit out). Around behind the standing line (around the tree). Back down through the small loop (back in hole). Tighten by pulling standing line and loop simultaneously.</div>
+</div>
+<div class="knot-item">
+  <div class="kname">CLOVE HITCH — Quick Post Attachment</div>
+  <div class="kuse">Use: Temporary lashing to post/tree, starting and finishing lashings, adjustable attachment | Easy to untie even under load</div>
+  <div class="khow">Wrap rope around post. Second wrap crossing over first. Tuck working end under second wrap. Pull tight. OR: make two identical overhand loops, slide second loop behind first, slip both over post.</div>
+</div>
+<div class="knot-item">
+  <div class="kname">TAUT-LINE HITCH — Adjustable Tension</div>
+  <div class="kuse">Use: Tent and tarp guy lines, clothesline, any line needing length adjustment while maintaining tension</div>
+  <div class="khow">Pass line around anchor (tree, stake). Wrap working end twice around the standing line inside the loop, moving toward anchor. One more wrap on the outside of those wraps. Pass end through last wrap. Tighten. Slides freely when loosened, locks under tension.</div>
+</div>
+<div class="knot-item">
+  <div class="kname">SHEET BEND — Joining Two Ropes</div>
+  <div class="kuse">Use: Joining ropes of different diameter, extending rope length | Double sheet bend for more security</div>
+  <div class="khow">Form bight (loop) in thicker rope. Pass thinner rope through bight from underneath. Route around behind both tails of the bight. Pass under its own standing part (not through the bight). Pull tight. Both tails should exit on same side for security.</div>
+</div>
+<div class="knot-item">
+  <div class="kname">PRUSIK KNOT — Friction Hitch</div>
+  <div class="kuse">Use: Ascending a rope, friction brake, safety backup | Requires cord thinner than main rope</div>
+  <div class="khow">Create a loop with smaller cord (prusik loop). Wrap loop around main rope 3 times through itself. The coils must be neat and parallel. Slides freely when unweighted, grips when weighted from below. Can be released by pushing coils upward.</div>
+</div>
+<div class="knot-item">
+  <div class="kname">FIGURE-8 — Stopper/Loop</div>
+  <div class="kuse">Use: Stopper knot at rope end, figure-8 on a bight = secure loop for climbing/rescue</div>
+  <div class="khow">Pass working end over standing part to form loop. Pass under and through the loop. Result looks like the number 8. For figure-8 loop: fold rope double, tie figure-8 with the bight as the working end.</div>
+</div>`
+},
+
+weather: {
+  icon:'🌩', label:'WEATHER SIGNS', sub:'Natural forecasting',
+  html:`<div class="sec-title">🌩 READING WEATHER — NATURAL INDICATORS</div>
+<div class="grid2" style="margin-bottom:12px">
+  <div class="card" style="border-color:var(--accent3)"><div class="card-icon">🔴</div><div class="card-title" style="color:var(--accent3)">RED SKY RULE</div><div class="card-body">Red sky at night (west): weather system passed, fair weather likely. Red sky at morning (east): moisture in atmosphere ahead, storm approaching. "Red sky at morning, sailors take warning."</div></div>
+  <div class="card" style="border-color:var(--warn)"><div class="card-icon">⬇</div><div class="card-title" style="color:var(--warn)">FALLING PRESSURE</div><div class="card-body">Aching joints, ear discomfort, campfire smoke descends and swirls, wildlife more active, frogs louder, insects near ground, pine cones close up — storm incoming. Act to establish or improve shelter.</div></div>
+  <div class="card" style="border-color:var(--accent)"><div class="card-icon">☁</div><div class="card-title" style="color:var(--accent)">CLOUD READING</div><div class="card-body">Cirrus (wispy/fibrous high): change within 24–48h. Cumulonimbus (tall anvil top): storm NOW — get off high ground, water, open areas. Stratus (flat gray layer): extended light precipitation.</div></div>
+  <div class="card" style="border-color:var(--accent3)"><div class="card-icon">💧</div><div class="card-title" style="color:var(--accent3)">HUMIDITY SIGNS</div><div class="card-body">Morning dew on ground: fair day likely (clear sky let heat radiate overnight). No dew: cloud cover overnight = possible rain. Salt stickiness, hair frizz, static electricity increase = humidity rising = potential rain.</div></div>
+  <div class="card"><div class="card-icon">🌬</div><div class="card-title">WIND DIRECTION</div><div class="card-body">In Northern Hemisphere: wind from S/SW = warm, often clear. Wind from N/NE = cold air mass coming. Sudden wind shift or calm after wind = front passing. Wind backing (counterclockwise) = worsening weather.</div></div>
+  <div class="card"><div class="card-icon">🐸</div><div class="card-title">ANIMAL BEHAVIOR</div><div class="card-body">Swallows flying low: insects flying low (air pressure dropping) = rain likely. Cattle lying down in field = rain within hours (old observation, anecdotal but widely reported). Bees returning to hive mid-afternoon: storm coming.</div></div>
+</div>
+<div class="tip"><strong>FLASH-TO-BANG RULE:</strong> Count seconds between lightning flash and thunder. Divide by 5 = miles away. Under 30 seconds (6 miles) = threat. Under 10 seconds = immediate danger. Wait 30 minutes after last thunder before resuming exposed activity.</div>
+<div class="warn">⚠ LIGHTNING SAFETY: No safe spot in the open. Seek: valley bottoms, dense stands of small trees, buildings, vehicles. Avoid: summits, lone trees, open fields, metal objects, water, cliff edges. Lightning crouch: feet together, crouch low, cover ears, do NOT lie flat.</div>`
+},
+
+hazards: {
+  icon:'⚠', label:'HAZARDS', sub:'Snakes, plants, terrain, water',
+  html:`<div class="sec-title red">⚠ WILDERNESS HAZARDS</div>
+<div class="tip" style="margin-bottom:12px"><strong>SNAKEBITE:</strong> Stay calm — panic raises heart rate, spreading venom faster. Immobilize bitten limb below heart level. Remove rings, watches, tight clothing (swelling). Walk slowly to help or call 911. Identify snake if safely possible (photo). Get to hospital. Time from bite to antivenom is critical.</div>
+<div class="danger">🚫 SNAKEBITE — NEVER: Suction venom (ineffective, causes infection), cut the wound, apply tourniquet (causes tissue death), apply ice (constricts vessels, worsens venom spread), give alcohol, apply electric shock. All proven to worsen outcome.</div>
+<div class="tip" style="margin-top:10px"><strong>POISONOUS PLANTS:</strong><br>
+• Poison Ivy/Oak/Sumac: "Leaves of three, let it be." Urushiol causes contact dermatitis 12–48h after contact. Wash exposed skin with soap and water within 30 min if possible. Rhus antigen persists on gear/pets. Smoke from burning is dangerous (airway exposure).<br>
+• Water Hemlock: Most violently toxic North American plant. White umbrella flower clusters near water. Rapid convulsions. Avoid all plants in carrot/parsley family (Apiaceae) unless expert.<br>
+• Jimsonweed (Datura): Large white trumpet flowers. Highly toxic. Hallucinations, then coma. All parts toxic.<br>
+• Death Camas: Looks like wild onion but no onion smell. White/cream flowers.</div>
+<div class="warn" style="margin-top:10px">⚠ SWIFT WATER: Even 6 inches of fast-moving water can knock an adult down. 2 feet can sweep a vehicle. If swept: float on back, feet downstream, toes up, use feet to push off rocks, angle toward shore (don't fight current, angle across it). Avoid strainers (debris below surface) — get over them, not under. Hydraulics (recirculating currents below drops) can hold indefinitely.</div>
+<div class="warn">⚠ AVALANCHE: Avoid: convex slopes 30–45°, lee slopes during/after storm, cornices. If caught: swimming motions, cover face, try to stay near surface. When stopped: create air space before snow settles. Spit to determine down (gravity). Stay calm — body heat may melt space around you.</div>
+<div class="danger">🚫 BEAR ENCOUNTER: Do NOT run (triggers prey drive). Stand tall, speak calmly, group together. Brown/grizzly attack: play dead (face down, hands protecting neck). Black bear attack: fight back aggressively. Both: do not make direct sustained eye contact. Bear spray: effective within 30ft, downwind, finger off safety until deployed.</div>`
+},
+
+urban: {
+  icon:'🏙', label:'URBAN SURVIVAL', sub:'City emergency response',
+  html:`<div class="sec-title">🏙 URBAN SURVIVAL — DISASTER AND CIVIL EMERGENCY</div>
+<ul class="steps">
+<li class="step"><div class="step-n">1</div><div><div class="step-body"><strong>SHELTER IN PLACE vs EVACUATE:</strong> Shelter in place: chemical/biological/radiological release nearby (shelter + seal doors/windows with plastic/tape), active civil unrest, severe weather (tornado: interior room, lowest floor, away from windows).<br>Evacuate: flooding, structural damage, gas leak, fire.</div></div></li>
+<li class="step"><div class="step-n">2</div><div><div class="step-body"><strong>HOME EMERGENCY KIT (72-hour minimum):</strong> Water (1 gallon/person/day), non-perishable food, manual can opener, first aid kit, flashlight + batteries, battery/hand-crank radio, whistle, dust masks, plastic sheeting + duct tape, moist towelettes, wrench/pliers (shut off utilities), local maps, phone charger/battery pack.</div></div></li>
+<li class="step"><div class="step-n">3</div><div><div class="step-body"><strong>UTILITIES — EMERGENCY SHUTOFFS:</strong><br>Gas: locate meter shutoff, use wrench, turn perpendicular to pipe. Only shut off if you smell gas or damage is suspected. ONLY utility company can turn it back on.<br>Water: main shutoff is typically where water enters home or at meter.<br>Electricity: main breaker in panel. Individual breakers for flooding in specific areas.</div></div></li>
+<li class="step"><div class="step-n">4</div><div><div class="step-body"><strong>EARTHQUAKE:</strong> Drop, cover, hold on. Under sturdy table or against interior wall away from windows. NOT in doorway (no protection, may slam shut). After shaking stops: check for fire, gas leaks, structural damage. Do not use elevators. Expect aftershocks.</div></div></li>
+<li class="step"><div class="step-n">5</div><div><div class="step-body"><strong>URBAN FIRE:</strong> Feel door before opening (back of hand — if hot, don't open, use alternate exit). Stay low (smoke rises). Close doors behind you (slows fire spread). If trapped: seal door gaps, signal from window. Never re-enter burning building.</div></div></li>
+</ul>
+<div class="tip"><strong>MEETING POINT:</strong> Pre-establish a family meeting point outside your home and one outside your neighborhood. Designate an out-of-area contact person — it's often easier to call long distance during a local disaster than local calls.</div>
+<div class="tip"><strong>CASH:</strong> ATMs don't work in power outages. Have small bills — vendors may not be able to make change. $200 in mixed bills is a reasonable emergency reserve.</div>`
+},
+
+vehicle: {
+  icon:'🚗', label:'VEHICLE SURVIVAL', sub:'Stranded in vehicle',
+  html:`<div class="sec-title">🚗 VEHICLE SURVIVAL — STRANDED OR CRASHED</div>
+<ul class="steps">
+<li class="step"><div class="step-n">1</div><div><div class="step-body"><strong>STAY WITH YOUR VEHICLE (usually):</strong> Vehicles are visible from air, provide shelter, reflect radar, and mark your last known position. Exceptions: rising water (get out immediately), fire, or you are certain of a close and achievable destination.</div></div></li>
+<li class="step"><div class="step-n">2</div><div><div class="step-body"><strong>SIGNAL:</strong> Hood up = universal distress signal. Tie bright cloth to antenna. SOS in snow/dirt around vehicle. Use headlights to signal approaching aircraft (flash in patterns). Honk horn: 3 blasts = distress.</div></div></li>
+<li class="step"><div class="step-n">3</div><div><div class="step-body"><strong>WARMTH:</strong> Run engine 10 minutes/hour for heat — not continuously (CO risk, fuel conservation). ALWAYS crack window when running engine. Check exhaust pipe isn't blocked by snow (can cause rapid CO buildup inside).</div><div class="step-sub" style="color:var(--accent4)">⚠ CO poisoning is odorless and kills quickly. Window crack is not optional.</div></div></li>
+<li class="step"><div class="step-n">4</div><div><div class="step-body"><strong>RESOURCES IN YOUR VEHICLE:</strong> Fuel as fire starter (carefully). Mirrors for signaling. Floor mats for insulation. Seat foam for cushion. Wiring for lashing. Hubcap as digging/cooking implement. Jumper cables as lashing material. Horn for signaling. Lights and battery for signaling.</div></div></li>
+<li class="step"><div class="step-n">5</div><div><div class="step-body"><strong>CRASH FIRST RESPONSE:</strong> Turn off ignition (fire prevention). Check for injuries: MARCH protocol. If fuel smell: get everyone out and away. Call 911. Danger of secondary collision: get off road or set up warning triangle/flares. Stay calm — shock affects decision making.</div></div></li>
+</ul>
+<div class="tip"><strong>VEHICLE KIT (always carry):</strong> Jumper cables, blanket, small first aid kit, water (2L minimum), protein bars, flashlight, reflective triangles/flares, ice scraper, shovel (winter), traction pads or cat litter, phone charger cord, $50 cash, basic tool kit.</div>
+<div class="warn">⚠ SUBMERGED VEHICLE: Window or door won't open until pressure equalizes. Use headrest spike or window punch to break side window. DO NOT wait for water to fill the vehicle — panic and cold make this extremely difficult. Best time to open door: when water is at your neck level (pressure nearly equalized).</div>`
+},
+
+powerout: {
+  icon:'⚡', label:'POWER OUTAGE', sub:'Extended grid failure',
+  html:`<div class="sec-title">⚡ EXTENDED POWER OUTAGE RESPONSE</div>
+<ul class="steps">
+<li class="step"><div class="step-n">1</div><div><div class="step-body"><strong>FIRST HOUR:</strong> Determine scope (house vs neighborhood vs regional). Check fuse/breakers first. If neighborhood: call utility and check outage maps. Charge devices and power banks immediately from any remaining power. Gather flashlights, candles, lighters.</div></div></li>
+<li class="step"><div class="step-n">2</div><div><div class="step-body"><strong>FOOD SAFETY:</strong> Refrigerator safe 4 hours closed. Freezer: 24–48 hours if full. Add ice bags if available. NEVER put generator indoors to power refrigerator — CO kills.<br>Safe: canned goods, dried goods, hard cheeses, peanut butter, crackers, fruit.<br>Discard: meat/poultry/seafood above 40°F for over 2 hours, soft cheeses, cooked leftovers.</div></div></li>
+<li class="step"><div class="step-n">3</div><div><div class="step-body"><strong>HEAT:</strong> Layer clothing before opening heat source options. Internal body heat conserved by layers is free. If wood stove: safe. Propane heater: rated for indoor use only, requires ventilation crack. Kerosene: requires ventilation. Natural gas appliances: only cook tops if safely vented — NOT space heating without proper setup.</div></div></li>
+<li class="step"><div class="step-n">4</div><div><div class="step-body"><strong>WATER:</strong> Fill bathtubs immediately (water pressure may fail). WaterBOB bathtub liner holds 100 gallons. Toilet tank water is clean. Water heater tank: 30–50 gallons of clean water (drain from valve at bottom).</div></div></li>
+<li class="step"><div class="step-n">5</div><div><div class="step-body"><strong>COMMUNICATIONS:</strong> Battery/hand-crank radio for official updates (NOAA Weather Radio, AM emergency broadcasts). Minimize phone use to preserve battery. Text messages use less bandwidth than calls during network congestion. Charge phones from car if needed.</div></div></li>
+</ul>
+<div class="danger">🚫 GENERATOR SAFETY: NEVER inside home, garage, basement, or near windows/vents (10–15ft minimum clearance). CO from generators kills dozens yearly. Install CO detectors on every floor. Never backfeed into house wiring — fatal to utility workers.</div>`
+},
+
+psychology: {
+  icon:'🧠', label:'TRAUMA PSYCHOLOGY', sub:'Mental resilience under stress',
+  html:`<div class="sec-title">🧠 PSYCHOLOGY UNDER SURVIVAL STRESS</div>
+<div class="tip" style="margin-bottom:14px"><strong>THE WILL TO SURVIVE IS THE #1 SURVIVAL FACTOR.</strong> Skills and equipment matter, but psychological resilience determines who uses them effectively under stress.</div>
+<ul class="steps">
+<li class="step"><div class="step-n">1</div><div><div class="step-body"><strong>NORMALIZE THE STRESS RESPONSE:</strong> Fear, tunnel vision, shaking, dry mouth, time distortion are normal. Your body is preparing you to act. The stress response becomes dangerous only when it produces panic (non-productive action) rather than focused response.</div></div></li>
+<li class="step"><div class="step-n">2</div><div><div class="step-body"><strong>TACTICAL BREATHING (Box Breathing):</strong> Inhale 4 counts → Hold 4 counts → Exhale 4 counts → Hold 4 counts. Activates parasympathetic nervous system. Reduces cortisol. Improves fine motor skills. Use before any high-stakes action.</div></div></li>
+<li class="step"><div class="step-n">3</div><div><div class="step-body"><strong>MICRO-GOALS:</strong> "I will survive" is too abstract under acute stress. "I will collect enough wood for 3 hours of fire" is achievable. Break survival into small, completable tasks. Completing tasks builds confidence and momentum.</div></div></li>
+<li class="step"><div class="step-n">4</div><div><div class="step-body"><strong>DECISION FATIGUE:</strong> Cognitive resources are finite. Make major decisions (shelter direction, water source, signaling strategy) early while thinking is clearest. Once made, commit and execute — second-guessing wastes energy and creates inaction.</div></div></li>
+<li class="step"><div class="step-n">5</div><div><div class="step-body"><strong>MONOTONOUS TASKS AND MORALE:</strong> Boredom is dangerous — leads to poor decisions and loss of will. Keep busy with productive tasks: improving shelter, gathering materials, practicing skills, maintaining signals. Give yourself a schedule.</div></div></li>
+</ul>
+<div class="tip"><strong>Group dynamics:</strong> In multi-person survival: establish clear leadership early to prevent conflicting decisions. Give everyone a specific role. Address fear and morale openly. A person who believes rescue is impossible often stops trying — keep hope realistic but present.</div>
+<div class="tip"><strong>Survivors describe:</strong> An internal narrative that says "I will get through this" and an ability to maintain perspective — "This is temporary, and I am taking actions that will end it." Practice this mental framing before you need it.</div>`
+},
+
+comms: {
+  icon:'📻', label:'FIELD COMMUNICATIONS', sub:'Radio, mesh, signals',
+  html:`<div class="sec-title">📻 FIELD COMMUNICATIONS</div>
+<ul class="steps">
+<li class="step"><div class="step-n">1</div><div><div class="step-body"><strong>CELL PHONE (primary):</strong> Even without service, can call 911 (uses any carrier). Enable location services for E911. Low battery: set airplane mode + check for signal periodically vs constant searching (drains battery rapidly). Text often goes through when voice calls fail (smaller packet size).</div></div></li>
+<li class="step"><div class="step-n">2</div><div><div class="step-body"><strong>FRS/GMRS RADIOS (walkie-talkie):</strong> FRS: no license, 0.5W, ~0.5 mile. GMRS: license required, up to 50W repeaters, 1–5 miles. Channel 1–7 shared FRS/GMRS. Monitor channel 9 (emergency). Channel 16: used by some SAR teams. Range highly terrain-dependent.</div></div></li>
+<li class="step"><div class="step-n">3</div><div><div class="step-body"><strong>HAM RADIO:</strong> License required (Technician level: take 35-question test). 2m band (144–148MHz) for local: 5–50 miles with repeater access. APRS (Automatic Packet Reporting System): transmits GPS location on 144.390MHz — SAR and ham operators monitor. Most useful advanced prep option.</div></div></li>
+<li class="step"><div class="step-n">4</div><div><div class="step-body"><strong>PISCES MOON MESH (LoRa):</strong> T-Beam device + Pisces Moon OS. SOS beacon broadcasts GPS coordinates over LoRa mesh network (10–25km range) to gateway node → SMS to SAR contacts. Works without cell service at your location. Two-way communication. See SOS Beacon app.</div></div></li>
+<li class="step"><div class="step-n">5</div><div><div class="step-body"><strong>SATELLITE DEVICES:</strong> Garmin inReach, SPOT, ZOLEO: two-way messaging anywhere on Earth with satellite subscription. Global coverage. Most reliable option for remote wilderness. Monthly subscription cost but works where nothing else does.</div></div></li>
+</ul>
+<div class="tip"><strong>Priority order when in distress:</strong><br>
+1. Call 911 (cell — works even without carrier plan)<br>
+2. SMS (when voice fails)<br>
+3. PLB/satellite device (if carried)<br>
+4. LoRa mesh SOS (if T-Beam present)<br>
+5. FRS/GMRS radio (local contact)<br>
+6. Visual signaling (mirror, smoke, ground symbols)</div>
+<div class="tip"><strong>Personal Locator Beacon (PLB):</strong> One-time purchase, no subscription, registered to your name with NOAA. Activates COSPAS-SARSAT satellite network. Free to register at beaconregistration.noaa.gov. 5-year battery, works globally. No two-way communication but extremely reliable rescue initiation.</div>`
+},
+
+};
+
+// ── Nav structure ─────────────────────────────────────────────────
+const NAV_SECTIONS = [
+  { heading: 'CORE PROTOCOLS', keys: ['stop','shelter','water','fire','food'] },
+  { heading: 'NAVIGATION', keys: ['nav_guide','stars'] },
+  { heading: 'RESCUE', keys: ['signal','knots'] },
+  { heading: 'ENVIRONMENT', keys: ['weather','hazards'] },
+  { heading: 'MODERN SCENARIOS', keys: ['urban','vehicle','powerout'] },
+  { heading: 'RESILIENCE', keys: ['psychology','comms'] },
+];
+
+// ── Custom pages + Notes (same pattern as Medical) ─────────────────
+function getCustomPages() { return JSON.parse(localStorage.getItem('pm_surv_custom_pages')||'[]'); }
+function saveCustomPages(p) { localStorage.setItem('pm_surv_custom_pages', JSON.stringify(p)); }
+function getNotes(key) { return localStorage.getItem('pm_surv_note_'+key)||''; }
+function saveNote(key, text) {
+  localStorage.setItem('pm_surv_note_'+key, text);
+  renderNav();
+  const el = document.getElementById('noteStatus');
+  if (el) el.textContent = 'saved ' + new Date().toLocaleTimeString();
+}
+
+let currentKey = 'stop';
+let editingCustom = null;
+
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+function renderNav() {
+  let html = '';
+  NAV_SECTIONS.forEach(sec => {
+    html += `<div class="nav-section">${sec.heading}</div>`;
+    sec.keys.forEach(k => {
+      const def = BUILT_IN[k];
+      if (!def) return;
+      const hasNote = getNotes(k).trim().length > 0;
+      html += `<div class="nav-item ${currentKey===k?'active':''}" onclick="showBuiltin('${k}')">
+        <span class="nav-icon">${def.icon}</span>
+        <div><div class="nav-label">${def.label}</div><div class="nav-sub">${def.sub}</div></div>
+        ${hasNote ? '<div class="note-dot"></div>' : ''}
+      </div>`;
+    });
+  });
+
+  const customs = getCustomPages();
+  if (customs.length > 0) {
+    html += `<div class="nav-section">MY PAGES</div>`;
+    customs.forEach((p,i) => {
+      html += `<div class="nav-item ${currentKey==='custom_'+i?'active':''}" onclick="showCustom(${i})">
+        <span class="nav-icon">${p.icon||'📄'}</span>
+        <div><div class="nav-label">${esc(p.title)}</div><div class="nav-sub">Custom</div></div>
+        <div class="custom-dot"></div>
+      </div>`;
+    });
+  }
+
+  html += `<div class="nav-section">ADD / MANAGE</div>
+    <div class="nav-item ${currentKey==='__add__'?'active':''}" onclick="showAddPage()">
+      <span class="nav-icon">➕</span>
+      <div><div class="nav-label">NEW PAGE</div><div class="nav-sub">Add custom guide</div></div>
+    </div>
+    <div class="nav-item" onclick="exportPages()">
+      <span class="nav-icon">📤</span>
+      <div><div class="nav-label">EXPORT MY PAGES</div></div>
+    </div>
+    <div class="nav-item" onclick="document.getElementById('importFile').click()">
+      <span class="nav-icon">📥</span>
+      <div><div class="nav-label">IMPORT PAGES</div></div>
+    </div>`;
+  document.getElementById('nav').innerHTML = html;
+}
+
+function showBuiltin(key) {
+  currentKey = key;
+  const def = BUILT_IN[key];
+  const notes = getNotes(key);
+  let html = '';
+  if (def.priority) {
+    html += `<div class="priority-banner"><span class="pb-icon">⚠</span><div><div class="pb-title">${def.priority.title}</div><div class="pb-sub">${def.priority.sub}</div></div></div>`;
+  }
+  html += `<div class="content-body">${def.html}</div>`;
+  html += `<div class="notes-panel">
+    <div class="notes-header">
+      <div class="notes-title">📝 PERSONAL NOTES — ${def.label}</div>
+      <span class="notes-saved" id="noteStatus">${notes?'saved':''}</span>
+    </div>
+    <textarea class="notes-ta" id="noteTa" placeholder="Add regional specifics, team protocols, personal notes..."
+      oninput="saveNote('${key}',this.value)">${esc(notes)}</textarea>
+  </div>`;
+  document.getElementById('content').innerHTML = html;
+  renderNav();
+}
+
+function showCustom(i) {
+  currentKey = 'custom_'+i;
+  const pages = getCustomPages();
+  const p = pages[i];
+  const notes = getNotes('custom_'+i);
+  document.getElementById('content').innerHTML = `<div class="content-body">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="sec-title" style="color:var(--accent);margin-bottom:0">${p.icon||'📄'} ${esc(p.title)}</div>
+      <div style="display:flex;gap:6px">
+        <button class="btn gold" onclick="editCustom(${i})">✏ EDIT</button>
+        <button class="btn red" onclick="deleteCustom(${i})">🗑 DELETE</button>
+      </div>
+    </div>
+    <div style="font-size:.72rem;color:var(--text);line-height:1.85;white-space:pre-wrap">${markdownToHtml(p.content||'')}</div>
+  </div>
+  <div class="notes-panel">
+    <div class="notes-header">
+      <div class="notes-title">📝 NOTES — ${esc(p.title)}</div>
+      <span class="notes-saved" id="noteStatus">${notes?'saved':''}</span>
+    </div>
+    <textarea class="notes-ta" id="noteTa" oninput="saveNote('custom_${i}',this.value)">${esc(notes)}</textarea>
+  </div>`;
+  renderNav();
+}
+
+function showAddPage(editIndex) {
+  currentKey = '__add__';
+  editingCustom = editIndex !== undefined ? editIndex : null;
+  const pages = getCustomPages();
+  const existing = editingCustom !== null ? pages[editingCustom] : null;
+  document.getElementById('content').innerHTML = `<div class="page-editor">
+    <div class="sec-title" style="color:var(--accent3);margin-bottom:0">${editingCustom!==null?'✏ EDIT PAGE':'➕ NEW PAGE'}</div>
+    <div style="font-size:.6rem;color:var(--text-dim)">Plain text or markdown. # H1, ## H2, **bold**, - list, --- divider</div>
+    <div style="display:grid;grid-template-columns:60px 1fr;gap:8px;align-items:center">
+      <input class="pe-input" id="peIcon" placeholder="🏕" value="${esc(existing?.icon||'')}" style="text-align:center;font-size:1.4rem">
+      <input class="pe-input" id="peTitle" placeholder="Page title" value="${esc(existing?.title||'')}">
+    </div>
+    <textarea class="pe-ta" id="peContent" placeholder="Write your guide here...">${esc(existing?.content||'')}</textarea>
+    <div style="font-size:.58rem;color:var(--text-dim)">Import from URL (via Gemini AI):</div>
+    <div style="display:flex;gap:6px">
+      <input class="pe-input" id="peUrl" placeholder="https://..." style="flex:1">
+      <button class="btn gold" onclick="importFromUrl()">IMPORT URL</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn green" onclick="savePage()">💾 SAVE</button>
+      ${editingCustom!==null?`<button class="btn red" onclick="deleteCustom(${editingCustom})">🗑 DELETE</button>`:''}
+      <button class="btn" onclick="showBuiltin('stop')">CANCEL</button>
+    </div>
+  </div>`;
+  renderNav();
+}
+
+function editCustom(i) { showAddPage(i); }
+
+function savePage() {
+  const title = document.getElementById('peTitle').value.trim();
+  const content = document.getElementById('peContent').value;
+  const icon = document.getElementById('peIcon').value.trim()||'📄';
+  if (!title) { alert('Title required'); return; }
+  const pages = getCustomPages();
+  const page = {title,content,icon,created:Date.now()};
+  if (editingCustom!==null) pages[editingCustom]={...pages[editingCustom],...page};
+  else pages.push(page);
+  saveCustomPages(pages);
+  const idx = editingCustom!==null?editingCustom:pages.length-1;
+  editingCustom=null;
+  showCustom(idx);
+}
+
+function deleteCustom(i) {
+  if (!confirm('Delete this page?')) return;
+  const pages = getCustomPages();
+  pages.splice(i,1);
+  saveCustomPages(pages);
+  showBuiltin('stop');
+}
+
+function exportPages() {
+  const blob = new Blob([JSON.stringify(getCustomPages(),null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download='pm_survival_pages_'+Date.now()+'.json'; a.click();
+}
+
+function importPages(file) {
+  const r = new FileReader();
+  r.onload = e => {
+    try {
+      const imp = JSON.parse(e.target.result);
+      if (!Array.isArray(imp)) throw new Error();
+      saveCustomPages([...getCustomPages(),...imp]);
+      renderNav(); alert(`Imported ${imp.length} pages.`);
+    } catch { alert('Invalid format'); }
+  };
+  r.readAsText(file);
+}
+
+async function importFromUrl() {
+  const url = document.getElementById('peUrl').value.trim();
+  if (!url) return;
+  document.getElementById('peContent').value = 'Fetching...';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:2000,
+        messages:[{role:'user',content:`Fetch this URL and extract the main survival/emergency/outdoor skills content as clean markdown for an offline reference app. URL: ${url}\nReturn ONLY markdown content.`}],
+        tools:[{type:'web_search_20250305',name:'web_search'}]
+      })
+    });
+    const data = await res.json();
+    const text = data.content?.filter(c=>c.type==='text').map(c=>c.text).join('\n')||'No content extracted';
+    document.getElementById('peContent').value = text;
+    if (!document.getElementById('peTitle').value) document.getElementById('peTitle').value = new URL(url).hostname;
+  } catch(e) { document.getElementById('peContent').value = `Error: ${e.message}\n\nPaste content manually.`; }
+}
+
+function markdownToHtml(md) {
+  return md
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/^### (.+)$/gm,'<h3 style="font-family:Orbitron,monospace;font-size:.75rem;color:var(--gold);margin:10px 0 5px">$1</h3>')
+    .replace(/^## (.+)$/gm,'<h2 style="font-family:Orbitron,monospace;font-size:.85rem;color:var(--accent3);margin:12px 0 6px">$1</h2>')
+    .replace(/^# (.+)$/gm,'<h1 style="font-family:Orbitron,monospace;font-size:1rem;color:var(--accent4);margin:14px 0 8px">$1</h1>')
+    .replace(/\*\*(.+?)\*\*/g,'<strong style="color:var(--text-bright)">$1</strong>')
+    .replace(/_(.+?)_/g,'<em style="color:var(--text-dim)">$1</em>')
+    .replace(/`(.+?)`/g,'<code style="background:var(--bg3);padding:1px 5px;color:var(--accent3)">$1</code>')
+    .replace(/^- (.+)$/gm,'<div style="padding:3px 0 3px 16px;border-left:2px solid var(--panel-border)">• $1</div>')
+    .replace(/^(\d+)\. (.+)$/gm,'<div style="padding:3px 0 3px 16px"><span style="color:var(--accent4);font-family:Orbitron,monospace">$1</span> $2</div>')
+    .replace(/^---$/gm,'<hr style="border:none;border-top:1px solid var(--panel-border);margin:10px 0">')
+    .replace(/\n\n/g,'</p><p style="margin-bottom:8px">')
+    .replace(/\n/g,'<br>');
+}
+
+document.body.insertAdjacentHTML('beforeend','<input type="file" id="importFile" accept=".json" style="display:none" onchange="importPages(this.files[0])">');
+
+renderNav();
+showBuiltin('stop');
+</script>
+</body></html>

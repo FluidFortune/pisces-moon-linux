@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<!-- 
+  Pisces Moon OS — news_local.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  fluidfortune.com
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<link rel="stylesheet" href="pm_fonts.css"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>PISCES MOON // LOCAL NEWS</title>
+<link rel="stylesheet" href="pm_shared.css">
+<style>
+.news-grid { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+.news-card { border-bottom:1px solid var(--panel-border); cursor:pointer; overflow:hidden; }
+.news-card:nth-child(odd) { border-right:1px solid var(--panel-border); }
+.news-card:hover { background:rgba(240,165,0,.04); }
+.news-card.featured { grid-column:1/-1; }
+.news-img { width:100%; height:200px; object-fit:cover; filter:brightness(.8); }
+.news-card.featured .news-img { height:260px; }
+.news-img-wrap { position:relative; }
+.news-body { padding:14px 16px; }
+.news-title { font-size:.78rem; color:var(--text-bright); line-height:1.5; margin-bottom:8px; font-weight:500; }
+.news-card.featured .news-title { font-size:1.05rem; }
+.news-snippet { font-size:.65rem; color:var(--text-dim); line-height:1.7;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+.news-meta { font-size:.58rem; color:var(--text-dim); display:flex; gap:12px; margin-top:8px; }
+.news-source-tag { font-family:Orbitron,monospace; font-size:.5rem; letter-spacing:2px;
+    padding:2px 7px; border:1px solid var(--gold-dim); color:var(--gold); display:inline-block; }
+.news-distance { font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:.58rem; }
+.loc-panel { padding:16px 14px; border-bottom:1px solid var(--panel-border); background:var(--bg2); }
+.loc-label { font-family:Orbitron,monospace; font-size:.55rem; letter-spacing:2px;
+    color:var(--gold); margin-bottom:8px; }
+.loc-display { font-size:.85rem; color:var(--text-bright); margin-bottom:6px; font-weight:500; }
+.loc-city { font-size:.65rem; color:var(--text-dim); margin-bottom:14px; }
+.radius-ctrl { display:flex; gap:8px; align-items:center; margin-top:10px; }
+.radius-ctrl input[type=range] { flex:1; accent-color:var(--gold); }
+.radius-val { font-family:Orbitron,monospace; color:var(--gold); font-size:.8rem;
+    min-width:60px; text-align:right; }
+.region-list { padding:0; }
+.region-item { padding:10px 14px; border-bottom:1px solid rgba(28,46,58,.4);
+    cursor:pointer; font-size:.65rem; display:flex; justify-content:space-between; align-items:center; }
+.region-item:hover { background:rgba(240,165,0,.04); }
+.region-item.active { background:rgba(240,165,0,.08); color:var(--gold); border-left:2px solid var(--gold); }
+.region-radius { color:var(--accent); font-family:'Share Tech Mono',monospace; font-size:.55rem; }
+</style>
+</head><body>
+
+<header class="pm-header">
+    <div class="pm-logo">📍 <em>LOCAL</em> NEWS</div>
+    <nav class="pm-nav">
+        <div class="pm-nav-item active">NEARBY</div>
+    </nav>
+    <div class="pm-hdr-right">
+        <div class="pm-live-badge"><div class="pm-live-dot"></div>LIVE</div>
+        <span class="pm-last-update" id="lastUpdate"></span>
+        <button class="pm-refresh" onclick="loadLocalNews()">⟳ REFRESH</button>
+    </div>
+</header>
+
+<div class="pm-app">
+    <!-- LEFT: Location control + region list -->
+    <div class="pm-col-left">
+        <div class="loc-panel">
+            <div class="loc-label">LOCATION</div>
+            <div class="loc-display" id="locDisplay">90012</div>
+            <div class="loc-city" id="locCity">Downtown Los Angeles, CA</div>
+            <div style="display:flex; gap:6px">
+                <input class="pm-input" id="zipInput" placeholder="ZIP code" maxlength="5"
+                    style="flex:1" onkeydown="if(event.key==='Enter')setLocation()">
+                <button class="pm-btn" onclick="setLocation()" style="font-size:.6rem;padding:6px 12px">SET</button>
+            </div>
+            <div class="radius-ctrl">
+                <span style="font-size:.55rem;color:var(--text-dim);letter-spacing:2px;font-family:Orbitron,monospace">RADIUS</span>
+                <input type="range" id="radiusSlider" min="10" max="300" value="50" step="10"
+                    oninput="updateRadius(this.value)">
+                <span class="radius-val" id="radiusVal">50 mi</span>
+            </div>
+        </div>
+
+        <div class="pm-sh">REGION COVERAGE <span class="pm-sh-sub" id="regionCount"></span></div>
+        <div class="region-list" id="regionList"></div>
+    </div>
+
+    <!-- MAIN: News -->
+    <div class="pm-col-main">
+        <div class="news-grid" id="newsGrid">
+            <div style="grid-column:1/-1">
+                <div class="pm-shimmer" style="height:260px;margin-bottom:1px"></div>
+                <div class="pm-shimmer" style="height:200px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: AI -->
+    <div class="pm-col-right">
+        <div class="pm-sh">AI LOCAL ANALYST <span class="pm-sh-sub">Gemini</span></div>
+        <div style="padding:12px 14px;border-bottom:1px solid var(--panel-border)">
+            <textarea class="pm-input" id="aiInput" rows="3"
+                placeholder="Ask about local events, issues, trends..."
+                style="resize:none;font-family:'Share Tech Mono',monospace"></textarea>
+            <button class="pm-btn" onclick="askAI()" style="width:100%;margin-top:8px">ASK ▶</button>
+            <div style="margin-top:10px">
+                <button class="ai-btn-quick" onclick="quickAsk('What is happening in my area today?')">Area summary</button>
+                <button class="ai-btn-quick" onclick="quickAsk('Any public safety concerns nearby?')">Safety</button>
+                <button class="ai-btn-quick" onclick="quickAsk('Local politics and government')">Politics</button>
+                <button class="ai-btn-quick" onclick="quickAsk('Community events and culture')">Events</button>
+            </div>
+        </div>
+        <div class="pm-ai-response" id="aiResponse">
+            <div style="text-align:center;padding:24px;color:var(--text-dim)">
+                <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:3px;margin-bottom:8px;color:var(--gold)">READY</div>
+                <div style="font-size:.62rem;line-height:2">Analyst ready with local context.<br>Powered by Gemini.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.ai-btn-quick {
+    padding: 5px 10px;
+    border: 1px solid var(--panel-border);
+    background: transparent;
+    color: var(--text-dim);
+    font-family: 'Share Tech Mono', monospace;
+    font-size: .58rem;
+    cursor: pointer;
+    transition: all .15s;
+    margin: 3px;
+}
+.ai-btn-quick:hover { border-color: var(--gold); color: var(--gold); }
+</style>
+
+<script src="pm_scraper.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// LOCAL NEWS — ZIP-based geographic news aggregator
+// Default: 90012 (Downtown Los Angeles)
+// ═══════════════════════════════════════════════════════════════════
+
+// Known ZIP → region mappings — expanded on demand via geocoding API
+const ZIP_REGIONS = {
+    // Los Angeles metro
+    '90012': {city:'Downtown Los Angeles', state:'CA', lat:34.0617, lon:-118.2380,
+              feeds:['latimes','ktla','laist','kpcc','pasadenastar','nbcla']},
+    '90210': {city:'Beverly Hills', state:'CA', lat:34.0901, lon:-118.4065,
+              feeds:['latimes','ktla','laist','beverlypress','nbcla']},
+    '91101': {city:'Pasadena', state:'CA', lat:34.1478, lon:-118.1445,
+              feeds:['latimes','pasadenastar','laist','kpcc']},
+    // NYC
+    '10001': {city:'New York (Manhattan)', state:'NY', lat:40.7506, lon:-73.9972,
+              feeds:['nypost','nyt_metro','nydn','gothamist','ny1']},
+    '11201': {city:'Brooklyn', state:'NY', lat:40.6958, lon:-73.9936,
+              feeds:['nypost','nyt_metro','brooklyneagle','gothamist']},
+    // Chicago
+    '60601': {city:'Chicago', state:'IL', lat:41.8857, lon:-87.6225,
+              feeds:['chitribune','chisuntimes','wbez','blockclubchi']},
+    // San Francisco
+    '94102': {city:'San Francisco', state:'CA', lat:37.7793, lon:-122.4192,
+              feeds:['sfchronicle','sfgate','missionlocal','kqed']},
+    // DC
+    '20001': {city:'Washington, DC', state:'DC', lat:38.9125, lon:-77.0209,
+              feeds:['washpost','dcist','wamu']},
+    // Houston
+    '77002': {city:'Houston', state:'TX', lat:29.7543, lon:-95.3657,
+              feeds:['houstonchronicle','houstonpublic','kprc']},
+    // Phoenix
+    '85001': {city:'Phoenix', state:'AZ', lat:33.4484, lon:-112.0740,
+              feeds:['azcentral','azfamily','kjzz']},
+};
+
+// Regional feed definitions
+const REGIONAL_FEEDS = {
+    // LA metro
+    latimes:      {name:'LA Times',        url:'https://www.latimes.com/local/rss2.0.xml'},
+    ktla:         {name:'KTLA',            url:'https://ktla.com/news/local-news/feed/'},
+    laist:        {name:'LAist',           url:'https://laist.com/feeds/latest'},
+    kpcc:         {name:'KPCC',            url:'https://laist.com/feeds/latest'},
+    pasadenastar: {name:'Pasadena Star',   url:'https://www.pasadenastarnews.com/feed/'},
+    nbcla:        {name:'NBC LA',          url:'https://www.nbclosangeles.com/news/local/feed/'},
+    beverlypress: {name:'Beverly Press',   url:'https://beverlypress.com/feed/'},
+    // NYC
+    nypost:       {name:'NY Post',         url:'https://nypost.com/metro/feed/'},
+    nyt_metro:    {name:'NY Times Metro',  url:'https://rss.nytimes.com/services/xml/rss/nyt/NYRegion.xml'},
+    nydn:         {name:'NY Daily News',   url:'https://www.nydailynews.com/new-york/rss2.0.xml'},
+    gothamist:    {name:'Gothamist',       url:'https://gothamist.com/feeds/latest'},
+    ny1:          {name:'NY1',             url:'https://www.ny1.com/nyc/all-boroughs/news/rss'},
+    brooklyneagle:{name:'Brooklyn Eagle',  url:'https://brooklyneagle.com/feed/'},
+    // Chicago
+    chitribune:   {name:'Chicago Tribune', url:'https://www.chicagotribune.com/arcio/rss/category/news/?sort=display_date:desc'},
+    chisuntimes:  {name:'Sun-Times',       url:'https://chicago.suntimes.com/rss/index.xml'},
+    wbez:         {name:'WBEZ',            url:'https://www.wbez.org/feed/'},
+    blockclubchi: {name:'Block Club',      url:'https://blockclubchicago.org/feed/'},
+    // SF
+    sfchronicle:  {name:'SF Chronicle',    url:'https://www.sfchronicle.com/bayarea/feed/bay-area-news-429.php'},
+    sfgate:       {name:'SF Gate',         url:'https://www.sfgate.com/bayarea/feed/Bay-Area-News-429.php'},
+    missionlocal: {name:'Mission Local',   url:'https://missionlocal.org/feed/'},
+    kqed:         {name:'KQED',            url:'https://www.kqed.org/news/feed'},
+    // DC
+    washpost:     {name:'Washington Post', url:'https://feeds.washingtonpost.com/rss/local'},
+    dcist:        {name:'DCist',           url:'https://dcist.com/feeds/latest'},
+    wamu:         {name:'WAMU',            url:'https://wamu.org/feed/'},
+    // Houston
+    houstonchronicle: {name:'Houston Chronicle', url:'https://www.houstonchronicle.com/news/houston-texas/feed/Houston-News-228.php'},
+    houstonpublic: {name:'Houston Public',  url:'https://www.houstonpublicmedia.org/feed/'},
+    kprc:         {name:'KPRC',            url:'https://www.click2houston.com/arc/outboundfeeds/rss/category/news/'},
+    // Phoenix
+    azcentral:    {name:'AZCentral',       url:'https://www.azcentral.com/local/rss/'},
+    azfamily:     {name:'AZ Family',       url:'https://www.azfamily.com/rss.xml'},
+    kjzz:         {name:'KJZZ',            url:'https://kjzz.org/rss.xml'},
+};
+
+let currentZip = '90012';
+let currentRadius = 50;
+let allItems = [];
+let geminiKey = '';
+
+async function init() {
+    // Load saved state
+    const saved = localStorage.getItem('pm_local_news');
+    if (saved) {
+        try {
+            const s = JSON.parse(saved);
+            if (s.zip) currentZip = s.zip;
+            if (s.radius) currentRadius = s.radius;
+        } catch(e) {}
+    }
+
+    // API key
+    geminiKey = localStorage.getItem('gemini_key') || '';
+
+    // UI
+    document.getElementById('zipInput').value = currentZip;
+    document.getElementById('radiusSlider').value = currentRadius;
+    document.getElementById('radiusVal').textContent = currentRadius + ' mi';
+
+    updateLocationDisplay();
+    loadLocalNews();
+}
+
+function updateLocationDisplay() {
+    const region = ZIP_REGIONS[currentZip];
+    document.getElementById('locDisplay').textContent = currentZip;
+    if (region) {
+        document.getElementById('locCity').textContent = `${region.city}, ${region.state}`;
+    } else {
+        document.getElementById('locCity').textContent = 'Unknown ZIP — using national feeds';
+    }
+}
+
+function setLocation() {
+    const zip = document.getElementById('zipInput').value.trim();
+    if (!/^\d{5}$/.test(zip)) {
+        alert('Enter a valid 5-digit ZIP code');
+        return;
+    }
+    currentZip = zip;
+    saveState();
+    updateLocationDisplay();
+    loadLocalNews();
+}
+
+function updateRadius(val) {
+    currentRadius = parseInt(val);
+    document.getElementById('radiusVal').textContent = currentRadius + ' mi';
+    saveState();
+    // Debounce the reload
+    clearTimeout(window._radiusDebounce);
+    window._radiusDebounce = setTimeout(() => loadLocalNews(), 500);
+}
+
+function saveState() {
+    localStorage.setItem('pm_local_news', JSON.stringify({
+        zip: currentZip, radius: currentRadius
+    }));
+}
+
+// Find regions within radius using simple lat/lon distance
+function getNearbyRegions(zip, radiusMi) {
+    const target = ZIP_REGIONS[zip];
+    if (!target) return [];  // Unknown ZIP — no regions
+
+    const nearby = [];
+    for (const [z, r] of Object.entries(ZIP_REGIONS)) {
+        const dist = haversine(target.lat, target.lon, r.lat, r.lon);
+        if (dist <= radiusMi) {
+            nearby.push({zip: z, region: r, distance: dist});
+        }
+    }
+
+    return nearby.sort((a, b) => a.distance - b.distance);
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+    const R = 3959; // miles
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat/2)**2 +
+        Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
+        Math.sin(dLon/2)**2;
+    return R * 2 * Math.asin(Math.sqrt(a));
+}
+
+async function loadLocalNews() {
+    document.getElementById('newsGrid').innerHTML = `
+        <div style="grid-column:1/-1">
+            <div class="pm-shimmer" style="height:260px;margin-bottom:1px"></div>
+            <div class="pm-shimmer" style="height:200px"></div>
+        </div>`;
+
+    const regions = getNearbyRegions(currentZip, currentRadius);
+
+    if (regions.length === 0) {
+        document.getElementById('newsGrid').innerHTML = `
+            <div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-dim)">
+                <div style="font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:3px;color:var(--accent4);margin-bottom:12px">ZIP NOT IN DATABASE</div>
+                <div style="font-size:.75rem;line-height:1.8;margin-bottom:16px">
+                    ZIP code <strong style="color:var(--text-bright)">${currentZip}</strong> is not in the local news database yet.<br>
+                    Try one of these supported ZIPs:
+                </div>
+                <div style="font-size:.7rem;line-height:2;color:var(--gold);margin-bottom:16px">
+                    90012 Los Angeles · 10001 New York · 60601 Chicago · 94102 San Francisco<br>
+                    20001 Washington DC · 77002 Houston · 85001 Phoenix
+                </div>
+                <div style="font-size:.65rem;color:var(--text-dim)">
+                    To add your area: edit ZIP_REGIONS in news_local.html
+                </div>
+            </div>`;
+        document.getElementById('regionList').innerHTML = '';
+        document.getElementById('regionCount').textContent = '0 regions';
+        return;
+    }
+
+    // Render region list
+    document.getElementById('regionList').innerHTML = regions.map(r => `
+        <div class="region-item">
+            <div>
+                <div style="color:var(--text-bright);font-weight:500">${PM.esc(r.region.city)}, ${PM.esc(r.region.state)}</div>
+                <div style="font-size:.55rem;color:var(--text-dim);margin-top:2px">ZIP ${PM.esc(r.zip)}</div>
+            </div>
+            <span class="region-radius">${r.distance.toFixed(1)} mi</span>
+        </div>`).join('');
+    document.getElementById('regionCount').textContent = `${regions.length} region${regions.length===1?'':'s'}`;
+
+    // Collect unique feeds
+    const feedsToFetch = new Set();
+    regions.forEach(r => r.region.feeds.forEach(f => feedsToFetch.add(f)));
+
+    const feeds = [...feedsToFetch].map(key => ({
+        url: REGIONAL_FEEDS[key]?.url,
+        source: REGIONAL_FEEDS[key]?.name || key
+    })).filter(f => f.url);
+
+    // Fetch them all
+    const result = await PM.fetchFeeds(feeds, {maxItems: 50});
+
+    if (result.items.length === 0) {
+        PM.renderError('newsGrid',
+            'Could not reach local news sources. Try again shortly.',
+            loadLocalNews);
+        return;
+    }
+
+    allItems = result.items;
+    allItems[0].featured = true;
+
+    document.getElementById('lastUpdate').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    render();
+}
+
+function render() {
+    document.getElementById('newsGrid').innerHTML = allItems.map((item, idx) => `
+        <div class="news-card ${idx===0?'featured':''}"
+             onclick="window.open('${PM.esc(item.link)}', '_blank')">
+            ${item.img ? `
+                <div class="news-img-wrap">
+                    <img class="news-img" src="${PM.esc(item.img)}" alt=""
+                         loading="lazy" onerror="this.parentElement.style.display='none'">
+                </div>
+            ` : ''}
+            <div class="news-body">
+                <span class="news-source-tag">${PM.esc(item.source)}</span>
+                <div class="news-title" style="margin-top:8px">${PM.esc(item.title)}</div>
+                ${item.description ? `<div class="news-snippet">${PM.esc(item.description)}</div>` : ''}
+                <div class="news-meta">
+                    <span>${PM.ago(item.pubDate)}</span>
+                </div>
+            </div>
+        </div>`).join('');
+}
+
+async function askAI() {
+    const input = document.getElementById('aiInput');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+    await sendToAI(q);
+}
+
+async function quickAsk(q) { await sendToAI(q); }
+
+async function sendToAI(prompt) {
+    const el = document.getElementById('aiResponse');
+
+    if (!geminiKey) {
+        el.innerHTML = `
+            <div style="padding:24px;text-align:center;color:var(--text-dim)">
+                <div style="color:var(--accent4);font-family:Orbitron,monospace;font-size:.58rem;margin-bottom:10px;letter-spacing:2px">NO API KEY</div>
+                <input type="password" class="pm-input" id="quickKey" placeholder="Gemini API key..." style="margin-top:10px">
+                <button class="pm-btn" onclick="saveKey()" style="margin-top:8px">SAVE</button>
+            </div>`;
+        return;
+    }
+
+    el.innerHTML = '<div class="pm-thinking"><span></span><span></span><span></span></div>';
+
+    const region = ZIP_REGIONS[currentZip];
+    const context = allItems.slice(0, 12).map(i =>
+        `${i.source}: ${i.title}${i.description ? ' — ' + i.description.substring(0, 150) : ''}`
+    ).join('\n');
+
+    const fullPrompt = `You are a local news analyst for Pisces Moon OS.
+User location: ${region ? region.city + ', ' + region.state : 'ZIP ' + currentZip}
+Search radius: ${currentRadius} miles
+
+LOCAL STORIES:
+${context}
+
+USER: ${prompt}
+
+Provide a focused, direct answer grounded in the local stories. Cite sources when relevant. 2-4 paragraphs.`;
+
+    try {
+        const response = await PM.gemini(fullPrompt, {apiKey: geminiKey, temperature: 0.6});
+        el.innerHTML = `<div>${PM.esc(response)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/\n\n/g, '</p><p style="margin-top:10px">')
+            .replace(/^/, '<p>') + '</p>'}</div>`;
+    } catch (e) {
+        el.innerHTML = `<div style="padding:14px;color:var(--accent4);font-size:.7rem">
+            AI error: ${PM.esc(e.message)}</div>`;
+    }
+}
+
+function saveKey() {
+    const k = document.getElementById('quickKey').value.trim();
+    if (k) {
+        geminiKey = k;
+        localStorage.setItem('gemini_key', k);
+        document.getElementById('aiResponse').innerHTML = `
+            <div style="padding:24px;text-align:center;color:var(--accent3);font-size:.7rem">Key saved.</div>`;
+    }
+}
+
+window.addEventListener('load', init);
+</script>
+</body></html>
