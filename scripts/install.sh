@@ -124,8 +124,17 @@ step "Deploying HTML apps from $HTML_SRC"
 
 # Copy all HTML files
 cp "$HTML_SRC"/*.html /opt/pisces-moon/html/
-cp "$HTML_SRC"/pm_fonts.css /opt/pisces-moon/html/ 2>/dev/null || warn "pm_fonts.css missing"
+
+# Shared CSS modules
+cp "$HTML_SRC"/pm_fonts.css   /opt/pisces-moon/html/ 2>/dev/null || warn "pm_fonts.css missing"
+cp "$HTML_SRC"/pm_theme.css   /opt/pisces-moon/html/ 2>/dev/null || warn "pm_theme.css missing"
+cp "$HTML_SRC"/pm_shared.css  /opt/pisces-moon/html/ 2>/dev/null || warn "pm_shared.css missing"
+
+# Shared JS modules
 cp "$HTML_SRC"/pm_transport.js /opt/pisces-moon/html/ 2>/dev/null || warn "pm_transport.js missing"
+cp "$HTML_SRC"/pm_lib.js       /opt/pisces-moon/html/ 2>/dev/null || warn "pm_lib.js missing"
+cp "$HTML_SRC"/pm_viz.js       /opt/pisces-moon/html/ 2>/dev/null || warn "pm_viz.js missing"
+cp "$HTML_SRC"/pm_stats.js     /opt/pisces-moon/html/ 2>/dev/null || warn "pm_stats.js missing — The Clinician will not work"
 
 # Lib bundle (Leaflet, ZXing, jsQR, qrcodejs)
 if [[ -d "$HTML_SRC/lib" ]]; then
@@ -161,6 +170,12 @@ if [[ -f "$REPO_ROOT/tools/edge_bridge.py" ]]; then
     cp "$REPO_ROOT/tools/edge_bridge.py" /opt/pisces-moon/tools/
     chmod 755 /opt/pisces-moon/tools/edge_bridge.py
     ok "Deployed edge_bridge.py"
+fi
+
+if [[ -f "$REPO_ROOT/tools/pm_bridge.py" ]]; then
+    cp "$REPO_ROOT/tools/pm_bridge.py" /opt/pisces-moon/tools/
+    chmod 755 /opt/pisces-moon/tools/pm_bridge.py
+    ok "Deployed pm_bridge.py"
 fi
 
 # Copy LICENSE + NOTICE so users on the deployed system can find them
@@ -411,19 +426,20 @@ ONBOARDEOF
     ok "Onboard autostart configured"
 fi
 
-# ── 9. edge_bridge systemd user service ────────────────────────────
-if [[ -f /opt/pisces-moon/tools/edge_bridge.py ]]; then
-    step "Creating edge_bridge systemd user service"
+# -- 9. Pisces Moon bridge systemd user service ─────────────────────
+if [[ -f /opt/pisces-moon/tools/pm_bridge.py ]]; then
+    step "Creating Pisces Moon bridge systemd user service"
 
     sudo -u "$TARGET_USER" mkdir -p "$TARGET_HOME/.config/systemd/user"
     cat > "$TARGET_HOME/.config/systemd/user/pisces-moon-bridge.service" <<SVCEOF
 [Unit]
-Description=Pisces Moon edge bridge (T-Beam serial → WebSocket)
-After=graphical-session.target
+Description=Pisces Moon bridge (T-Beam relay or native WiFi scan)
+After=graphical-session.target network.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/python3 /opt/pisces-moon/tools/edge_bridge.py
+ExecStartPre=/bin/sleep 3
+ExecStart=/usr/bin/python3 /opt/pisces-moon/tools/pm_bridge.py
 Restart=on-failure
 RestartSec=5
 
@@ -432,8 +448,16 @@ WantedBy=default.target
 SVCEOF
     chown "$TARGET_USER:$TARGET_USER" "$TARGET_HOME/.config/systemd/user/pisces-moon-bridge.service"
 
-    ok "Service file created (not enabled by default)"
-    info "Enable: systemctl --user enable --now pisces-moon-bridge"
+    # Auto-enable and start immediately
+    UID_NUM=$(id -u "$TARGET_USER")
+    sudo -u "$TARGET_USER" \
+        XDG_RUNTIME_DIR="/run/user/${UID_NUM}" \
+        systemctl --user enable --now pisces-moon-bridge \
+        && ok "Bridge service enabled and started automatically" \
+        || warn "Could not start now — will auto-start at next login"
+
+    info "T-Beam connected: relay mode  |  No T-Beam: native WiFi scan"
+    info "Status: systemctl --user status pisces-moon-bridge"
 fi
 
 # ── 10. Final summary ──────────────────────────────────────────────
