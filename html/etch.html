@@ -17,15 +17,55 @@
   - Mobile-aware (canvas size + undo state caps on mobile)
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <title>PISCES MOON // ETCH v3</title>
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 :root{
   --bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;
-  --panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;
-  --accent4:#ff3366;--gold:#f4a820;
-  --text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;
+  --panel-border:#1a3a50;--accent:#4dd9ff;--accent3:#4dffa6;
+  --accent4:#ff5577;--gold:#ffd166;
+  --text:#c8e6f5;--text-bright:#c8e8f5;--text-dim:#2a5870;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;user-select:none;}
@@ -45,7 +85,7 @@ header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding
 .tool-col{background:var(--bg2);border-right:1px solid var(--panel-border);display:flex;flex-direction:column;align-items:center;padding:5px;gap:3px;overflow-y:auto;}
 .ti{width:40px;height:40px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;border-radius:3px;flex-shrink:0;position:relative;}
 .ti:hover{border-color:var(--accent3);color:var(--accent3);}
-.ti.active{border-color:var(--accent3);background:rgba(0,255,136,.12);}
+.ti.active{border-color:var(--accent3);background:rgba(77,255,166,.12);}
 .ti .tip{display:none;position:absolute;left:46px;top:50%;transform:translateY(-50%);background:var(--bg2);border:1px solid var(--panel-border);padding:3px 8px;font-size:.55rem;white-space:nowrap;z-index:100;color:var(--text-bright);pointer-events:none;}
 .ti:hover .tip{display:block;}
 .tsep{width:80%;height:1px;background:var(--panel-border);margin:2px 0;}
@@ -75,8 +115,8 @@ input[type=range]{flex:1;accent-color:var(--accent3);height:3px;}
 select.blend{width:100%;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text);font-family:'Share Tech Mono',monospace;font-size:.6rem;padding:5px;margin:3px 0;outline:none;}
 /* Layers */
 .layer-item{padding:7px 8px;border-bottom:1px solid rgba(28,46,58,.3);display:flex;align-items:center;gap:5px;cursor:pointer;font-size:.6rem;transition:background .15s;}
-.layer-item:hover{background:rgba(0,255,136,.04);}
-.layer-item.active{background:rgba(0,255,136,.08);border-left:2px solid var(--accent3);}
+.layer-item:hover{background:rgba(77,255,166,.04);}
+.layer-item.active{background:rgba(77,255,166,.08);border-left:2px solid var(--accent3);}
 .layer-thumb{width:28px;height:20px;border:1px solid var(--panel-border);flex-shrink:0;background:#111;}
 .layer-vis{background:none;border:none;cursor:pointer;font-size:.75rem;flex-shrink:0;}
 .layer-name{flex:1;color:var(--text);font-size:.58rem;}
@@ -278,7 +318,7 @@ const CANVAS_H  = isMobile ? 768  : 1024;
 
 // ── State ─────────────────────────────────────────────────────────
 let tool = 'rectsel';
-let fgColor = '#00d4ff', bgColor = '#050a0e';
+let fgColor = '#4dd9ff', bgColor = '#050a0e';
 let size = 6, opacity = 1, hardness = 1, flow = 1;
 let tolerance = 32;
 let gradType = 'linear';
@@ -328,9 +368,9 @@ let pinchDist0 = null;
 let adjSnapshot = null, hueSatSnapshot = null;
 
 const PALETTE = [
-  '#ffffff','#c8e8f5','#7ab8d4','#1a3a50','#050a0e',
-  '#ff3366','#ff6b00','#ffcc00','#00ff88','#00d4ff',
-  '#f4a820','#9b59b6','#ff8c00','#00fa9a','#3498db',
+  '#ffffff','#c8e8f5','#c8e6f5','#1a3a50','#050a0e',
+  '#ff5577','#ff6b00','#ffcc00','#4dffa6','#4dd9ff',
+  '#ffd166','#9b59b6','#ff8c00','#00fa9a','#3498db',
   '#e74c3c','#1abc9c','#2c3e50','#ecf0f1','#f39c12',
 ];
 

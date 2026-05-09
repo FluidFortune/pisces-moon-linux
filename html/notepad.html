@@ -5,15 +5,55 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // NOTEPAD v3</title>
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 :root{
   --bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;
-  --panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;
-  --accent4:#ff3366;--gold:#f4a820;
-  --text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;
+  --panel-border:#1a3a50;--accent:#4dd9ff;--accent3:#4dffa6;
+  --accent4:#ff5577;--gold:#ffd166;
+  --text:#c8e6f5;--text-bright:#c8e8f5;--text-dim:#2a5870;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -22,11 +62,11 @@ header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding
 .hdr-right{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
 .hbtn{padding:4px 11px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:.6rem;cursor:pointer;transition:all .15s;}
 .hbtn:hover{border-color:var(--accent3);color:var(--accent3);}
-.hbtn.active{border-color:var(--accent3);color:var(--accent3);background:rgba(0,255,136,.08);}
+.hbtn.active{border-color:var(--accent3);color:var(--accent3);background:rgba(77,255,166,.08);}
 /* File tabs */
 .tabs{background:var(--bg2);border-bottom:1px solid var(--panel-border);display:flex;overflow-x:auto;flex-shrink:0;}
 .tab{padding:7px 14px;font-size:.6rem;cursor:pointer;border-right:1px solid var(--panel-border);white-space:nowrap;display:flex;align-items:center;gap:6px;transition:background .15s;color:var(--text-dim);}
-.tab:hover{background:rgba(0,255,136,.04);}
+.tab:hover{background:rgba(77,255,166,.04);}
 .tab.active{background:var(--bg3);color:var(--text-bright);border-top:2px solid var(--accent3);}
 .tab.modified::after{content:'●';color:var(--gold);margin-left:3px;font-size:.5rem;}
 .tab-close{background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:.65rem;padding:0 2px;line-height:1;}
@@ -50,8 +90,8 @@ header{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding
 .file-list{background:var(--bg2);border-right:1px solid var(--panel-border);overflow-y:auto;display:flex;flex-direction:column;}
 .fl-header{padding:6px 10px;font-family:'Orbitron',monospace;font-size:.48rem;letter-spacing:3px;color:var(--text-dim);background:var(--bg);border-bottom:1px solid var(--panel-border);display:flex;align-items:center;justify-content:space-between;}
 .fl-item{padding:9px 12px;border-bottom:1px solid rgba(28,46,58,.3);cursor:pointer;font-size:.62rem;display:flex;align-items:center;gap:6px;transition:background .15s;color:var(--text-dim);}
-.fl-item:hover{background:rgba(0,255,136,.04);}
-.fl-item.active{background:rgba(0,255,136,.08);border-left:2px solid var(--accent3);color:var(--text-bright);}
+.fl-item:hover{background:rgba(77,255,166,.04);}
+.fl-item.active{background:rgba(77,255,166,.08);border-left:2px solid var(--accent3);color:var(--text-bright);}
 .fl-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
 .fl-del{background:none;border:none;color:transparent;cursor:pointer;font-size:.6rem;padding:0 3px;}
 .fl-item:hover .fl-del{color:var(--text-dim);}

@@ -5,16 +5,56 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 <title>PISCES MOON // BREAKOUT</title>
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:#050a0e;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;overflow:hidden;font-family:'Courier New',monospace;touch-action:none;user-select:none;}
-#hdr{color:#00d4ff;font-size:.65rem;letter-spacing:3px;margin-bottom:6px;display:flex;gap:18px;}
+#hdr{color:#4dd9ff;font-size:.65rem;letter-spacing:3px;margin-bottom:6px;display:flex;gap:18px;}
 #hdr span{color:#fff;}
 canvas{display:block;border:1px solid #1a3a50;}
-#msg{color:#00ff88;font-size:.85rem;letter-spacing:4px;margin-top:8px;min-height:20px;text-align:center;}
+#msg{color:#4dffa6;font-size:.85rem;letter-spacing:4px;margin-top:8px;min-height:20px;text-align:center;}
 #hint{color:#2a5870;font-size:.5rem;letter-spacing:2px;margin-top:3px;text-align:center;}
 </style>
 </head><body>
@@ -49,9 +89,9 @@ function resize(){
 }
 resize(); window.addEventListener('resize',()=>{resize();if(!started)init();});
 
-const COLORS=['#ff3366','#ff6b00','#f4a820','#00ff88','#00d4ff','#9b59b6'];
+const COLORS=['#ff5577','#ff6b00','#ffd166','#4dffa6','#4dd9ff','#9b59b6'];
 const POWERUPS=['WIDE','MULTI','FAST','SLOW','LIFE'];
-const PU_COLOR={'WIDE':'#00ff88','MULTI':'#00d4ff','FAST':'#ff3366','SLOW':'#f4a820','LIFE':'#ff3366'};
+const PU_COLOR={'WIDE':'#4dffa6','MULTI':'#4dd9ff','FAST':'#ff5577','SLOW':'#ffd166','LIFE':'#ff5577'};
 
 let bricks,balls,paddle,score,best,lives,level,gameOver,started,won,particles,powerups;
 
@@ -245,14 +285,14 @@ function draw(){
 
   // paddle
   const grad=ctx.createLinearGradient(paddle.x,paddle.y,paddle.x,paddle.y+PH);
-  grad.addColorStop(0,'#00d4ff'); grad.addColorStop(1,'#005577');
+  grad.addColorStop(0,'#4dd9ff'); grad.addColorStop(1,'#005577');
   ctx.fillStyle=grad; ctx.fillRect(paddle.x,paddle.y,paddle.w,PH);
 
   // balls
   balls.forEach(b=>{
     ctx.beginPath(); ctx.arc(b.x,b.y,BALL_R,0,Math.PI*2);
     ctx.fillStyle='#fff'; ctx.fill();
-    ctx.strokeStyle='#00d4ff'; ctx.lineWidth=1; ctx.stroke();
+    ctx.strokeStyle='#4dd9ff'; ctx.lineWidth=1; ctx.stroke();
   });
 }
 

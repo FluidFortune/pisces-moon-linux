@@ -5,11 +5,51 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // GHOST PARTITION</title>
 <link rel="stylesheet" href="pm_shared.css">
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 .gp-layout { display:grid; grid-template-columns:280px 1fr 280px; height:calc(100vh - 52px); overflow:hidden; }
 .gp-left  { border-right:1px solid var(--panel-border); overflow-y:auto; }
 .gp-right { border-left:1px solid var(--panel-border); overflow-y:auto; }
@@ -23,7 +63,7 @@
 .pin-dot.filled { background:var(--gold); border-color:var(--gold); }
 .pin-pad { display:grid; grid-template-columns:repeat(3,64px); gap:8px; }
 .pin-btn { width:64px; height:64px; background:var(--bg2); border:1px solid var(--panel-border); color:var(--text-bright); font-family:Orbitron,monospace; font-size:1.2rem; cursor:pointer; transition:all .15s; }
-.pin-btn:hover { border-color:var(--gold); background:rgba(244,168,32,.1); }
+.pin-btn:hover { border-color:var(--gold); background:rgba(255,209,102,.1); }
 .pin-error { color:var(--accent4); font-family:Orbitron,monospace; font-size:.6rem; letter-spacing:3px; opacity:0; transition:opacity .3s; }
 .pin-error.show { opacity:1; }
 
@@ -33,20 +73,20 @@
 
 /* File list */
 .gp-file { padding:10px 12px; border-bottom:1px solid rgba(28,46,58,.4); cursor:pointer; transition:background .15s; }
-.gp-file:hover { background:rgba(244,168,32,.04); }
-.gp-file.selected { background:rgba(244,168,32,.08); border-left:2px solid var(--gold); }
+.gp-file:hover { background:rgba(255,209,102,.04); }
+.gp-file.selected { background:rgba(255,209,102,.08); border-left:2px solid var(--gold); }
 .gp-file-name { font-size:.72rem; color:var(--text-bright); margin-bottom:3px; display:flex; gap:8px; align-items:center; }
 .gp-file-meta { font-size:.58rem; color:var(--text-dim); display:flex; gap:10px; }
 .class-badge { display:inline-block; padding:1px 6px; font-family:Orbitron,monospace; font-size:.45rem; letter-spacing:1px; }
-.class-tactical { background:rgba(255,51,102,.1); color:var(--accent4); border:1px solid var(--accent4); }
-.class-decoy    { background:rgba(0,212,255,.1);  color:var(--accent);  border:1px solid var(--accent);  }
-.class-student  { background:rgba(0,255,136,.1);  color:var(--accent3); border:1px solid var(--accent3); }
+.class-tactical { background:rgba(255,85,119,.1); color:var(--accent4); border:1px solid var(--accent4); }
+.class-decoy    { background:rgba(77,217,255,.1);  color:var(--accent);  border:1px solid var(--accent);  }
+.class-student  { background:rgba(77,255,166,.1);  color:var(--accent3); border:1px solid var(--accent3); }
 .class-unclassified { background:rgba(28,46,58,.5); color:var(--text-dim); border:1px solid var(--panel-border); }
 
 /* Nuke */
-.nuke-zone { margin:12px; padding:14px; border:1px solid var(--accent4); background:rgba(255,51,102,.05); }
+.nuke-zone { margin:12px; padding:14px; border:1px solid var(--accent4); background:rgba(255,85,119,.05); }
 .nuke-title { font-family:Orbitron,monospace; font-size:.7rem; letter-spacing:3px; color:var(--accent4); margin-bottom:8px; }
-.nuke-btn { width:100%; padding:12px; background:rgba(255,51,102,.1); border:2px solid var(--accent4); color:var(--accent4); font-family:Orbitron,monospace; font-size:.8rem; letter-spacing:4px; cursor:pointer; transition:all .2s; }
+.nuke-btn { width:100%; padding:12px; background:rgba(255,85,119,.1); border:2px solid var(--accent4); color:var(--accent4); font-family:Orbitron,monospace; font-size:.8rem; letter-spacing:4px; cursor:pointer; transition:all .2s; }
 .nuke-btn:hover { background:var(--accent4); color:var(--bg); }
 
 .controls { padding:10px 12px; border-bottom:1px solid var(--panel-border); background:var(--bg2); display:flex; gap:8px; flex-wrap:wrap; }
@@ -161,7 +201,7 @@
     </div>
 </div>
 
-<script src="pm_scraper.js"></script>
+<script src="pm_lib.js"></script>
 <script src="pm_viz.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
@@ -286,9 +326,9 @@ function renderStorageBar() {
     total = total || 1;
 
     const colors = {
-        tactical:     '#ff3366',
-        decoy:        '#00d4ff',
-        student:      '#00ff88',
+        tactical:     '#ff5577',
+        decoy:        '#4dd9ff',
+        student:      '#4dffa6',
         unclassified: '#2a5870',
     };
 

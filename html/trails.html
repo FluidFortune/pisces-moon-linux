@@ -6,11 +6,51 @@
   fluidfortune.com
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // TRAILS INTEL</title>
 <link rel="stylesheet" href="lib/leaflet.min.css">
 <link rel="stylesheet" href="pm_shared.css">
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 .layout { display:grid; grid-template-columns:340px 1fr 320px; height:calc(100vh - 52px); overflow:hidden; }
 .sidebar { overflow-y:auto; border-right:1px solid var(--panel-border); }
 #map { height:100%; }
@@ -106,7 +146,7 @@
 </div>
 
 <script src="lib/leaflet.min.js"></script>
-<script src="pm_scraper.js"></script>
+<script src="pm_lib.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
 // ICONIC TRAILS — famous, iconic, well-documented trails as defaults
@@ -237,12 +277,10 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {maxZoom: 19})
 function init() {
     // Load saved
     try {
-        const s = localStorage.getItem('pm_trails_saved');
-        if (s) savedTrails = JSON.parse(s);
+        savedTrails = PM.load('trails_saved', []);
     } catch(e) {}
 
-    geminiKey = localStorage.getItem('gemini_key') || localStorage.getItem('pm_gemini_key') || '';
-
+    
     render();
     addMarkers();
 }
@@ -391,98 +429,420 @@ async function findNearby() {
     const loc = document.getElementById('locationInput').value.trim();
     if (!loc) { alert('Enter a location first'); return; }
 
-    if (!geminiKey) {
-        alert('Set Gemini API key via another Pisces Moon app first (stored in localStorage as gemini_key)');
+    document.getElementById('trailList').innerHTML = '<div class="pm-thinking" style="padding:20px"><span></span><span></span><span></span></div>';
+
+    // Try NPS API first for national parks
+    const npsResults = await fetchNPSTrails(loc);
+    if (npsResults && npsResults.length > 0) {
+        currentTrails = npsResults;
+        document.getElementById('trailCount').textContent = `${currentTrails.length} trails`;
+        render();
+        addMarkers();
         return;
     }
 
-    document.getElementById('trailList').innerHTML = '<div class="pm-thinking" style="padding:20px"><span></span><span></span><span></span></div>';
+    // Fall back to Gemini if available
+    const geminiKey = PM.load('gemini_key') || PM.load('pm_gemini_key') || '';
+    if (!geminiKey) {
+        PM.renderError('trailList',
+            'No trails found via NPS API.',
+            'Set a Gemini API key to use AI-powered nearby trail search.');
+        return;
+    }
 
     try {
         const prompt = `List 8 notable hiking trails near ${loc}. Return ONLY a JSON array (no markdown), each object with these exact fields:
 {name, distance_miles, elevation_gain_ft, difficulty, description, lat, lon, features, region}
 description should be 2-3 sentences. features is a string array. difficulty is Easy/Moderate/Hard. Coordinates must be real GPS points.`;
 
-        const text = await PM.gemini(prompt, {apiKey: geminiKey, maxTokens: 2048});
+        const text = await PM.gemini(prompt, { maxTokens: 2048 });
         const cleaned = text.replace(/```json|```/g, '').trim();
-        const trails = JSON.parse(cleaned);
-
-        currentTrails = trails;
+        currentTrails = JSON.parse(cleaned);
+        document.getElementById('trailCount').textContent = `${currentTrails.length} trails`;
         render();
         addMarkers();
     } catch(e) {
-        document.getElementById('trailList').innerHTML = `
-            <div style="padding:20px;color:var(--accent4);font-size:.7rem">AI error: ${PM.esc(e.message)}</div>`;
+        PM.renderError('trailList', 'AI error: ' + e.message);
     }
+}
+
+// ── NPS API — free, no key required for basic access ─────────────
+async function fetchNPSTrails(query) {
+    try {
+        // Search NPS parks matching the query
+        const url = `https://developer.nps.gov/api/v1/parks?q=${encodeURIComponent(query)}&limit=5&fields=addresses,entranceFees,operatingHours,activities`;
+        const resp = await PM.fetchWithTimeout(url, {
+            headers: { 'X-Api-Key': 'DEMO_KEY' }
+        }, 10000);
+        if (!resp.ok) return null;
+        const data = await resp.json();
+        if (!data.data || !data.data.length) return null;
+
+        // Convert NPS park data to trail format
+        return data.data.map(park => ({
+            name: park.fullName,
+            difficulty: 'Moderate',
+            distance_miles: 0,
+            elevation_gain_ft: 0,
+            description: park.description || '',
+            lat: parseFloat(park.latitude) || 0,
+            lon: parseFloat(park.longitude) || 0,
+            features: (park.activities || []).slice(0, 5).map(a => a.name),
+            region: park.states || '',
+            nps_code: park.parkCode,
+            url: park.url,
+            source: 'nps'
+        })).filter(t => t.lat && t.lon);
+    } catch(e) {
+        return null;
+    }
+}
+
+// ── ENRICHMENT PIPELINE ───────────────────────────────────────────
+// AllTrails → Wikipedia → NPS conditions → optional Gemini synthesis
+async function enrichTrail(i) {
+    const t = currentTrails[i];
+    if (!t) return;
+
+    const el = document.getElementById('trailDetail');
+    el.innerHTML = `
+        <div style="font-family:Orbitron,monospace;font-size:.7rem;color:var(--gold);margin-bottom:14px">${PM.esc(t.name)}</div>
+        <div class="pm-thinking"><span></span><span></span><span></span></div>
+        <div id="enrichStatus" style="font-size:.6rem;color:var(--text-dim);margin-top:10px">Fetching AllTrails...</div>`;
+
+    const status = id => document.getElementById('enrichStatus');
+    const setStatus = s => { const el = status(); if (el) el.textContent = s; };
+
+    let enriched = { ...t };
+
+    // ── 1. AllTrails ─────────────────────────────────────────────
+    try {
+        setStatus('Fetching AllTrails...');
+        const atQuery = encodeURIComponent(t.name + ' trail');
+        const atUrl = `https://www.alltrails.com/explore?q=${atQuery}`;
+        const atHtml = await PM.fetchWithTimeout(
+            `https://corsproxy.io/?${encodeURIComponent(atUrl)}`, {}, 12000
+        );
+        if (atHtml.ok) {
+            const html = await atHtml.text();
+            // Extract JSON-LD structured data if present
+            const ldMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/i);
+            if (ldMatch) {
+                try {
+                    const ld = JSON.parse(ldMatch[1]);
+                    if (ld.distance) enriched.distance_miles = parseFloat(ld.distance) || t.distance_miles;
+                    if (ld.elevation) enriched.elevation_gain_ft = parseFloat(ld.elevation) || t.elevation_gain_ft;
+                    if (ld.description) enriched.alltrails_desc = ld.description;
+                } catch(e) {}
+            }
+            // Scrape visible text for description enrichment
+            const bodyText = html
+                .replace(/<script[\s\S]*?<\/script>/gi, '')
+                .replace(/<style[\s\S]*?<\/style>/gi, '')
+                .replace(/<[^>]+>/g, ' ')
+                .replace(/\s+/g, ' ')
+                .substring(0, 3000);
+            enriched.alltrails_raw = bodyText;
+        }
+    } catch(e) { /* AllTrails fetch failed — continue */ }
+
+    // ── 2. Wikipedia ─────────────────────────────────────────────
+    try {
+        setStatus('Checking Wikipedia...');
+        const wikiTitle = encodeURIComponent(t.name.replace(/\s*\([^)]*\)/g, '').trim());
+        const wikiUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${wikiTitle}`;
+        const wResp = await PM.fetchWithTimeout(wikiUrl, {}, 10000);
+        if (wResp.ok) {
+            const wData = await wResp.json();
+            if (wData.extract) {
+                enriched.wiki_summary = wData.extract;
+                enriched.wiki_url = wData.content_urls?.desktop?.page;
+            }
+        }
+    } catch(e) { /* Wikipedia fetch failed — continue */ }
+
+    // ── 3. NPS Conditions & Alerts ───────────────────────────────
+    try {
+        setStatus('Checking NPS conditions...');
+        const parkCode = enriched.nps_code || await guessNPSCode(t.name);
+        if (parkCode) {
+            const alertsUrl = `https://developer.nps.gov/api/v1/alerts?parkCode=${parkCode}&limit=5`;
+            const aResp = await PM.fetchWithTimeout(alertsUrl, {
+                headers: { 'X-Api-Key': 'DEMO_KEY' }
+            }, 8000);
+            if (aResp.ok) {
+                const aData = await aResp.json();
+                enriched.nps_alerts = (aData.data || []).map(a => ({
+                    title: a.title,
+                    category: a.category,
+                    description: a.description?.substring(0, 200)
+                }));
+            }
+        }
+    } catch(e) { /* NPS fetch failed — continue */ }
+
+    // ── 4. Optional Gemini synthesis ─────────────────────────────
+    const geminiKey = PM.load('gemini_key') || PM.load('pm_gemini_key') || '';
+    if (geminiKey && (enriched.alltrails_raw || enriched.wiki_summary)) {
+        try {
+            setStatus('AI synthesizing...');
+            const sources = [
+                enriched.alltrails_raw ? `AllTrails: ${enriched.alltrails_raw.substring(0, 1500)}` : '',
+                enriched.wiki_summary ? `Wikipedia: ${enriched.wiki_summary}` : '',
+            ].filter(Boolean).join('\n\n');
+
+            const prompt = `You are a trail guide. Based on this source data about "${t.name}", write a concise but rich trail description covering: overview, notable features, difficulty details, key waypoints or mile markers if mentioned, safety considerations, permit requirements, and best season. Keep it under 400 words. Be specific and practical.\n\n${sources}`;
+
+            const synthesis = await PM.gemini(prompt, { maxTokens: 800 });
+            enriched.ai_description = synthesis;
+        } catch(e) { /* Gemini failed — use raw sources */ }
+    }
+
+    // Save enrichment to localStorage
+    enriched.enriched = true;
+    enriched.enriched_at = Date.now();
+    try {
+        const cache = JSON.parse(localStorage.getItem('pm_trail_enriched') || '{}');
+        cache[t.name] = enriched;
+        localStorage.setItem('pm_trail_enriched', JSON.stringify(cache));
+    } catch(e) {}
+
+    // Update trail in current list
+    currentTrails[i] = enriched;
+
+    // Re-render detail with enriched data
+    renderTrailDetail(i);
+}
+
+// Guess NPS park code from trail name
+async function guessNPSCode(trailName) {
+    const known = {
+        'yosemite': 'yose', 'grand canyon': 'grca', 'zion': 'zion',
+        'yellowstone': 'yell', 'olympic': 'olym', 'rainier': 'mora',
+        'rocky mountain': 'romo', 'glacier': 'glac', 'arches': 'arch',
+        'canyonlands': 'cany', 'bryce': 'brca', 'shenandoah': 'shen',
+        'acadia': 'acad', 'smoky': 'grsm', 'joshua tree': 'jotr',
+        'sequoia': 'sequ', 'kings canyon': 'kica', 'death valley': 'deva',
+        'grand teton': 'grte', 'capitol reef': 'care', 'mesa verde': 'meve',
+        'hawaii volcanoes': 'havo', 'katmai': 'katm', 'denali': 'dena',
+        'crater lake': 'crla', 'lassen': 'lavo', 'channel islands': 'chis',
+        'badlands': 'badl', 'wind cave': 'wica', 'carlsbad': 'cave',
+        'guadalupe': 'gumo', 'big bend': 'bibe', 'everglades': 'ever',
+        'biscayne': 'bisc', 'virgin islands': 'viis', 'hot springs': 'hosp',
+    };
+    const lower = trailName.toLowerCase();
+    for (const [key, code] of Object.entries(known)) {
+        if (lower.includes(key)) return code;
+    }
+    return null;
 }
 
 async function scrapeTrail() {
     const url = document.getElementById('scrapeInput').value.trim();
     if (!url || !/^https?:\/\//.test(url)) {
-        alert('Paste a valid URL');
+        alert('Paste a valid trail URL (AllTrails, NPS, hiking blog, etc.)');
         return;
     }
 
-    document.getElementById('trailList').innerHTML = '<div class="pm-thinking" style="padding:20px"><span></span><span></span><span></span></div>';
+    document.getElementById('trailList').innerHTML =
+        '<div class="pm-thinking" style="padding:20px"><span></span><span></span><span></span></div>';
 
     try {
         let html = null;
-        for (const makeUrl of PM.CORS_PROXIES) {
+        for (const proxy of PM.CORS_PROXIES) {
             try {
-                const resp = await PM.fetchWithTimeout(makeUrl(url), {}, 15000);
+                const target = proxy ? proxy + encodeURIComponent(url) : url;
+                const resp = await PM.fetchWithTimeout(target, {}, 15000);
                 if (resp.ok) { html = await resp.text(); break; }
             } catch(e) {}
         }
-        if (!html) throw new Error('Could not fetch page');
+        if (!html) throw new Error('Could not fetch page — try a different URL or proxy');
 
-        // Extract page title + body text, send to AI to structure it
         const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-        const title = titleMatch ? titleMatch[1] : 'Unknown Trail';
+        const title = titleMatch ? titleMatch[1].replace(' - AllTrails', '').trim() : 'Trail';
 
-        // Strip scripts and get visible text
+        // Try JSON-LD first (AllTrails and many trail sites embed this)
+        let structured = null;
+        const ldMatches = [...html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/gi)];
+        for (const m of ldMatches) {
+            try {
+                const ld = JSON.parse(m[1]);
+                if (ld['@type'] === 'ExerciseAction' || ld.distance || ld.name) {
+                    structured = ld;
+                    break;
+                }
+            } catch(e) {}
+        }
+
         const bodyText = html
             .replace(/<script[\s\S]*?<\/script>/gi, '')
             .replace(/<style[\s\S]*?<\/style>/gi, '')
             .replace(/<[^>]+>/g, ' ')
             .replace(/\s+/g, ' ')
-            .substring(0, 6000);
+            .substring(0, 5000);
 
-        if (!geminiKey) {
-            // No AI — save a basic entry
-            const trail = {
-                name: title.substring(0, 80),
-                difficulty: 'Unknown',
-                distance_miles: 0,
-                elevation_gain_ft: 0,
-                description: bodyText.substring(0, 400),
-                sourceUrl: url
-            };
-            savedTrails.push(trail);
-            localStorage.setItem('pm_trails_saved', JSON.stringify(savedTrails));
-            alert('Saved basic entry (set Gemini key for full structured extraction)');
-            setMode('saved');
-            return;
-        }
+        const geminiKey = PM.load('gemini_key') || PM.load('pm_gemini_key') || '';
 
-        const prompt = `Extract trail data from this scraped page. Return ONLY JSON (no markdown) with these fields:
-{name, distance_miles, elevation_gain_ft, difficulty, description, lat, lon, features, region}
-Use numbers for distance/elevation. difficulty is Easy/Moderate/Hard. features is a string array. If coords unknown, use null. description should be 2-3 sentences.
+        let trail = {
+            name: (structured?.name || title).substring(0, 80),
+            difficulty: structured?.difficulty || 'Unknown',
+            distance_miles: parseFloat(structured?.distance) || 0,
+            elevation_gain_ft: parseFloat(structured?.elevation) || 0,
+            description: structured?.description || bodyText.substring(0, 500),
+            lat: parseFloat(structured?.geo?.latitude) || null,
+            lon: parseFloat(structured?.geo?.longitude) || null,
+            features: [],
+            region: '',
+            sourceUrl: url,
+            source: url.includes('alltrails') ? 'alltrails' : 'web',
+            enriched: false
+        };
+
+        if (geminiKey) {
+            const prompt = `Extract structured trail data from this scraped page. Return ONLY JSON (no markdown):
+{name, distance_miles, elevation_gain_ft, difficulty, description, lat, lon, features, region, waypoints}
+difficulty: Easy/Moderate/Hard. features: string array. waypoints: array of {name, miles, description} if found. description: 2-3 rich sentences. Use null for unknown coords.
 
 Page title: ${title}
-Content: ${bodyText}`;
+${structured ? 'Structured data found: ' + JSON.stringify(structured).substring(0, 500) : ''}
+Content: ${bodyText.substring(0, 3000)}`;
 
-        const aiText = await PM.gemini(prompt, {apiKey: geminiKey, maxTokens: 1200});
-        const cleaned = aiText.replace(/```json|```/g, '').trim();
-        const trail = JSON.parse(cleaned);
-        trail.sourceUrl = url;
+            const aiText = await PM.gemini(prompt, { maxTokens: 1500 });
+            const cleaned = aiText.replace(/\`\`\`json|\`\`\`/g, '').trim();
+            const parsed = JSON.parse(cleaned);
+            trail = { ...trail, ...parsed, sourceUrl: url, enriched: true };
+        }
 
         savedTrails.push(trail);
-        localStorage.setItem('pm_trails_saved', JSON.stringify(savedTrails));
-
+        PM.save('trails_saved', savedTrails);
         setMode('saved');
+
     } catch(e) {
-        document.getElementById('trailList').innerHTML = `
-            <div style="padding:20px;color:var(--accent4);font-size:.7rem">Scrape error: ${PM.esc(e.message)}</div>`;
+        PM.renderError('trailList', 'Scrape error: ' + e.message,
+            'Try pasting an AllTrails URL or any hiking trail page');
+    }
+}
+
+function renderTrailDetail(i) {
+    const t = currentTrails[i];
+    if (!t) return;
+
+    const isSaved = savedTrails.some(s => s.name === t.name);
+    const el = document.getElementById('trailDetail');
+
+    const diffClass = (t.difficulty||'').toLowerCase().includes('easy') ? 'be'
+                    : (t.difficulty||'').toLowerCase().includes('hard') ? 'bh' : 'bm';
+
+    // NPS alerts block
+    const alertsHtml = t.nps_alerts?.length ? `
+        <div style="margin:10px 0;padding:10px;background:rgba(255,85,119,.08);border:1px solid rgba(255,85,119,.3);border-radius:4px">
+            <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--accent4);margin-bottom:6px">⚠ NPS ALERTS</div>
+            ${t.nps_alerts.map(a =>
+                `<div style="font-size:.62rem;color:var(--text);margin-bottom:4px"><strong>${PM.esc(a.title)}</strong><br>${PM.esc(a.description||'')}</div>`
+            ).join('')}
+        </div>` : '';
+
+    // Waypoints block
+    const waypointsHtml = t.waypoints?.length ? `
+        <div style="margin:10px 0">
+            <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">WAYPOINTS</div>
+            ${t.waypoints.map(w =>
+                `<div style="font-size:.62rem;padding:4px 0;border-bottom:1px solid var(--panel-border);color:var(--text)">
+                    <span style="color:var(--gold);margin-right:8px">${w.miles ? w.miles + 'mi' : '—'}</span>
+                    <strong>${PM.esc(w.name||'')}</strong>
+                    ${w.description ? `<span style="color:var(--text-dim)"> — ${PM.esc(w.description)}</span>` : ''}
+                </div>`
+            ).join('')}
+        </div>` : '';
+
+    // Description — use best available source
+    const description = t.ai_description || t.wiki_summary || t.alltrails_desc || t.description || '';
+
+    // Sources tag
+    const sourcesTags = [
+        t.alltrails_raw ? '<span style="color:var(--accent3)">AllTrails</span>' : '',
+        t.wiki_summary  ? '<span style="color:var(--accent)">Wikipedia</span>' : '',
+        t.nps_alerts    ? '<span style="color:var(--accent2)">NPS</span>' : '',
+        t.ai_description ? '<span style="color:var(--gold)">AI Synthesized</span>' : '',
+    ].filter(Boolean).join(' · ');
+
+    el.innerHTML = `
+        <div style="font-family:Orbitron,monospace;font-size:.75rem;letter-spacing:2px;color:var(--gold);margin-bottom:10px">
+            ${PM.esc(t.name)}
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+            <span class="badge ${diffClass}">${PM.esc(t.difficulty||'?')}</span>
+            ${t.distance_miles ? `<span class="badge" style="background:rgba(77,217,255,.1);color:var(--accent);border-color:var(--accent)">${t.distance_miles} mi</span>` : ''}
+            ${t.elevation_gain_ft ? `<span class="badge" style="background:rgba(255,209,102,.1);color:var(--gold);border-color:var(--gold)">+${t.elevation_gain_ft.toLocaleString()} ft</span>` : ''}
+            ${t.region ? `<span class="badge" style="background:transparent;color:var(--text-dim);border-color:var(--panel-border)">${PM.esc(t.region)}</span>` : ''}
+        </div>
+        ${alertsHtml}
+        <div style="font-size:.7rem;line-height:1.8;color:var(--text);margin-bottom:12px;white-space:pre-wrap">${PM.esc(description)}</div>
+        ${waypointsHtml}
+        ${t.features?.length ? `
+        <div style="margin:10px 0">
+            <div style="font-family:Orbitron,monospace;font-size:.55rem;letter-spacing:2px;color:var(--text-dim);margin-bottom:6px">FEATURES</div>
+            <div style="display:flex;flex-wrap:wrap;gap:4px">
+                ${t.features.map(f => `<span style="background:var(--bg3);border:1px solid var(--panel-border);padding:2px 8px;font-size:.58rem;border-radius:2px;color:var(--text)">${PM.esc(f)}</span>`).join('')}
+            </div>
+        </div>` : ''}
+        ${sourcesTags ? `<div style="font-size:.55rem;margin-top:10px;color:var(--text-dim)">Sources: ${sourcesTags}</div>` : ''}
+        ${t.wiki_url ? `<div style="margin-top:6px"><a href="${PM.esc(t.wiki_url)}" target="_blank" style="font-size:.58rem;color:var(--accent)">→ Wikipedia</a></div>` : ''}
+        ${t.sourceUrl ? `<div style="margin-top:4px"><a href="${PM.esc(t.sourceUrl)}" target="_blank" style="font-size:.58rem;color:var(--accent)">→ Source</a></div>` : ''}
+        <div style="display:flex;gap:6px;margin-top:14px;flex-wrap:wrap">
+            <button class="pm-btn pm-btn-cy" onclick="enrichTrail(${i})" style="flex:1">
+                ${t.enriched ? '↻ RE-ENRICH' : '⬇ ENRICH'}
+            </button>
+            <button class="pm-btn" onclick="${isSaved ? `removeTrail(${i})` : `saveTrail(${i})`}"
+                style="flex:1;${isSaved ? 'border-color:var(--accent4);color:var(--accent4)' : ''}">
+                ${isSaved ? 'REMOVE' : 'SAVE'}
+            </button>
+        </div>`;
+}
+
+function selectTrail(i) {
+    const t = currentTrails[i];
+    if (!t) return;
+    selectedTrail = i;
+
+    // Check for cached enrichment
+    try {
+        const cache = JSON.parse(localStorage.getItem('pm_trail_enriched') || '{}');
+        if (cache[t.name]) {
+            currentTrails[i] = { ...t, ...cache[t.name] };
+        }
+    } catch(e) {}
+
+    renderTrailDetail(i);
+    render(); // Update selected state in list
+
+    // Fly map to trail
+    if (t.lat && t.lon) {
+        map.flyTo([t.lat, t.lon], 11, { duration: 1.2 });
+    }
+}
+
+function saveTrail(i) {
+    const t = currentTrails[i];
+    if (!t || savedTrails.some(s => s.name === t.name)) return;
+    savedTrails.push(t);
+    PM.save('trails_saved', savedTrails);
+    renderTrailDetail(i);
+}
+
+function removeTrail(i) {
+    const t = currentTrails[i];
+    if (!t) return;
+    savedTrails = savedTrails.filter(s => s.name !== t.name);
+    PM.save('trails_saved', savedTrails);
+    if (currentMode === 'saved') {
+        currentTrails = [...savedTrails];
+        selectedTrail = null;
+        document.getElementById('trailDetail').innerHTML =
+            '<div style="padding:24px;text-align:center;color:var(--text-dim);font-size:.7rem">Trail removed.</div>';
+        render();
+    } else {
+        renderTrailDetail(i);
     }
 }
 
@@ -497,9 +857,10 @@ async function quickAsk(q) { await sendAI(q); }
 
 async function sendAI(q) {
     const el = document.getElementById('aiAnswer');
+    const geminiKey = PM.load('gemini_key') || PM.load('pm_gemini_key') || '';
 
     if (!geminiKey) {
-        el.innerHTML = '<div style="color:var(--accent4)">No API key set. Use Gemini Terminal to add one.</div>';
+        el.innerHTML = '<div style="color:var(--accent4);font-size:.65rem">No Gemini key set. Use Gemini Terminal to add one.</div>';
         return;
     }
 
@@ -508,19 +869,23 @@ async function sendAI(q) {
     let context = '';
     if (selectedTrail !== null && currentTrails[selectedTrail]) {
         const t = currentTrails[selectedTrail];
-        context = `User is viewing: ${t.name} (${t.difficulty}, ${t.distance_miles}mi, ${t.elevation_gain_ft}ft).\n${t.description}\n\n`;
+        const desc = t.ai_description || t.wiki_summary || t.description || '';
+        context = `User is viewing: ${t.name} (${t.difficulty}, ${t.distance_miles}mi, +${t.elevation_gain_ft}ft gain).
+${desc.substring(0, 600)}
+
+`;
     }
 
     try {
         const response = await PM.gemini(
-            `${context}You are an experienced hiking and backcountry guide. Give practical, safety-focused advice.\n\nUser question: ${q}`,
-            {apiKey: geminiKey, maxTokens: 1000}
+            `${context}You are an experienced hiking and backcountry guide. Give practical, safety-focused advice.\n\nQuestion: ${q}`,
+            { maxTokens: 1000 }
         );
-        el.innerHTML = `<div>${PM.esc(response)
+        el.innerHTML = `<div style="font-size:.7rem;line-height:1.7">${PM.esc(response)
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/\n/g, '<br>')}</div>`;
     } catch(e) {
-        el.innerHTML = `<div style="color:var(--accent4)">AI error: ${PM.esc(e.message)}</div>`;
+        el.innerHTML = `<div style="color:var(--accent4);font-size:.65rem">AI error: ${PM.esc(e.message)}</div>`;
     }
 }
 

@@ -8,11 +8,51 @@
   Works on Android Chrome, Linux Chromium, and WebView APK.
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // QR TOOL</title>
 <link rel="stylesheet" href="pm_shared.css">
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 .qr-layout{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 52px);overflow:hidden;}
 .qr-panel{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
 .qr-panel:last-child{border-right:none;}
@@ -45,11 +85,11 @@
 .qr-size-row{display:flex;align-items:center;gap:10px;}
 .err-lvl-row{display:flex;gap:6px;}
 .err-btn{padding:4px 10px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.48rem;cursor:pointer;}
-.err-btn.active{background:rgba(0,212,255,.12);border-color:var(--accent);color:var(--accent);}
+.err-btn.active{background:rgba(77,217,255,.12);border-color:var(--accent);color:var(--accent);}
 /* History */
 .history-panel{width:100%;max-width:380px;}
 .history-item{padding:8px 10px;border-bottom:1px solid rgba(28,46,58,.3);font-size:.63rem;color:var(--text-bright);cursor:pointer;display:flex;gap:8px;align-items:flex-start;}
-.history-item:hover{background:rgba(0,212,255,.04);}
+.history-item:hover{background:rgba(77,217,255,.04);}
 .history-text{flex:1;font-family:Share\ Tech\ Mono,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .history-meta{font-size:.52rem;color:var(--text-dim);flex-shrink:0;}
 @media(max-width:600px){.qr-layout{grid-template-columns:1fr;}height:auto;overflow-y:auto;}
@@ -253,7 +293,7 @@ function displayResult(data, fromCamera) {
   const type = detectType(data);
   const el = document.getElementById('resultText');
   el.style.color = 'var(--accent3)';
-  el.innerHTML = `<span class="result-type" style="background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid rgba(0,255,136,.3)">${type}</span><br>${esc(data)}`;
+  el.innerHTML = `<span class="result-type" style="background:rgba(77,255,166,.1);color:var(--accent3);border:1px solid rgba(77,255,166,.3)">${type}</span><br>${esc(data)}`;
   document.getElementById('scanActions').style.display = 'flex';
   renderHistory();
 }
@@ -387,7 +427,7 @@ function generateQR() {
     const tempDiv = document.createElement('div');
     qrObj = new QRCode(tempDiv, {
       text, width: size, height: size,
-      colorDark: '#00d4ff', colorLight: '#050a0e',
+      colorDark: '#4dd9ff', colorLight: '#050a0e',
       correctLevel: QRCode.CorrectLevel[eccLevel] || QRCode.CorrectLevel.M
     });
     // Give it a tick to render
@@ -403,7 +443,7 @@ function generateQR() {
   } catch(e) {
     const ctx = canvas.getContext('2d');
     ctx.fillStyle = '#050a0e'; ctx.fillRect(0,0,size,size);
-    ctx.fillStyle = '#00d4ff'; ctx.font = '12px monospace';
+    ctx.fillStyle = '#4dd9ff'; ctx.font = '12px monospace';
     ctx.fillText('QR generation error', 10, size/2);
   }
 }

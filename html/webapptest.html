@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<!--
+  Pisces Moon Launcher
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  fluidfortune.com
+-->
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Pisces Moon ☾ Launcher</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&family=Outfit:wght@200;300;400;500&family=Share+Tech+Mono&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
+:root {
+  --bg:        #020608;
+  --bg2:       #040c10;
+  --bg3:       #071018;
+  --panel:     rgba(8,18,28,.55);
+  --panel-br:  #0f2535;
+  --accent:    #4dd9ff;
+  --accent2:   #0aa8d4;
+  --accent3:   #4dffa6;
+  --accent4:   #ff5577;
+  --gold:      #ffd166;
+  --purple:    #c89eff;
+  --text:      #c8e6f5;
+  --text-br:   #e8f6ff;
+  --text-dim:  #5a8aa4;
+  --text-mid:  #8db8d0;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  background: var(--bg);
+  color: var(--text-br);
+  font-family: 'Outfit', -apple-system, sans-serif;
+  font-weight: 300;
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Layered radial deep-water background */
+body::before, body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+body::before {
+  background:
+    radial-gradient(ellipse at 20% 10%, rgba(77,217,255,.08), transparent 50%),
+    radial-gradient(ellipse at 80% 90%, rgba(200,158,255,.06), transparent 50%),
+    radial-gradient(ellipse at 50% 50%, rgba(77,255,166,.03), transparent 60%);
+}
+body::after {
+  background:
+    repeating-linear-gradient(0deg,
+      transparent 0,
+      transparent 2px,
+      rgba(77,217,255,.015) 2px,
+      rgba(77,217,255,.015) 4px);
+  mix-blend-mode: screen;
+}
+
+/* Scanline */
+@keyframes scanline {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+.scanline {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(77,217,255,.5) 30%,
+    rgba(77,255,166,.5) 70%,
+    transparent);
+  z-index: 1;
+  animation: scanline 8s linear infinite;
+  opacity: .4;
+  pointer-events: none;
+}
+
+/* Header */
+.header {
+  position: relative;
+  z-index: 2;
+  padding: 28px 32px 20px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  border-bottom: 1px solid var(--panel-br);
+  background: linear-gradient(180deg, rgba(0,0,0,.4), rgba(0,0,0,0));
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.brand-title {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 600;
+  font-size: 1.6rem;
+  letter-spacing: 6px;
+  background: linear-gradient(135deg, var(--text-br) 0%, var(--accent) 50%, var(--accent3) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  text-shadow: 0 0 40px rgba(77,217,255,.3);
+}
+.brand-title .moon {
+  display: inline-block;
+  color: var(--accent);
+  -webkit-text-fill-color: var(--accent);
+  text-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent);
+  margin: 0 8px;
+  animation: moonglow 4s ease-in-out infinite;
+}
+@keyframes moonglow {
+  0%, 100% { opacity: .9; text-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent); }
+  50%      { opacity: 1;  text-shadow: 0 0 30px var(--accent), 0 0 60px var(--accent3); }
+}
+.brand-tagline {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .58rem;
+  letter-spacing: 3px;
+  color: var(--text-mid);
+  text-transform: uppercase;
+}
+
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-family: 'DM Mono', monospace;
+  font-size: .58rem;
+  letter-spacing: 1.5px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: rgba(77,217,255,.04);
+  border: 1px solid rgba(77,217,255,.15);
+  border-top-color: rgba(77,217,255,.3);
+  border-radius: 4px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.06);
+  color: var(--text);
+}
+.dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent3);
+  box-shadow: 0 0 10px var(--accent3);
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: .5; transform: scale(.8); }
+}
+
+/* Search bar */
+.search-wrap {
+  position: relative;
+  z-index: 2;
+  padding: 20px 32px;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.search-input {
+  flex: 1;
+  padding: 12px 18px 12px 44px;
+  background: linear-gradient(155deg, rgba(8,18,28,.7), rgba(0,0,0,.4));
+  border: 1px solid var(--panel-br);
+  border-top-color: rgba(255,255,255,.1);
+  border-radius: 6px;
+  color: var(--text-br);
+  font-family: 'DM Mono', monospace;
+  font-size: .75rem;
+  letter-spacing: 1px;
+  outline: none;
+  backdrop-filter: blur(20px) saturate(1.5);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 4px 20px rgba(0,0,0,.4);
+  transition: all .15s;
+}
+.search-input::placeholder { color: var(--text-dim); }
+.search-input:focus {
+  border-color: var(--accent);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 0 0 2px rgba(77,217,255,.15), 0 4px 30px rgba(77,217,255,.2);
+}
+.search-icon {
+  position: absolute;
+  left: 50px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--accent);
+  font-size: 1rem;
+  text-shadow: 0 0 8px var(--accent);
+  pointer-events: none;
+}
+
+.count-badge {
+  font-family: 'Orbitron', sans-serif;
+  font-size: .6rem;
+  letter-spacing: 2px;
+  color: var(--text);
+  padding: 8px 14px;
+  background: rgba(77,217,255,.05);
+  border: 1px solid rgba(77,217,255,.15);
+  border-top-color: rgba(77,217,255,.3);
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+/* Category filter pills */
+.filters {
+  position: relative;
+  z-index: 2;
+  padding: 0 32px 16px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  overflow-x: auto;
+}
+.filter {
+  padding: 7px 14px;
+  background: transparent;
+  border: 1px solid var(--panel-br);
+  border-radius: 4px;
+  color: var(--text-mid);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 400;
+  font-size: .58rem;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all .15s;
+  white-space: nowrap;
+}
+.filter:hover {
+  color: var(--accent);
+  border-color: rgba(77,217,255,.3);
+}
+.filter.active {
+  background: rgba(77,217,255,.08);
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 16px rgba(77,217,255,.2);
+}
+
+/* Grid */
+.grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  padding: 0 32px 40px;
+}
+
+/* App card - glass + terminal aesthetic */
+.app {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+  height: 110px;
+  background: linear-gradient(155deg,
+    rgba(8,18,28,.7) 0%,
+    rgba(4,12,16,.5) 50%,
+    rgba(0,0,0,.6) 100%);
+  border: 1px solid var(--panel-br);
+  border-top: 1px solid rgba(255,255,255,.12);
+  border-bottom: 1px solid rgba(0,0,0,.4);
+  border-radius: 5px;
+  text-decoration: none;
+  cursor: pointer;
+  overflow: hidden;
+  backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 4px 16px rgba(0,0,0,.5);
+  transition: transform .15s ease-out, border-color .15s, box-shadow .15s;
+}
+
+/* Catch-light highlight on top */
+.app::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.25) 50%,
+    transparent);
+  pointer-events: none;
+}
+
+/* Glow band on hover */
+.app::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    transparent 0%,
+    rgba(77,217,255,.0) 50%,
+    rgba(77,217,255,.08) 100%);
+  opacity: 0;
+  transition: opacity .15s;
+  pointer-events: none;
+}
+
+.app:hover {
+  transform: translateY(-2px);
+  border-color: var(--accent);
+  border-top-color: rgba(77,217,255,.5);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.12),
+    0 8px 30px rgba(0,0,0,.6),
+    0 0 30px rgba(77,217,255,.15);
+}
+.app:hover::after { opacity: 1; }
+
+.app-icon {
+  font-size: 1.4rem;
+  line-height: 1;
+  filter: drop-shadow(0 0 8px currentColor);
+  color: var(--accent);
+}
+
+.app-name {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 500;
+  font-size: .82rem;
+  letter-spacing: 1.5px;
+  color: var(--text-br);
+  margin-top: auto;
+}
+
+.app-cat {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .5rem;
+  letter-spacing: 2px;
+  color: var(--text-mid);
+  text-transform: uppercase;
+}
+
+.app-meta {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: .42rem;
+  letter-spacing: 1px;
+  color: var(--text-dim);
+  opacity: .6;
+}
+
+/* Per-category accent */
+.app[data-cat="cyber"]    .app-icon { color: var(--accent4); }
+.app[data-cat="comms"]    .app-icon { color: var(--accent3); }
+.app[data-cat="field"]    .app-icon { color: var(--gold); }
+.app[data-cat="games"]    .app-icon { color: var(--purple); }
+.app[data-cat="media"]    .app-icon { color: var(--accent3); }
+.app[data-cat="news"]     .app-icon { color: var(--accent); }
+.app[data-cat="sports"]   .app-icon { color: var(--gold); }
+.app[data-cat="system"]   .app-icon { color: var(--text); }
+.app[data-cat="tools"]    .app-icon { color: var(--accent); }
+
+.app[data-cat="cyber"]:hover    { border-color: var(--accent4); border-top-color: rgba(255,85,119,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 8px 30px rgba(0,0,0,.6), 0 0 30px rgba(255,85,119,.15); }
+.app[data-cat="comms"]:hover    { border-color: var(--accent3); border-top-color: rgba(77,255,166,.5);  box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 8px 30px rgba(0,0,0,.6), 0 0 30px rgba(77,255,166,.15); }
+.app[data-cat="field"]:hover    { border-color: var(--gold);    border-top-color: rgba(255,209,102,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 8px 30px rgba(0,0,0,.6), 0 0 30px rgba(255,209,102,.15); }
+.app[data-cat="games"]:hover    { border-color: var(--purple);  border-top-color: rgba(200,158,255,.5); box-shadow: inset 0 1px 0 rgba(255,255,255,.12), 0 8px 30px rgba(0,0,0,.6), 0 0 30px rgba(200,158,255,.15); }
+
+/* Empty state */
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--text-dim);
+  font-family: 'DM Mono', monospace;
+  font-size: .8rem;
+  letter-spacing: 2px;
+}
+
+/* Footer */
+.footer {
+  position: relative;
+  z-index: 2;
+  padding: 16px 32px;
+  border-top: 1px solid var(--panel-br);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .55rem;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+@media (max-width: 600px) {
+  .header { padding: 20px 16px 14px; flex-direction: column; align-items: flex-start; }
+  .search-wrap, .filters, .grid, .footer { padding-left: 16px; padding-right: 16px; }
+  .brand-title { font-size: 1.2rem; letter-spacing: 4px; }
+  .grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+  .app { height: 96px; padding: 12px; }
+  .app-name { font-size: .7rem; }
+}
+</style>
+</head>
+<body>
+
+<div class="scanline"></div>
+
+<header class="header">
+  <div class="brand">
+    <div class="brand-title">PISCES<span class="moon">☾</span>MOON</div>
+    <div class="brand-tagline">Local-first / No gatekeepers / fluidfortune.com</div>
+  </div>
+  <div class="status-bar">
+    <div class="status-pill">
+      <div class="dot"></div>
+      <span id="bridgeStatus">CHECKING BRIDGE</span>
+    </div>
+    <div class="status-pill" id="clockPill">--:--</div>
+  </div>
+</header>
+
+<div class="search-wrap">
+  <span class="search-icon">⌕</span>
+  <input class="search-input" type="text" id="search" placeholder="Search apps...   ( /  to focus  •  ESC to clear )" autofocus>
+  <span class="count-badge" id="appCount">0 / 0</span>
+</div>
+
+<div class="filters" id="filters">
+  <button class="filter active" data-cat="all">ALL</button>
+  <button class="filter" data-cat="featured">★ FEATURED</button>
+  <button class="filter" data-cat="cyber">CYBER</button>
+  <button class="filter" data-cat="comms">COMMS</button>
+  <button class="filter" data-cat="field">FIELD</button>
+  <button class="filter" data-cat="tools">TOOLS</button>
+  <button class="filter" data-cat="news">NEWS</button>
+  <button class="filter" data-cat="sports">SPORTS</button>
+  <button class="filter" data-cat="media">MEDIA</button>
+  <button class="filter" data-cat="games">GAMES</button>
+  <button class="filter" data-cat="system">SYSTEM</button>
+</div>
+
+<main class="grid" id="grid"></main>
+
+<footer class="footer">
+  <span>PISCES MOON OS / v0.5 / FLUID FORTUNE</span>
+  <span>FOR JENNIFER &amp; CLARK</span>
+  <span id="modeIndicator">MODE: WEB</span>
+</footer>
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  APP REGISTRY
+//  Add or remove entries here. The launcher rebuilds from this.
+//  Categories: cyber, comms, field, tools, news, sports,
+//              media, games, system
+// ─────────────────────────────────────────────────────────────
+const APPS = [
+  // Featured / flagship
+  { f:'silas_creek_parkway.html', n:'Silas Creek Parkway', i:'⚡', c:'cyber',  featured:true },
+  { f:'watchtower.html',          n:'Watchtower',          i:'⛯',  c:'cyber',  featured:true },
+  { f:'about.html',               n:'About',               i:'☾',  c:'system', featured:true },
+  { f:'field_notes.html',         n:'Field Notes',         i:'✎',  c:'field',  featured:true },
+  { f:'recipes.html',             n:'Recipes',             i:'🍳', c:'field',  featured:true },
+  { f:'trails.html',              n:'Trails',              i:'⛰',  c:'field',  featured:true },
+  { f:'medical_ref.html',         n:'Medical Ref',         i:'⚕',  c:'field',  featured:true },
+  { f:'survival_ref.html',        n:'Survival Ref',        i:'🧭', c:'field',  featured:true },
+
+  // Cyber / security
+  { f:'wardrive.html',            n:'WarDrive',             i:'🛰', c:'cyber' },
+  { f:'beacon_spotter.html',      n:'Beacon Spotter',      i:'📡', c:'cyber' },
+  { f:'wifi_app.html',            n:'WiFi Connect',        i:'📶', c:'cyber' },
+  { f:'bt_radar.html',            n:'BT Radar',            i:'📻', c:'cyber' },
+  { f:'ble_gatt.html',            n:'BLE GATT',            i:'🔗', c:'cyber' },
+  { f:'ble_ducky.html',           n:'BLE Ducky',           i:'🦆', c:'cyber' },
+  { f:'usb_ducky.html',           n:'USB Ducky',           i:'⌨',  c:'cyber' },
+  { f:'wifi_ducky.html',          n:'WiFi Ducky',          i:'🦆', c:'cyber' },
+  { f:'wpa_handshake.html',       n:'WPA Handshake',       i:'🔐', c:'cyber' },
+  { f:'pkt_sniffer.html',         n:'Packet Sniffer',      i:'🎯', c:'cyber' },
+  { f:'pkt_analysis.html',        n:'Packet Analysis',     i:'📊', c:'cyber' },
+  { f:'probe_intel.html',         n:'Probe Intel',         i:'🔍', c:'cyber' },
+  { f:'rf_spectrum.html',         n:'RF Spectrum',         i:'📈', c:'cyber' },
+  { f:'net_scanner.html',         n:'Net Scanner',         i:'🌐', c:'cyber' },
+  { f:'hash_tool.html',           n:'Hash Tool',           i:'#️⃣', c:'cyber' },
+  { f:'ghost_partition.html',     n:'Ghost Partition',     i:'👻', c:'cyber' },
+  { f:'clinician.html',           n:'The Clinician',       i:'🔬', c:'cyber' },
+  { f:'spadra_smelter.html',      n:'Spadra Smelter',      i:'🔥', c:'cyber' },
+
+  // Comms / mesh
+  { f:'mesh_messenger.html',      n:'Mesh Messenger',      i:'✉',  c:'comms' },
+  { f:'sos_beacon.html',          n:'SOS Beacon',          i:'🆘', c:'comms' },
+  { f:'ssh_client.html',          n:'SSH Client',          i:'💻', c:'comms' },
+  { f:'voice_terminal.html',      n:'Voice Terminal',      i:'🎙', c:'comms' },
+  { f:'gemini_terminal.html',     n:'Gemini Terminal',     i:'⌬',  c:'comms' },
+  { f:'gemini_log.html',          n:'Gemini Log',          i:'📜', c:'comms' },
+
+  // Field / outdoor
+  { f:'gps_app.html',             n:'GPS',                 i:'📍', c:'field' },
+  { f:'weather.html',             n:'Weather',             i:'☁',  c:'field' },
+
+  // Tools
+  { f:'calculator.html',          n:'Calculator',          i:'🔢', c:'tools' },
+  { f:'notepad.html',             n:'Notepad',             i:'📝', c:'tools' },
+  { f:'calendar.html',            n:'Calendar',            i:'📅', c:'tools' },
+  { f:'clock.html',               n:'Clock',               i:'🕐', c:'tools' },
+
+  // News
+  { f:'news_general.html',        n:'News General',        i:'📰', c:'news' },
+  { f:'news_world.html',          n:'News World',          i:'🌍', c:'news' },
+  { f:'news_tech.html',           n:'News Tech',           i:'💾', c:'news' },
+  { f:'news_finance.html',        n:'News Finance',        i:'💹', c:'news' },
+  { f:'news_local.html',          n:'News Local',          i:'📍', c:'news' },
+
+  // Sports
+  { f:'baseball.html',            n:'Baseball',            i:'⚾', c:'sports' },
+  { f:'nfl.html',                 n:'NFL',                 i:'🏈', c:'sports' },
+  { f:'nba.html',                 n:'NBA',                 i:'🏀', c:'sports' },
+  { f:'nhl.html',                 n:'NHL',                 i:'🏒', c:'sports' },
+  { f:'mls.html',                 n:'MLS',                 i:'⚽', c:'sports' },
+
+  // Media
+  { f:'audio_player.html',        n:'Audio Player',        i:'🎵', c:'media' },
+  { f:'audio_recorder.html',      n:'Audio Recorder',      i:'🎤', c:'media' },
+  { f:'etch.html',                n:'Etch',                i:'🎨', c:'media' },
+
+  // Games
+  { f:'chess.html',               n:'Chess',               i:'♛',  c:'games' },
+  { f:'galaga.html',              n:'Galaga',              i:'👾', c:'games' },
+  { f:'pacman.html',              n:'Pac-Man',             i:'🟡', c:'games' },
+  { f:'snake.html',               n:'Snake',               i:'🐍', c:'games' },
+  { f:'simcity.html',             n:'SimCity',             i:'🏙', c:'games' },
+  { f:'punky.html',               n:'Punky',               i:'🎸', c:'games' },
+  { f:'little_soul.html',         n:'Little Soul',         i:'✨', c:'games' },
+  { f:'static.html',              n:'Static',              i:'📺', c:'games' },
+
+  // System
+  { f:'system_info.html',         n:'System Info',         i:'⚙',  c:'system' },
+  { f:'filesystem.html',          n:'Filesystem',          i:'📁', c:'system' },
+  { f:'pin_screen.html',          n:'Pin Screen',          i:'🔒', c:'system' },
+  { f:'vault.html',               n:'Vault',               i:'🔐', c:'system' },
+  { f:'passgen.html',             n:'Pass Gen',            i:'🎲', c:'system' },
+  { f:'contacts.html',            n:'Contacts',            i:'👤', c:'system' },
+  { f:'habits.html',              n:'Habits',              i:'✅', c:'system' },
+  { f:'port_scanner.html',        n:'Port Scanner',        i:'🔌', c:'cyber'  },
+  { f:'barcode.html',             n:'Barcode',             i:'▊▊', c:'tools'  },
+  { f:'qr_tool.html',             n:'QR Tool',             i:'⬛', c:'tools'  },
+  { f:'video_player.html',        n:'Video Player',        i:'🎬', c:'media'  },
+  { f:'offline_maps.html',        n:'Offline Maps',        i:'🗺', c:'field'  },
+  { f:'compass.html',             n:'Compass',             i:'🧭', c:'field'  },
+  { f:'sun_moon.html',            n:'Sun & Moon',          i:'🌙', c:'field'  },
+  { f:'tides.html',               n:'Tides',               i:'🌊', c:'field'  },
+  { f:'flashlight.html',          n:'Flashlight',          i:'🔦', c:'tools'  },
+  { f:'breakout.html',            n:'Breakout',            i:'🟥', c:'games'  },
+  { f:'minesweeper.html',         n:'Minesweeper',         i:'💣', c:'games'  },
+  { f:'tetris.html',              n:'Tetris',              i:'🟦', c:'games'  },
+  { f:'body_metrics.html',        n:'Body Metrics',        i:'📊', c:'tools'  },
+];
+
+// ─────────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────────
+let activeFilter = 'all';
+let searchQuery  = '';
+
+// ─────────────────────────────────────────────────────────────
+//  RENDER
+// ─────────────────────────────────────────────────────────────
+function render() {
+  const grid = document.getElementById('grid');
+  const q    = searchQuery.toLowerCase().trim();
+
+  const filtered = APPS.filter(app => {
+    if (activeFilter === 'featured' && !app.featured) return false;
+    if (activeFilter !== 'all' && activeFilter !== 'featured' && app.c !== activeFilter) return false;
+    if (q && !app.n.toLowerCase().includes(q) && !app.c.includes(q)) return false;
+    return true;
+  });
+
+  document.getElementById('appCount').textContent = filtered.length + ' / ' + APPS.length;
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty">▮ NO MATCHES</div>';
+    return;
+  }
+
+  grid.innerHTML = filtered.map((app, i) => {
+    const idx = String(i + 1).padStart(2, '0');
+    return '<a class="app" data-cat="' + app.c + '" href="' + app.f + '" target="_blank" rel="noopener">' +
+      '<div class="app-meta">[' + idx + ']</div>' +
+      '<div class="app-icon">' + app.i + '</div>' +
+      '<div class="app-cat">' + app.c.toUpperCase() + '</div>' +
+      '<div class="app-name">' + app.n + '</div>' +
+    '</a>';
+  }).join('');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  EVENT WIRING
+// ─────────────────────────────────────────────────────────────
+document.getElementById('search').addEventListener('input', e => {
+  searchQuery = e.target.value;
+  render();
+});
+
+document.getElementById('search').addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    e.target.value = '';
+    searchQuery = '';
+    render();
+  }
+});
+
+document.addEventListener('keydown', e => {
+  // Slash to focus search (when not already focused)
+  if (e.key === '/' && document.activeElement !== document.getElementById('search')) {
+    e.preventDefault();
+    document.getElementById('search').focus();
+  }
+});
+
+document.querySelectorAll('.filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeFilter = btn.dataset.cat;
+    render();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────
+//  CLOCK
+// ─────────────────────────────────────────────────────────────
+function updateClock() {
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  const ss = String(d.getSeconds()).padStart(2, '0');
+  document.getElementById('clockPill').textContent = hh + ':' + mm + ':' + ss;
+}
+updateClock();
+setInterval(updateClock, 1000);
+
+// ─────────────────────────────────────────────────────────────
+//  BRIDGE STATUS
+//  Probe ws://127.0.0.1:8080 to show whether the edge bridge
+//  is running. Pure visual indicator - apps work without it.
+// ─────────────────────────────────────────────────────────────
+function checkBridge() {
+  const status = document.getElementById('bridgeStatus');
+  if (!status) return;
+  try {
+    const ws = new WebSocket((() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1' : host;
+    return `ws://${bridgeHost}:8080`;
+})());
+    const timer = setTimeout(() => {
+      try { ws.close(); } catch {}
+      status.textContent = 'BRIDGE OFFLINE';
+      status.previousElementSibling.style.background = 'var(--accent4)';
+      status.previousElementSibling.style.boxShadow = '0 0 10px var(--accent4)';
+    }, 2000);
+    ws.onopen = () => {
+      clearTimeout(timer);
+      ws.close();
+      status.textContent = 'BRIDGE ONLINE';
+      status.previousElementSibling.style.background = 'var(--accent3)';
+      status.previousElementSibling.style.boxShadow = '0 0 10px var(--accent3)';
+    };
+    ws.onerror = () => {
+      clearTimeout(timer);
+      status.textContent = 'BRIDGE OFFLINE';
+      status.previousElementSibling.style.background = 'var(--accent4)';
+      status.previousElementSibling.style.boxShadow = '0 0 10px var(--accent4)';
+    };
+  } catch {
+    status.textContent = 'BRIDGE OFFLINE';
+  }
+}
+checkBridge();
+setInterval(checkBridge, 15000);
+
+// ─────────────────────────────────────────────────────────────
+//  PLATFORM DETECT
+// ─────────────────────────────────────────────────────────────
+(function detectPlatform() {
+  const ua = navigator.userAgent;
+  let mode = 'WEB';
+  if (/Mac/.test(ua))      mode = 'MAC';
+  else if (/Linux/.test(ua)) mode = 'LINUX';
+  else if (/Android/.test(ua)) mode = 'ANDROID';
+  else if (/Windows/.test(ua)) mode = 'WIN';
+  else if (/iPhone|iPad/.test(ua)) mode = 'iOS';
+  document.getElementById('modeIndicator').textContent = 'MODE: ' + mode;
+})();
+
+// ─────────────────────────────────────────────────────────────
+//  GO
+// ─────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

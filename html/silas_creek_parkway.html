@@ -1,0 +1,2603 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS - silas_creek_parkway.html v1.0
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  Named for Silas Creek Parkway, Winston-Salem NC
+  (Ben Folds Five - "Hospital Song")
+  For Donna.
+-->
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>PISCES MOON // SILAS CREEK PARKWAY</title>
+<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Orbitron:wght@400;500;700;900&display=swap">
+<style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
+:root{
+  --bg:#020608;--bg2:#040c10;--bg3:#071018;
+  --panel-border:#0f2535;--accent:#4dd9ff;--accent3:#4dffa6;
+  --accent4:#ff5577;--gold:#ffd166;
+  --text:#c8e6f5;--text-bright:#e8f6ff;--text-dim:#5a8aa4;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%,   rgba(0,80,120,.35) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 20% 100%,  rgba(0,40,80,.25)  0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 80% 80%,   rgba(0,20,40,.2)   0%, transparent 50%),
+    #020608;
+  color:var(--text);
+  font-family:'DM Mono','Share Tech Mono',monospace;
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+}
+/* scanline overlay */
+body::after{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.08) 2px,rgba(0,0,0,.08) 4px);pointer-events:none;z-index:9999;}
+
+header{
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.07) 0%,
+    rgba(255,255,255,.02) 100%
+  );
+  backdrop-filter:blur(20px) saturate(1.5);
+  -webkit-backdrop-filter:blur(20px) saturate(1.5);
+  border-bottom:1px solid rgba(255,255,255,.1);
+  box-shadow:0 1px 0 rgba(255,255,255,.06), 0 4px 20px rgba(0,0,0,.5);
+  padding:7px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+}
+.logo{
+  font-family:'Outfit','Orbitron',sans-serif;
+  font-weight:600;
+  font-size:.95rem;
+  color:var(--accent);
+  letter-spacing:4px;
+  text-transform:uppercase;
+}
+.logo span{color:var(--accent3);}
+.hdr-right{display:flex;align-items:center;gap:10px;}
+.quality-badge{
+  font-family:'Outfit',sans-serif;font-weight:500;font-size:.65rem;letter-spacing:3px;
+  padding:4px 12px;
+  border:1px solid rgba(255,255,255,.12);
+  border-top:1px solid rgba(255,255,255,.2);
+  color:var(--text-dim);
+  background:linear-gradient(160deg,rgba(255,255,255,.07),rgba(0,0,0,.1));
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-radius:4px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 2px 6px rgba(0,0,0,.3);
+}
+.quality-badge.good{
+  border-color:rgba(77,255,166,.3);
+  border-top-color:rgba(77,255,166,.5);
+  color:var(--accent3);
+  background:linear-gradient(160deg,rgba(77,255,166,.12),rgba(77,255,166,.04));
+  box-shadow:inset 0 1px 0 rgba(77,255,166,.2),0 2px 12px rgba(77,255,166,.1);
+}
+.quality-badge.fair{
+  border-color:rgba(255,209,102,.3);
+  border-top-color:rgba(255,209,102,.5);
+  color:var(--gold);
+  background:linear-gradient(160deg,rgba(255,209,102,.12),rgba(255,209,102,.04));
+  box-shadow:inset 0 1px 0 rgba(255,209,102,.2),0 2px 12px rgba(255,209,102,.1);
+}
+.quality-badge.poor{
+  border-color:rgba(255,85,119,.3);
+  border-top-color:rgba(255,85,119,.5);
+  color:var(--accent4);
+  background:linear-gradient(160deg,rgba(255,85,119,.12),rgba(255,85,119,.04));
+  box-shadow:inset 0 1px 0 rgba(255,85,119,.2),0 2px 12px rgba(255,85,119,.1);
+}
+.monitor-dot{width:8px;height:8px;border-radius:50%;background:var(--text-dim);animation:none;}
+.monitor-dot.active{background:var(--accent3);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+.tabs{display:flex;gap:0;flex-shrink:0;}
+.tab{padding:6px 18px;font-size:.62rem;font-family:'Outfit',sans-serif;font-weight:500;letter-spacing:2px;cursor:pointer;border:1px solid var(--panel-border);background:transparent;color:var(--text-dim);margin-left:-1px;transition:all .15s;text-transform:uppercase;}
+.tab:hover,.tab.active{background:var(--bg3);color:var(--accent);border-color:var(--accent);}
+
+.main{flex:1;display:grid;grid-template-columns:220px 1fr;overflow:hidden;}
+.sidebar{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
+.content{display:flex;flex-direction:column;overflow:hidden;}
+
+/* sidebar */
+.sb-section{padding:12px;border-bottom:1px solid var(--panel-border);}
+.sb-label{
+  font-family:'Outfit',sans-serif;
+  font-weight:400;
+  font-size:.58rem;
+  letter-spacing:4px;
+  color:var(--text-dim);
+  margin-bottom:10px;
+  text-transform:uppercase;
+  opacity:.7;
+}
+
+/* Metric cell: fixed height box, label top, value fills middle, bar at bottom */
+.metric-cell{
+  height:68px;
+  /* Liquid glass base */
+  background:linear-gradient(
+    155deg,
+    rgba(255,255,255,.11) 0%,
+    rgba(255,255,255,.05) 35%,
+    rgba(0,0,0,.25) 100%
+  );
+  backdrop-filter:blur(20px) saturate(1.8) brightness(1.05);
+  -webkit-backdrop-filter:blur(20px) saturate(1.8) brightness(1.05);
+  border:1px solid rgba(255,255,255,.15);
+  border-top:1px solid rgba(255,255,255,.35);
+  border-bottom:1px solid rgba(0,0,0,.4);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.25),
+    inset 0 -1px 0 rgba(0,0,0,.3),
+    inset 1px 0 0 rgba(255,255,255,.05),
+    inset -1px 0 0 rgba(255,255,255,.05),
+    0 8px 32px rgba(0,0,0,.6),
+    0 2px 8px rgba(0,0,0,.4),
+    0 0 0 .5px rgba(255,255,255,.08);
+  padding:8px 10px 0 10px;
+  margin-bottom:6px;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+  border-radius:6px;
+  /* Subtle color tint from metric color, set per-cell */
+  transition:box-shadow .3s;
+}
+.metric-cell:last-of-type{margin-bottom:0;}
+/* Colored tint per metric */
+.metric-cell.dl{
+  background:linear-gradient(155deg,
+    rgba(77,217,255,.18) 0%,
+    rgba(77,217,255,.07) 35%,
+    rgba(0,0,0,.28) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.25),
+    inset 0 -1px 0 rgba(0,0,0,.3),
+    0 8px 32px rgba(0,0,0,.6),
+    0 0 24px rgba(77,217,255,.06),
+    0 0 0 .5px rgba(77,217,255,.15);
+}
+.metric-cell.ul{
+  background:linear-gradient(155deg,
+    rgba(77,255,166,.18) 0%,
+    rgba(77,255,166,.07) 35%,
+    rgba(0,0,0,.28) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.25),
+    inset 0 -1px 0 rgba(0,0,0,.3),
+    0 8px 32px rgba(0,0,0,.6),
+    0 0 24px rgba(77,255,166,.06),
+    0 0 0 .5px rgba(77,255,166,.15);
+}
+.metric-cell.lat{
+  background:linear-gradient(155deg,
+    rgba(255,209,102,.18) 0%,
+    rgba(255,209,102,.07) 35%,
+    rgba(0,0,0,.28) 100%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.25),
+    inset 0 -1px 0 rgba(0,0,0,.3),
+    0 8px 32px rgba(0,0,0,.6),
+    0 0 24px rgba(255,209,102,.06),
+    0 0 0 .5px rgba(255,209,102,.15);
+}
+/* Gloss sheen - pseudo element top edge catch-light */
+.metric-cell::before{
+  content:'';
+  position:absolute;
+  top:0; left:4%; right:4%;
+  height:1px;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,255,.4) 20%,
+    rgba(255,255,255,.75) 50%,
+    rgba(255,255,255,.4) 80%,
+    transparent 100%
+  );
+}
+/* Second softer glow band just below the catch-light */
+.metric-cell::after{
+  content:'';
+  position:absolute;
+  top:1px; left:10%; right:10%;
+  height:12px;
+  background:linear-gradient(180deg,
+    rgba(255,255,255,.07) 0%,
+    transparent 100%
+  );
+  pointer-events:none;
+}
+/* Inner glow when active (post-test) */
+.metric-cell.lit{
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.2),
+    inset 0 -1px 0 rgba(0,0,0,.2),
+    0 4px 20px rgba(0,0,0,.5),
+    0 0 24px rgba(77,217,255,.08);
+}
+.metric-name{
+  font-family:'Outfit',sans-serif;
+  font-weight:400;
+  font-size:.6rem;
+  letter-spacing:3px;
+  color:var(--text-dim);
+  line-height:1;
+  flex-shrink:0;
+  text-transform:uppercase;
+  opacity:.75;
+}
+.metric-value-row{
+  flex:1;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.metric-val{
+  font-family:'Orbitron',sans-serif;
+  font-size:1.8rem;
+  font-weight:500;
+  line-height:1;
+  letter-spacing:2px;
+  color:var(--text-bright);
+  margin-top:2px;
+  /* Soft text shadow - depth behind the glass */
+  text-shadow:0 0 30px currentColor, 0 0 60px currentColor, 0 1px 0 rgba(0,0,0,.6);
+}
+.metric-val.dl{color:var(--accent);}
+.metric-val.ul{color:var(--accent3);}
+.metric-val.ping{color:var(--gold);}
+.metric-unit{
+  font-family:'Outfit',sans-serif;
+  font-weight:300;
+  font-size:.58rem;
+  letter-spacing:2px;
+  color:var(--text-dim);
+  align-self:flex-end;
+  margin-bottom:5px;
+  text-transform:uppercase;
+  opacity:.7;
+}
+/* bar sits flush at cell bottom, no margin */
+.bar-wrap{
+  height:3px;
+  background:rgba(0,0,0,.35);
+  overflow:hidden;
+  position:absolute;
+  bottom:0;left:0;right:0;
+}
+.bar-fill{
+  height:100%;
+  transition:width .5s cubic-bezier(.4,0,.2,1);
+  background:linear-gradient(90deg, var(--accent), rgba(77,217,255,.6));
+  box-shadow:0 0 6px var(--accent);
+}
+.bar-fill.ul{
+  background:linear-gradient(90deg, var(--accent3), rgba(77,255,166,.6));
+  box-shadow:0 0 6px var(--accent3);
+}
+.bar-fill.ping{
+  background:linear-gradient(90deg, var(--gold), rgba(255,209,102,.6));
+  box-shadow:0 0 6px var(--gold);
+}
+
+/* session stat cells */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;}
+.stat-cell{
+  background:linear-gradient(
+    160deg,
+    rgba(255,255,255,.06) 0%,
+    rgba(255,255,255,.02) 50%,
+    rgba(0,0,0,.12) 100%
+  );
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.10);
+  border-top:1px solid rgba(255,255,255,.18);
+  border-bottom:1px solid rgba(0,0,0,.25);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.1),
+    0 2px 8px rgba(0,0,0,.3);
+  padding:8px 8px 6px 8px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  height:50px;
+  border-radius:5px;
+  position:relative;
+  overflow:hidden;
+}
+.stat-cell::before{
+  content:'';
+  position:absolute;
+  top:0; left:10%; right:10%;
+  height:1px;
+  background:linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,.3) 50%,
+    transparent
+  );
+}
+.stat-v{
+  font-family:'Orbitron',sans-serif;
+  font-size:.85rem;
+  font-weight:500;
+  color:var(--text-bright);
+  line-height:1;
+  letter-spacing:1px;
+  text-shadow:0 0 16px currentColor, 0 0 32px currentColor;
+}
+.stat-l{
+  font-family:'Outfit',sans-serif;
+  font-weight:300;
+  font-size:.5rem;
+  letter-spacing:3px;
+  color:var(--text-dim);
+  line-height:1;
+  text-transform:uppercase;
+  opacity:.65;
+}
+
+.pm-btn{padding:8px 12px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Outfit',sans-serif;font-weight:400;font-size:.65rem;cursor:pointer;letter-spacing:2px;transition:all .15s;width:100%;margin-bottom:4px;text-transform:uppercase;}
+.pm-btn:hover{border-color:var(--accent);color:var(--accent);}
+.pm-btn.primary{border-color:var(--accent3);color:var(--accent3);}
+.pm-btn.primary:hover{background:rgba(77,255,166,.08);}
+.pm-btn.danger{border-color:var(--accent4);color:var(--accent4);}
+.pm-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+select.pm-sel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--text);font-family:'Outfit',sans-serif;font-weight:400;font-size:.65rem;padding:7px 8px;outline:none;width:100%;cursor:pointer;margin-bottom:6px;border-radius:4px;letter-spacing:1px;}
+select.pm-sel:focus{border-color:var(--accent);}
+
+/* speed tab */
+.speed-tab{flex:1;display:grid;grid-template-rows:1fr 160px;overflow:hidden;padding:12px;gap:12px;}
+.chart-panel{
+  background:linear-gradient(
+    170deg,
+    rgba(255,255,255,.08) 0%,
+    rgba(255,255,255,.03) 30%,
+    rgba(0,0,0,.3) 100%
+  );
+  backdrop-filter:blur(16px) saturate(1.6);
+  -webkit-backdrop-filter:blur(16px) saturate(1.6);
+  border:1px solid rgba(255,255,255,.12);
+  border-top:1px solid rgba(255,255,255,.28);
+  border-bottom:1px solid rgba(0,0,0,.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.18),
+    inset 0 -1px 0 rgba(0,0,0,.25),
+    0 8px 40px rgba(0,0,0,.7),
+    0 2px 8px rgba(0,0,0,.4),
+    0 0 0 .5px rgba(255,255,255,.06);
+  border-radius:8px;
+  padding:12px;
+  display:flex;
+  flex-direction:column;
+  position:relative;
+  overflow:hidden;
+}
+.chart-panel::before{
+  content:'';
+  position:absolute;
+  top:0; left:3%; right:3%;
+  height:1px;
+  background:linear-gradient(90deg,
+    transparent 0%,
+    rgba(255,255,255,.3) 20%,
+    rgba(255,255,255,.65) 50%,
+    rgba(255,255,255,.3) 80%,
+    transparent 100%
+  );
+}
+.chart-panel::after{
+  content:'';
+  position:absolute;
+  top:1px; left:8%; right:8%;
+  height:20px;
+  background:linear-gradient(180deg,rgba(255,255,255,.05) 0%,transparent 100%);
+  pointer-events:none;
+}
+.chart-title{font-family:'Outfit',sans-serif;font-weight:400;font-size:.62rem;letter-spacing:3px;color:var(--text-dim);margin-bottom:8px;display:flex;gap:16px;text-transform:uppercase;opacity:.75;}
+.chart-legend{display:flex;gap:12px;}
+.leg-item{display:flex;align-items:center;gap:4px;font-size:.58rem;font-family:'Outfit',sans-serif;font-weight:300;letter-spacing:1px;}
+.leg-dot{width:8px;height:8px;border-radius:50%;}
+canvas{flex:1;width:100%!important;}
+
+/* log tab */
+.log-tab{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.log-header{padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-family:'Outfit',sans-serif;font-weight:400;font-size:.62rem;letter-spacing:3px;color:var(--text-dim);display:flex;justify-content:space-between;align-items:center;text-transform:uppercase;opacity:.75;}
+.log-list{flex:1;overflow-y:auto;}
+.log-row{display:grid;grid-template-columns:160px 80px 80px 60px 70px;gap:0;padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.62rem;align-items:center;font-family:'DM Mono','Share Tech Mono',monospace;}
+.log-row:hover{background:rgba(77,217,255,.03);}
+.log-row.header{font-family:'Outfit',sans-serif;font-weight:400;font-size:.55rem;letter-spacing:3px;color:var(--text-dim);background:rgba(8,15,20,.9);backdrop-filter:blur(8px);position:sticky;top:0;text-transform:uppercase;opacity:.7;}
+.q-good{color:var(--accent3);}
+.q-fair{color:var(--gold);}
+.q-poor{color:var(--accent4);}
+
+/* test animation */
+.testing-overlay{position:fixed;inset:0;background:rgba(5,10,14,.85);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:100;display:none;}
+.testing-overlay.active{display:flex;}
+.test-label{font-family:'Orbitron',monospace;font-size:1.2rem;color:var(--accent);letter-spacing:4px;}
+.test-sub{font-size:.65rem;color:var(--text-dim);letter-spacing:2px;}
+.test-progress{width:280px;height:4px;background:var(--bg3);border:1px solid var(--panel-border);overflow:hidden;}
+.test-fill{height:100%;background:var(--accent);transition:width .3s;}
+.spinner{width:40px;height:40px;border:2px solid var(--panel-border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ping history */
+.ping-history{display:flex;gap:3px;margin-top:6px;}
+.ping-dot{width:8px;height:8px;border-radius:1px;background:var(--bg3);flex-shrink:0;}
+.ping-dot.good{background:var(--accent3);}
+.ping-dot.fair{background:var(--gold);}
+.ping-dot.poor{background:var(--accent4);}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:12px;color:var(--text-dim);}
+.empty-icon{font-size:3rem;opacity:.3;}
+.empty-text{font-family:'Orbitron',monospace;font-size:.6rem;letter-spacing:3px;opacity:.5;}
+
+/* networks tab */
+.networks-tab{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.net-toolbar{padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:10px;flex-shrink:0;}
+.net-summary{font-family:'Outfit',sans-serif;font-size:.6rem;letter-spacing:2px;color:var(--text-dim);flex:1;}
+.net-table{flex:1;overflow-y:auto;}
+.net-row{
+  display:grid;
+  grid-template-columns:28px 180px 130px 50px 40px 70px 80px 1fr;
+  gap:0;
+  padding:7px 14px;
+  border-bottom:1px solid rgba(255,255,255,.03);
+  font-size:.6rem;
+  align-items:center;
+  font-family:'DM Mono','Share Tech Mono',monospace;
+  transition:background .1s;
+}
+.net-row:hover{background:rgba(255,255,255,.02);}
+.net-row.header{
+  font-family:'Outfit',sans-serif;
+  font-weight:400;
+  font-size:.52rem;
+  letter-spacing:2px;
+  color:var(--text-dim);
+  background:rgba(4,12,16,.9);
+  backdrop-filter:blur(8px);
+  position:sticky;
+  top:0;
+  text-transform:uppercase;
+  opacity:.7;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.net-ssid{color:var(--text-bright);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.net-ssid.hidden-net{color:var(--text-dim);font-style:italic;}
+.net-bssid{color:var(--text-dim);font-size:.55rem;}
+.net-vendor{color:var(--text-dim);font-size:.55rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.enc-badge{
+  font-family:'Outfit',sans-serif;
+  font-size:.46rem;
+  letter-spacing:1px;
+  padding:2px 5px;
+  border-radius:3px;
+  text-align:center;
+}
+.enc-badge.open{
+  border:1px solid rgba(255,85,119,.3);
+  color:var(--accent4);
+  background:rgba(255,85,119,.08);
+}
+.enc-badge.secure{
+  border:1px solid rgba(77,255,166,.2);
+  color:var(--accent3);
+  background:rgba(77,255,166,.05);
+}
+.rssi-bar-wrap{
+  width:100%;
+  height:4px;
+  background:rgba(0,0,0,.3);
+  border-radius:2px;
+  overflow:hidden;
+}
+.rssi-bar{height:100%;border-radius:2px;transition:width .4s;}
+.ch-badge{
+  font-family:'Orbitron',sans-serif;
+  font-size:.55rem;
+  color:var(--text-dim);
+  text-align:center;
+}
+.ch-badge.crowded{color:var(--accent4);}
+.ch-badge.busy{color:var(--gold);}
+.ch-badge.clear{color:var(--accent3);}
+
+/* channel congestion mini-chart */
+.ch-chart{padding:10px 14px;border-top:1px solid rgba(255,255,255,.05);flex-shrink:0;height:90px;position:relative;}
+.ch-chart-title{
+  font-family:'Outfit',sans-serif;
+  font-size:.5rem;
+  letter-spacing:3px;
+  color:var(--text-dim);
+  text-transform:uppercase;
+  margin-bottom:4px;
+  opacity:.65;
+}
+
+/* device view rows */
+.dev-row{grid-template-columns:28px 110px 130px 160px 90px 70px 60px !important;}
+.dev-offline{opacity:.45;}
+.dev-ip{color:var(--accent);font-family:'Orbitron',sans-serif;font-size:.6rem;font-weight:500;}
+.dev-hostname{color:var(--text-bright);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.status-online{color:var(--accent3);font-family:'Outfit',sans-serif;font-size:.5rem;letter-spacing:2px;}
+.status-offline{color:var(--text-dim);font-family:'Outfit',sans-serif;font-size:.5rem;letter-spacing:2px;}
+.status-broadcasting{color:#4dd9ff;font-family:'Outfit',sans-serif;font-size:.5rem;letter-spacing:2px;text-shadow:0 0 6px #4dd9ff;}
+.dev-ble .dev-ip{color:#4dd9ff !important;}
+.dev-ble{background:linear-gradient(90deg,rgba(77,217,255,.04),transparent 30%);}
+/* band badge */
+.band-badge{font-family:'Outfit',sans-serif;font-size:.46rem;letter-spacing:1px;padding:2px 5px;border-radius:3px;text-align:center;}
+.band-5g{border:1px solid rgba(77,217,255,.3);color:var(--accent);background:rgba(77,217,255,.06);}
+.band-24g{border:1px solid rgba(122,184,212,.2);color:var(--text-dim);background:rgba(122,184,212,.04);}
+/* view toggle buttons */
+.net-view-btn{padding:5px 14px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Outfit',sans-serif;font-weight:400;font-size:.58rem;cursor:pointer;letter-spacing:2px;text-transform:uppercase;transition:all .15s;margin:0;}
+.net-view-btn:hover,.net-view-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(77,217,255,.06);}
+/* AP rows use wider grid */
+.ap-row{grid-template-columns:28px 180px 130px 50px 40px 40px 70px 80px 1fr !important;}
+
+/* ── PACKETS TAB ─────────────────────────────────────── */
+.packets-tab{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.pkt-toolbar{padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.06);display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap;}
+.pkt-status{font-family:'Outfit',sans-serif;font-size:.6rem;letter-spacing:2px;flex:1;color:var(--text-dim);}
+.pkt-counters{display:flex;gap:12px;flex-shrink:0;}
+.pkt-counter{text-align:center;}
+.pkt-counter-val{font-family:'Orbitron',sans-serif;font-size:.9rem;color:var(--text-bright);line-height:1;text-shadow:0 0 12px currentColor;}
+.pkt-counter-val.threat{color:var(--accent4);text-shadow:0 0 16px var(--accent4),0 0 32px var(--accent4);}
+.pkt-counter-lbl{font-family:'Outfit',sans-serif;font-size:.42rem;letter-spacing:2px;color:var(--text-dim);margin-top:2px;text-transform:uppercase;}
+
+/* Threat alert bar */
+.threat-bar{padding:6px 14px;border-bottom:1px solid rgba(255,85,119,.2);background:rgba(255,85,119,.06);display:none;flex-shrink:0;}
+.threat-bar.active{display:flex;align-items:center;gap:10px;}
+.threat-icon{font-size:1rem;animation:throb .5s infinite alternate;}
+@keyframes throb{from{opacity:.5}to{opacity:1}}
+.threat-text{font-family:'Outfit',sans-serif;font-size:.62rem;letter-spacing:1px;color:var(--accent4);flex:1;}
+.threat-severity{font-family:'Orbitron',sans-serif;font-size:.5rem;letter-spacing:2px;padding:2px 8px;border:1px solid var(--accent4);color:var(--accent4);}
+
+/* Probe intelligence panel */
+.probe-panel{padding:8px 14px;border-bottom:1px solid rgba(255,255,255,.04);background:rgba(0,0,0,.2);flex-shrink:0;max-height:80px;overflow-y:auto;}
+.probe-title{font-family:'Outfit',sans-serif;font-size:.5rem;letter-spacing:3px;color:var(--text-dim);text-transform:uppercase;margin-bottom:4px;opacity:.65;}
+.probe-tags{display:flex;gap:4px;flex-wrap:wrap;}
+.probe-tag{font-family:'DM Mono',monospace;font-size:.54rem;padding:2px 8px;background:rgba(77,217,255,.06);border:1px solid rgba(77,217,255,.15);color:var(--accent);border-radius:3px;white-space:nowrap;}
+.probe-tag.hidden{background:rgba(255,85,119,.06);border-color:rgba(255,85,119,.2);color:var(--accent4);}
+
+/* Frame stream */
+.pkt-stream{flex:1;overflow-y:auto;font-family:'DM Mono','Share Tech Mono',monospace;font-size:.6rem;}
+.pkt-row{display:grid;grid-template-columns:72px 120px 120px 80px 1fr;gap:0;padding:4px 14px;border-bottom:1px solid rgba(255,255,255,.02);align-items:center;transition:background .1s;}
+.pkt-row:hover{background:rgba(255,255,255,.02);}
+.pkt-row.hdr{font-family:'Outfit',sans-serif;font-size:.5rem;letter-spacing:2px;color:var(--text-dim);background:rgba(4,12,16,.95);backdrop-filter:blur(8px);position:sticky;top:0;text-transform:uppercase;border-bottom:1px solid rgba(255,255,255,.07);padding:6px 14px;}
+.pkt-ts{color:var(--text-dim);}
+.pkt-src{color:var(--text);}
+.pkt-dst{color:var(--text-dim);}
+/* subtype badges */
+.pkt-type{display:inline-block;padding:1px 6px;border-radius:2px;font-family:'Outfit',sans-serif;font-size:.48rem;letter-spacing:1px;font-weight:500;text-transform:uppercase;}
+.pkt-type.probe-req  {background:rgba(77,217,255,.1); border:1px solid rgba(77,217,255,.3); color:var(--accent);}
+.pkt-type.probe-resp {background:rgba(77,217,255,.06);border:1px solid rgba(77,217,255,.2); color:var(--accent);}
+.pkt-type.ble_adv{color:#c89eff;}
+.pkt-type.beacon     {background:rgba(122,184,212,.05);border:1px solid rgba(122,184,212,.15);color:var(--text-dim);}
+.pkt-type.deauth     {background:rgba(255,85,119,.15);border:1px solid rgba(255,85,119,.4); color:var(--accent4);font-weight:700;}
+.pkt-type.disassoc   {background:rgba(255,85,119,.1); border:1px solid rgba(255,85,119,.3); color:var(--accent4);}
+.pkt-type.auth       {background:rgba(77,255,166,.08); border:1px solid rgba(77,255,166,.2);  color:var(--accent3);}
+.pkt-type.assoc-req  {background:rgba(77,255,166,.06); border:1px solid rgba(77,255,166,.15); color:var(--accent3);}
+.pkt-type.assoc-resp {background:rgba(77,255,166,.04); border:1px solid rgba(77,255,166,.1);  color:var(--accent3);}
+.pkt-type.action     {background:rgba(255,209,102,.08); border:1px solid rgba(255,209,102,.2); color:var(--gold);}
+.pkt-type.unknown    {background:rgba(42,88,112,.2);  border:1px solid rgba(42,88,112,.4);  color:var(--text-dim);}
+.pkt-detail{color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.56rem;}
+.pkt-detail .ssid{color:var(--text-bright);}
+
+/* channel selector */
+.ch-sel{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);color:var(--text);font-family:'Outfit',sans-serif;font-size:.6rem;padding:5px 8px;border-radius:4px;cursor:pointer;outline:none;}
+
+/* Debug overlay */
+#debugPanel {
+  position: fixed;
+  bottom: 0; right: 0;
+  width: 380px;
+  max-height: 280px;
+  background: rgba(2,6,8,.96);
+  border: 1px solid var(--accent);
+  border-top-color: rgba(77,217,255,.5);
+  border-right: none;
+  border-bottom: none;
+  border-radius: 6px 0 0 0;
+  z-index: 9999;
+  font-family: 'DM Mono', monospace;
+  font-size: .55rem;
+  display: none;
+  flex-direction: column;
+  backdrop-filter: blur(20px);
+  box-shadow: -4px -4px 30px rgba(77,217,255,.15);
+}
+#debugHeader {
+  padding: 6px 10px;
+  background: rgba(77,217,255,.08);
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: var(--accent);
+  letter-spacing: 2px;
+  font-size: .5rem;
+  cursor: pointer;
+}
+#debugLog {
+  overflow-y: auto;
+  flex: 1;
+  padding: 6px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.dlog-info    { color: #c8e6f5; }
+.dlog-ok      { color: #4dffa6; }
+.dlog-warn    { color: #ffd166; }
+.dlog-error   { color: #ff5577; }
+.dlog-msg     { color: #a0c8e0; }
+.dlog-time    { color: #5a8aa4; margin-right: 6px; }
+#debugToggle {
+  position: fixed;
+  bottom: 12px;
+  right: 12px;
+  z-index: 10000;
+  background: rgba(77,217,255,.1);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  font-size: .5rem;
+  letter-spacing: 2px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+#debugToggle:hover { background: rgba(77,217,255,.2); }
+</style>
+<script>
+// pm_transport.js - inlined for standalone operation
+// ═══════════════════════════════════════════════════════════════════════
+// PISCES MOON OS - TRANSPORT ABSTRACTION LAYER
+// Copyright (C) 2026 Eric Becker / Fluid Fortune
+// SPDX-License-Identifier: MIT
+// fluidfortune.com
+//
+// PURPOSE:
+//   Lets one HTML app talk to a T-Beam via EITHER:
+//     - WebSocket (Linux desktop with edge_bridge.py running)
+//     - Web Bluetooth (Android with BLE GATT firmware on T-Beam)
+//   Without the app knowing or caring which transport is in use.
+//
+// USAGE:
+//   const beam = new PMTransport({
+//       onMessage: msg => handleData(msg),
+//       onStatus: s => updateUI(s),
+//   });
+//   await beam.connect();      // auto-detects best transport
+//   beam.send({cmd: "scan"});  // works the same on both transports
+//
+// AUTO-DETECTION ORDER:
+//   1. If running in Trojan Horse APK (window.PiscesAndroid exists)
+//      → prefer Web Bluetooth (no Termux required)
+//   2. If WebSocket is available at ws://127.0.0.1:8080
+//      → use WebSocket (Linux + edge_bridge.py)
+//   3. If neither, prompt user to pick one or fail gracefully
+//
+// MANUAL OVERRIDE:
+//   const beam = new PMTransport({mode: "bluetooth"});  // force BLE
+//   const beam = new PMTransport({mode: "websocket"});  // force WS
+// ═══════════════════════════════════════════════════════════════════════
+
+const PM_BLE_SERVICE_UUID         = "8b5e0001-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_DATA_CHAR_UUID       = "8b5e0002-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_COMMAND_CHAR_UUID    = "8b5e0003-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_STATUS_CHAR_UUID     = "8b5e0004-7c34-4a91-bd5c-1a2e9d6f8c4a";
+
+const PM_WS_DEFAULT_URL = (() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1' : host;
+    return `ws://${bridgeHost}:8080`;
+})();
+
+class PMTransport {
+    /**
+     * @param {Object} opts
+     * @param {Function} opts.onMessage - Called for every data packet from T-Beam
+     * @param {Function} opts.onStatus - Called when connection state changes
+     * @param {string} [opts.mode] - "auto" | "websocket" | "bluetooth"
+     * @param {string} [opts.wsUrl] - Override WebSocket URL
+     */
+    constructor(opts = {}) {
+        this.onMessage = opts.onMessage || (() => {});
+        this.onStatus  = opts.onStatus  || (() => {});
+        this.mode      = opts.mode      || "auto";
+        this.wsUrl     = opts.wsUrl     || PM_WS_DEFAULT_URL;
+
+        // State
+        this.transport = null;
+        this.connected = false;
+        this.activeMode = null;
+        this.ws = null;
+        this.bleDevice = null;
+        this.bleServer = null;
+        this.bleService = null;
+        this.bleDataChar = null;
+        this.bleCommandChar = null;
+    }
+
+    /**
+     * Connect to the T-Beam. Auto-detects transport unless mode was set.
+     * Returns a promise that resolves to {mode: "websocket"|"bluetooth"} on success.
+     */
+    async connect() {
+        let chosenMode = this.mode;
+
+        if (chosenMode === "auto") {
+            chosenMode = await this._autoDetectBestTransport();
+        }
+
+        this._status("connecting", `Trying ${chosenMode}...`);
+
+        try {
+            if (chosenMode === "bluetooth") {
+                await this._connectBluetooth();
+            } else if (chosenMode === "websocket") {
+                try {
+                    await this._connectWebSocket();
+                } catch (wsErr) {
+                    // WebSocket failed - try Bluetooth if available
+                    if (navigator.bluetooth) {
+                        chosenMode = "bluetooth";
+                        await this._connectBluetooth();
+                    } else {
+                        throw wsErr;
+                    }
+                }
+            } else {
+                throw new Error(`Unknown transport mode: ${chosenMode}`);
+            }
+
+            this.activeMode = chosenMode;
+            this.connected = true;
+            this._status("connected", `Connected via ${chosenMode}`);
+            return {mode: chosenMode};
+        } catch (e) {
+            this._status("error", e.message);
+            throw e;
+        }
+    }
+
+    /**
+     * Send a command/message to the T-Beam.
+     * @param {Object|string} data - JSON-serializable object or string
+     */
+    async send(data) {
+        if (!this.connected) {
+            throw new Error("Not connected. Call connect() first.");
+        }
+
+        const payload = typeof data === "string" ? data : JSON.stringify(data);
+
+        if (this.activeMode === "websocket") {
+            this.ws.send(payload);
+        } else if (this.activeMode === "bluetooth") {
+            // BLE characteristic writes have a max packet size (~512 bytes)
+            // For larger payloads we'd chunk, but commands should be small.
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(payload);
+            if (bytes.length > 512) {
+                throw new Error("BLE command too large (max 512 bytes)");
+            }
+            await this.bleCommandChar.writeValue(bytes);
+        }
+    }
+
+    /**
+     * Cleanly disconnect.
+     */
+    async disconnect() {
+        this.connected = false;
+        if (this.ws) {
+            try { this.ws.close(); } catch {}
+            this.ws = null;
+        }
+        if (this.bleDevice && this.bleDevice.gatt.connected) {
+            try { this.bleDevice.gatt.disconnect(); } catch {}
+        }
+        this.bleDevice = null;
+        this.activeMode = null;
+        this._status("disconnected", "Disconnected");
+    }
+
+    /**
+     * Returns capabilities of the current connection.
+     * Apps can check what's possible before trying.
+     */
+    capabilities() {
+        return {
+            connected: this.connected,
+            mode: this.activeMode,
+            bandwidth: this.activeMode === "websocket" ? "high" : "low",
+            // BLE realistically handles ~10-50 KB/s; WebSocket much higher
+            maxPacketSize: this.activeMode === "bluetooth" ? 512 : 65536,
+            bidirectional: true,
+        };
+    }
+
+    // ── PRIVATE ───────────────────────────────────────────────────────
+
+    async _autoDetectBestTransport() {
+        // Heuristic: if we're in the Pisces Moon Android APK, prefer BLE.
+        // Otherwise, prefer WebSocket (Linux desktop with edge bridge).
+        const isAndroidAPK = typeof window !== "undefined" &&
+                             window.PiscesAndroid &&
+                             typeof window.PiscesAndroid.bridgeAvailable === "function";
+
+        if (isAndroidAPK) {
+            // Check if Web Bluetooth is available
+            if (navigator.bluetooth) return "bluetooth";
+            // Fall back to WebSocket (Termux bridge running)
+            return "websocket";
+        }
+
+        // Non-APK contexts (Linux desktop / macOS Chrome):
+        // Skip the probe-then-connect dance - it caused a race condition
+        // where the close from the probe interfered with the next open.
+        // Just try to connect directly. If it fails, fall back to BLE.
+        return "websocket";
+    }
+
+    async _probeWebSocket() {
+        return new Promise(resolve => {
+            try {
+                const probe = new WebSocket(this.wsUrl);
+                const timer = setTimeout(() => {
+                    try { probe.close(); } catch {}
+                    resolve(false);
+                }, 1500);
+                probe.onopen = () => {
+                    clearTimeout(timer);
+                    try { probe.close(); } catch {}
+                    resolve(true);
+                };
+                probe.onerror = () => {
+                    clearTimeout(timer);
+                    resolve(false);
+                };
+            } catch {
+                resolve(false);
+            }
+        });
+    }
+
+    async _connectWebSocket() {
+        return new Promise((resolve, reject) => {
+            this.ws = new WebSocket(this.wsUrl);
+
+            this.ws.onopen = () => resolve();
+            this.ws.onerror = () => reject(new Error(`WebSocket failed at ${this.wsUrl}`));
+
+            this.ws.onmessage = ev => {
+                let data;
+                try {
+                    data = JSON.parse(ev.data);
+                } catch {
+                    data = {type: "raw", data: ev.data};
+                }
+                this.onMessage(data);
+            };
+
+            this.ws.onclose = () => {
+                if (this.connected) {
+                    this.connected = false;
+                    this._status("disconnected", "WebSocket closed");
+                }
+            };
+        });
+    }
+
+    async _connectBluetooth() {
+        if (!navigator.bluetooth) {
+            throw new Error("Web Bluetooth not supported in this browser");
+        }
+
+        // Show the system pairing dialog. User picks T-Beam from list.
+        this.bleDevice = await navigator.bluetooth.requestDevice({
+            filters: [
+                {services: [PM_BLE_SERVICE_UUID]},
+                {namePrefix: "PiscesMoon"},
+                {namePrefix: "T-Beam"},
+            ],
+            optionalServices: [PM_BLE_SERVICE_UUID],
+        });
+
+        // Listen for unexpected disconnections
+        this.bleDevice.addEventListener("gattserverdisconnected", () => {
+            if (this.connected) {
+                this.connected = false;
+                this._status("disconnected", "T-Beam disconnected");
+            }
+        });
+
+        // Connect to the GATT server on the T-Beam
+        this.bleServer = await this.bleDevice.gatt.connect();
+        this.bleService = await this.bleServer.getPrimaryService(PM_BLE_SERVICE_UUID);
+
+        // Get the data characteristic (T-Beam → tablet)
+        this.bleDataChar = await this.bleService.getCharacteristic(PM_BLE_DATA_CHAR_UUID);
+        await this.bleDataChar.startNotifications();
+        this.bleDataChar.addEventListener("characteristicvaluechanged", ev => {
+            const decoder = new TextDecoder();
+            const text = decoder.decode(ev.target.value);
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                data = {type: "raw", data: text};
+            }
+            this.onMessage(data);
+        });
+
+        // Get the command characteristic (tablet → T-Beam)
+        this.bleCommandChar = await this.bleService.getCharacteristic(PM_BLE_COMMAND_CHAR_UUID);
+
+        // Optional: status characteristic
+        try {
+            const statusChar = await this.bleService.getCharacteristic(PM_BLE_STATUS_CHAR_UUID);
+            await statusChar.startNotifications();
+            statusChar.addEventListener("characteristicvaluechanged", ev => {
+                const decoder = new TextDecoder();
+                const text = decoder.decode(ev.target.value);
+                this._status("device_status", text);
+            });
+        } catch {
+            // Status char is optional
+        }
+    }
+
+    _status(state, message) {
+        this.onStatus({state, message, mode: this.activeMode, timestamp: Date.now()});
+    }
+}
+
+// ── Convenience global ─────────────────────────────────────────────────
+if (typeof window !== "undefined") {
+    window.PMTransport = PMTransport;
+    window.PM_BLE_SERVICE_UUID = PM_BLE_SERVICE_UUID;
+}
+
+</script>
+</head><body>
+
+<header>
+  <div class="logo">📡 <span>SILAS CREEK</span> PARKWAY</div>
+  <div class="hdr-right">
+    <div class="tabs">
+      <button class="tab active" onclick="showTab('speed',this)">SPEED</button>
+      <button class="tab" onclick="showTab('log',this)">LOG</button>
+      <button class="tab" onclick="showTab('networks',this)">NETWORKS</button>
+      <button class="tab" onclick="showTab('packets',this)">PACKETS</button>
+    </div>
+    <div class="quality-badge" id="qualityBadge">NO DATA</div>
+    <div class="quality-badge" id="edgeBadge" style="font-size:.5rem">EDGE OFFLINE</div>
+    <div class="monitor-dot" id="monitorDot"></div>
+  </div>
+</header>
+
+<div class="main">
+  <!-- sidebar -->
+  <div class="sidebar">
+    <div class="sb-section">
+      <div class="sb-label">LIVE METRICS</div>
+      <div class="metric-cell dl">
+        <div class="metric-name">DOWNLOAD</div>
+        <div class="metric-value-row">
+          <span class="metric-val dl" id="dlVal">--.-</span>
+          <span class="metric-unit">Mbps</span>
+        </div>
+        <div class="bar-wrap"><div class="bar-fill" id="dlBar" style="width:0%"></div></div>
+      </div>
+      <div class="metric-cell ul">
+        <div class="metric-name">UPLOAD</div>
+        <div class="metric-value-row">
+          <span class="metric-val ul" id="ulVal">--.-</span>
+          <span class="metric-unit">Mbps</span>
+        </div>
+        <div class="bar-wrap"><div class="bar-fill ul" id="ulBar" style="width:0%"></div></div>
+      </div>
+      <div class="metric-cell lat">
+        <div class="metric-name">LATENCY</div>
+        <div class="metric-value-row">
+          <span class="metric-val ping" id="pingVal">---</span>
+          <span class="metric-unit">ms</span>
+        </div>
+        <div class="bar-wrap"><div class="bar-fill ping" id="pingBar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">SESSION</div>
+      <div class="stat-grid">
+        <div class="stat-cell">
+          <div class="stat-v" id="avgDl">--</div>
+          <div class="stat-l">AVG DL</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-v" id="testCount">0</div>
+          <div class="stat-l">TESTS</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-v" id="maxDl">--</div>
+          <div class="stat-l">MAX DL</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-v" id="minDl">--</div>
+          <div class="stat-l">MIN DL</div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="sb-label">PING HISTORY</div>
+        <div class="ping-history" id="pingHistory"></div>
+      </div>
+    </div>
+
+    <div class="sb-section" style="flex:1;display:flex;flex-direction:column;gap:4px;">
+      <div class="sb-label">AUTO-TEST</div>
+      <select class="pm-sel" id="autoInterval" onchange="setAutoTest(this.value)">
+        <option value="0">Manual only</option>
+        <option value="60">Every 1 min</option>
+        <option value="120">Every 2 min</option>
+        <option value="300" selected>Every 5 min</option>
+        <option value="600">Every 10 min</option>
+      </select>
+      <button class="pm-btn primary" id="runBtn" onclick="runTest()">RUN SPEED TEST</button>
+      <div class="sb-label" style="margin-top:6px">EXPORT DATA</div>
+      <button class="pm-btn" onclick="exportCSV()">CSV</button>
+      <button class="pm-btn" onclick="exportJSON()">JSON</button>
+      <button class="pm-btn danger" onclick="clearData()">CLEAR</button>
+    </div>
+  </div>
+
+  <!-- content area -->
+  <div class="content">
+    <!-- Speed tab -->
+    <div id="tab-speed" class="speed-tab">
+      <div class="chart-panel">
+        <div class="chart-title">
+          SPEED OVER TIME
+          <div class="chart-legend">
+            <div class="leg-item"><div class="leg-dot" style="background:#4dd9ff"></div>Download</div>
+            <div class="leg-item"><div class="leg-dot" style="background:#4dffa6"></div>Upload</div>
+            <div class="leg-item"><div class="leg-dot" style="background:#ffd166;border-radius:0"></div>Ping/10</div>
+          </div>
+        </div>
+        <canvas id="speedChart"></canvas>
+      </div>
+      <div class="chart-panel">
+        <div class="chart-title">DOWNLOAD DISTRIBUTION</div>
+        <canvas id="histChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Log tab -->
+    <div id="tab-log" style="display:none;flex:1;overflow:hidden;flex-direction:column;">
+      <div class="log-header">
+        TEST LOG
+        <button class="pm-btn" style="width:auto;margin:0;padding:4px 12px" onclick="exportCSV()">EXPORT CSV</button>
+      </div>
+      <div class="log-row header">
+        <span>TIMESTAMP</span><span>DL (Mbps)</span><span>UL (Mbps)</span><span>PING</span><span>QUALITY</span>
+      </div>
+      <div class="log-list" id="logList">
+        <div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">NO TESTS YET</div></div>
+      </div>
+    </div>
+
+    <!-- Networks tab -->
+    <div id="tab-networks" style="display:none;flex:1;overflow:hidden;flex-direction:column;" class="networks-tab">
+      <div class="net-toolbar">
+        <button class="pm-btn primary" style="width:auto;margin:0;padding:5px 16px" onclick="triggerScan()">SCAN NOW</button>
+        <button class="net-view-btn active" style="width:auto;margin:0;padding:5px 14px" onclick="switchNetView('aps',this)">NETWORKS</button>
+        <button class="net-view-btn" style="width:auto;margin:0;padding:5px 14px" onclick="switchNetView('devices',this)">AROUND YOU</button>
+        <div class="net-summary" id="netSummary">Connect edge node to scan</div>
+        <button class="pm-btn" style="width:auto;margin:0;padding:5px 12px;font-size:.5rem" onclick="exportNetCSV()">CSV</button>
+      </div>
+
+      <!-- AP view -->
+      <div id="apSection" style="display:contents">
+        <div class="net-row header" style="grid-template-columns:28px 180px 130px 50px 40px 40px 70px 80px 1fr">
+          <span></span><span>SSID</span><span>BSSID</span>
+          <span>RSSI</span><span>CH</span><span>BAND</span>
+          <span>SECURITY</span><span>VENDOR</span><span>SIGNAL</span>
+        </div>
+        <div class="net-table" id="apTable">
+          <div class="empty-state"><div class="empty-icon">📡</div><div class="empty-text">EDGE NODE OFFLINE</div></div>
+        </div>
+      </div>
+
+      <!-- Device view -->
+      <div id="deviceSection" style="display:none">
+        <div class="net-row header" style="grid-template-columns:28px 110px 130px 160px 90px 70px 60px">
+          <span></span><span>IP/TYPE</span><span>MAC</span>
+          <span>NAME</span><span>VENDOR</span>
+          <span>SOURCE</span><span>SIGNAL</span>
+        </div>
+        <div class="net-table" id="deviceTable">
+          <div class="empty-state"><div class="empty-icon">📡</div><div class="empty-text">SCAN TO DISCOVER DEVICES AROUND YOU</div></div>
+        </div>
+      </div>
+
+      <!-- Channel congestion chart -->
+      <div class="ch-chart">
+        <div class="ch-chart-title">CHANNEL CONGESTION (2.4GHz)</div>
+        <canvas id="chChart" style="width:100%;height:60px"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PACKETS TAB (outside main grid, full-screen overlay style) -->
+<div id="tab-packets" style="display:none;position:fixed;inset:52px 0 0 0;flex-direction:column;background:var(--bg);z-index:10;" class="packets-tab">
+
+  <!-- toolbar -->
+  <div class="pkt-toolbar">
+    <button class="pm-btn primary" id="pktStartBtn" style="width:auto;margin:0;padding:5px 16px" onclick="toggleCapture()">START CAPTURE</button>
+    <select class="ch-sel" id="chSel">
+      <option value="">All channels</option>
+      <option value="1">Ch 1</option><option value="2">Ch 2</option>
+      <option value="3">Ch 3</option><option value="4">Ch 4</option>
+      <option value="5">Ch 5</option><option value="6">Ch 6</option>
+      <option value="7">Ch 7</option><option value="8">Ch 8</option>
+      <option value="9">Ch 9</option><option value="10">Ch 10</option>
+      <option value="11">Ch 11</option><option value="36">Ch 36</option>
+      <option value="40">Ch 40</option><option value="44">Ch 44</option>
+      <option value="48">Ch 48</option><option value="149">Ch 149</option>
+      <option value="153">Ch 153</option><option value="157">Ch 157</option>
+      <option value="161">Ch 161</option>
+    </select>
+    <label style="display:flex;align-items:center;gap:5px;font-family:Outfit,sans-serif;font-size:.58rem;color:var(--text-dim);cursor:pointer">
+      <input type="checkbox" id="showBeacons" onchange="toggleBeacons(this.checked)" style="accent-color:var(--accent)">
+      Show beacons
+    </label>
+    <div class="pkt-status" id="pktStatus">Edge node offline</div>
+    <div class="pkt-counters">
+      <div class="pkt-counter"><div class="pkt-counter-val" id="pktFrameCount">0</div><div class="pkt-counter-lbl">Frames</div></div>
+      <div class="pkt-counter"><div class="pkt-counter-val threat" id="pktThreatCount">0</div><div class="pkt-counter-lbl">Threats</div></div>
+      <div class="pkt-counter"><div class="pkt-counter-val" id="pktProbeCount">0</div><div class="pkt-counter-lbl">Probes</div></div>
+    </div>
+    <button class="pm-btn danger" style="width:auto;margin:0;padding:5px 12px" onclick="clearPackets()">CLEAR</button>
+  </div>
+
+  <!-- threat alert bar -->
+  <div class="threat-bar" id="threatBar">
+    <div class="threat-icon">⚠</div>
+    <div class="threat-text" id="threatText">No threats detected</div>
+    <div class="threat-severity" id="threatSeverity">INFO</div>
+  </div>
+
+  <!-- probe intelligence -->
+  <div class="probe-panel">
+    <div class="probe-title">Probe Requests - Devices Looking For</div>
+    <div class="probe-tags" id="probeTags"></div>
+  </div>
+
+  <!-- column headers -->
+  <div class="pkt-row hdr">
+    <span>TIME</span>
+    <span>SOURCE</span>
+    <span>DEST</span>
+    <span>TYPE</span>
+    <span>DETAIL</span>
+  </div>
+
+  <!-- live frame stream -->
+  <div class="pkt-stream" id="pktStream">
+    <div class="empty-state" id="pktEmpty">
+      <div class="empty-icon">📦</div>
+      <div class="empty-text">START CAPTURE TO SEE FRAMES</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- testing overlay -->
+<div class="testing-overlay" id="testingOverlay">
+  <div class="spinner"></div>
+  <div class="test-label" id="testLabel">TESTING</div>
+  <div class="test-sub" id="testSub">Connecting to endpoint...</div>
+  <div class="test-progress"><div class="test-fill" id="testFill" style="width:0%"></div></div>
+</div>
+
+<script>
+// ================================================================
+// SILAS CREEK PARKWAY - WiFi Speed Monitor
+// Real speed tests via Cloudflare public endpoints
+// No backend required. Clark Beddows Protocol compliant.
+// localStorage: pm_silas_creek_parkway
+// ================================================================
+
+const STORE = 'pm_silas_creek_parkway';
+const DL_ENDPOINT = 'https://speed.cloudflare.com/__down?bytes=2000000'; // 2MB
+const UL_ENDPOINT = 'https://speed.cloudflare.com/__up';
+const PING_ENDPOINT = 'https://cloudflare.com/cdn-cgi/trace';
+
+let results = [];
+let autoTimer = null;
+let isTesting = false;
+let chartData = { dl:[], ul:[], ping:[] };
+const MAX_CHART_POINTS = 60;
+
+// Quality thresholds
+function quality(dl, ping) {
+  if (dl >= 15 && ping < 50)  return 'good';
+  if (dl >= 5  && ping < 100) return 'fair';
+  return 'poor';
+}
+
+// ── SPEED TEST ENGINE ──────────────────────────────────────────
+
+async function measurePing() {
+  const times = [];
+  for (let i = 0; i < 4; i++) {
+    try {
+      const t0 = performance.now();
+      await fetch(PING_ENDPOINT + '?t=' + Date.now() + i, { cache:'no-store', mode:'no-cors' });
+      times.push(performance.now() - t0);
+    } catch { times.push(999); }
+  }
+  // Drop highest, average the rest
+  times.sort((a,b)=>a-b);
+  const trimmed = times.slice(0, -1);
+  return Math.round(trimmed.reduce((a,b)=>a+b,0) / trimmed.length);
+}
+
+async function measureDownload() {
+  const url = DL_ENDPOINT + '&t=' + Date.now();
+  const t0 = performance.now();
+  try {
+    const res = await fetch(url, { cache:'no-store' });
+    const buf = await res.arrayBuffer();
+    const elapsed = (performance.now() - t0) / 1000; // seconds
+    const bytes = buf.byteLength;
+    return Math.round((bytes * 8 / elapsed / 1e6) * 10) / 10; // Mbps
+  } catch {
+    // Fallback: smaller payload
+    try {
+      const url2 = 'https://speed.cloudflare.com/__down?bytes=500000&t=' + Date.now();
+      const t1 = performance.now();
+      const r2 = await fetch(url2, { cache:'no-store' });
+      const b2 = await r2.arrayBuffer();
+      const e2 = (performance.now() - t1) / 1000;
+      return Math.round((b2.byteLength * 8 / e2 / 1e6) * 10) / 10;
+    } catch { return 0; }
+  }
+}
+
+async function measureUpload() {
+  // Cloudflare __up blocks null-origin POST (local file CORS restriction).
+  // Strategy: use XMLHttpRequest which exposes upload progress events,
+  // letting us measure throughput via the time to complete the send phase.
+  // Falls back to fetch against httpbin if XHR also fails.
+
+  const CHUNK = 65536;
+  const SIZE  = 500000;
+  const payload = new Uint8Array(SIZE);
+  for (let i = 0; i < SIZE; i += CHUNK) {
+    crypto.getRandomValues(payload.subarray(i, Math.min(i + CHUNK, SIZE)));
+  }
+
+  // Method 1: XHR upload timing (measures actual send time, not round-trip)
+  try {
+    const result = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', UL_ENDPOINT + '?t=' + Date.now(), true);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+
+      let uploadStart = null;
+      let uploadEnd   = null;
+
+      xhr.upload.onloadstart = () => { uploadStart = performance.now(); };
+      xhr.upload.onload      = () => { uploadEnd   = performance.now(); };
+
+      xhr.onreadystatechange = () => {
+        if (xhr.readyState === 4) {
+          if (uploadEnd && uploadStart) {
+            const elapsed = (uploadEnd - uploadStart) / 1000;
+            if (elapsed > 0.05) {
+              resolve(Math.round((SIZE * 8 / elapsed / 1e6) * 10) / 10);
+            } else {
+              resolve(0);
+            }
+          } else {
+            resolve(0);
+          }
+        }
+      };
+
+      xhr.onerror = () => resolve(0);
+      xhr.ontimeout = () => resolve(0);
+      xhr.timeout = 15000;
+
+      xhr.send(new Blob([payload]));
+    });
+
+    if (result > 0) return result;
+  } catch(e) {
+    console.warn('XHR upload failed:', e);
+  }
+
+  // Method 2: fetch to httpbin (accepts POST from any origin)
+  try {
+    const t0 = performance.now();
+    await fetch('https://httpbin.org/post', {
+      method: 'POST',
+      body: new Blob([payload.subarray(0, 200000)]), // 200KB to httpbin
+      cache: 'no-store',
+    });
+    const elapsed = (performance.now() - t0) / 1000;
+    if (elapsed > 0.1) {
+      return Math.round((200000 * 8 / elapsed / 1e6) * 10) / 10;
+    }
+  } catch(e) {
+    console.warn('httpbin upload failed:', e);
+  }
+
+  return 0;
+}
+
+async function runTest() {
+  if (isTesting) return;
+  isTesting = true;
+
+  const overlay = document.getElementById('testingOverlay');
+  const label   = document.getElementById('testLabel');
+  const sub     = document.getElementById('testSub');
+  const fill    = document.getElementById('testFill');
+  const btn     = document.getElementById('runBtn');
+
+  btn.disabled = true;
+  overlay.classList.add('active');
+  document.getElementById('monitorDot').classList.add('active');
+
+  let ping = 0, dl = 0, ul = 0;
+
+  try {
+    // Step 1: Ping
+    label.textContent = 'MEASURING LATENCY';
+    sub.textContent = 'Pinging cloudflare.com...';
+    fill.style.width = '10%';
+    ping = await measurePing();
+    fill.style.width = '30%';
+
+    // Step 2: Download
+    label.textContent = 'DOWNLOAD TEST';
+    sub.textContent = 'Fetching 2MB from Cloudflare...';
+    fill.style.width = '35%';
+    dl = await measureDownload();
+    fill.style.width = '70%';
+
+    // Step 3: Upload
+    label.textContent = 'UPLOAD TEST';
+    sub.textContent = 'Sending 500KB to Cloudflare...';
+    fill.style.width = '75%';
+    ul = await measureUpload();
+    fill.style.width = '100%';
+
+    // Step 4: Record
+    const q = quality(dl, ping);
+    const result = {
+      timestamp: new Date().toISOString(),
+      download: dl,
+      upload: ul,
+      ping,
+      quality: q
+    };
+
+    results.unshift(result);
+    save();
+    updateUI(result);
+
+  } catch(e) {
+    console.error('Test failed:', e);
+    sub.textContent = 'Test failed - check connection';
+  } finally {
+    setTimeout(() => {
+      overlay.classList.remove('active');
+      label.textContent = 'TESTING';
+      fill.style.width = '0%';
+      btn.disabled = false;
+      isTesting = false;
+    }, 600);
+  }
+}
+
+// ── UI UPDATE ──────────────────────────────────────────────────
+
+function updateUI(result) {
+  const { download:dl, upload:ul, ping, quality:q } = result;
+
+  // Live metrics
+  document.getElementById('dlVal').textContent   = dl.toFixed(1);
+  document.getElementById('ulVal').textContent   = ul.toFixed(1);
+  document.getElementById('pingVal').textContent = ping;
+
+  // Bars (max reference: 100Mbps DL, 50Mbps UL, 200ms ping)
+  document.getElementById('dlBar').style.width   = Math.min(100, dl/100*100) + '%';
+  document.getElementById('ulBar').style.width   = Math.min(100, ul/50*100)  + '%';
+  document.getElementById('pingBar').style.width = Math.min(100, (200-Math.min(ping,200))/200*100) + '%';
+
+  // Quality badge
+  const badge = document.getElementById('qualityBadge');
+  badge.textContent = q.toUpperCase();
+  badge.className = 'quality-badge ' + q;
+
+  // Session stats
+  const dls = results.map(r=>r.download).filter(Boolean);
+  if (dls.length) {
+    const avg = (dls.reduce((a,b)=>a+b,0)/dls.length).toFixed(1);
+    document.getElementById('avgDl').textContent   = avg;
+    document.getElementById('maxDl').textContent   = Math.max(...dls).toFixed(1);
+    document.getElementById('minDl').textContent   = Math.min(...dls).toFixed(1);
+    document.getElementById('testCount').textContent = dls.length;
+  }
+
+  // Ping history dots
+  const hist = document.getElementById('pingHistory');
+  const recent = results.slice(0,20).reverse();
+  hist.innerHTML = recent.map(r =>
+    `<div class="ping-dot ${r.quality}"></div>`
+  ).join('');
+
+  // Chart data
+  chartData.dl.push(dl);
+  chartData.ul.push(ul);
+  chartData.ping.push(ping);
+  if (chartData.dl.length > MAX_CHART_POINTS) {
+    chartData.dl.shift(); chartData.ul.shift(); chartData.ping.shift();
+  }
+
+  drawSpeedChart();
+  drawHistChart();
+  renderLog();
+}
+
+// ── CANVAS CHARTS ──────────────────────────────────────────────
+
+function drawSpeedChart() {
+  const canvas = document.getElementById('speedChart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.offsetWidth;
+  const H = canvas.height = canvas.offsetHeight;
+  const PAD = { top:10, bottom:24, left:40, right:12 };
+  const w = W - PAD.left - PAD.right;
+  const h = H - PAD.top - PAD.bottom;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#080f14';
+  ctx.fillRect(0,0,W,H);
+
+  const dl = chartData.dl, ul = chartData.ul, ping = chartData.ping;
+  if (!dl.length) {
+    ctx.fillStyle = '#2a5870';
+    ctx.font = '.55rem Share Tech Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Run a speed test to see data', W/2, H/2);
+    return;
+  }
+
+  const maxVal = Math.max(50, ...dl, ...ul, ...ping.map(p=>p/10)) * 1.1;
+
+  // Grid
+  ctx.strokeStyle = '#1a3a50'; ctx.lineWidth = 1;
+  for (let i=0; i<=4; i++) {
+    const y = PAD.top + h - (i/4)*h;
+    ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W-PAD.right, y); ctx.stroke();
+    ctx.fillStyle = '#2a5870'; ctx.font = '.5rem Share Tech Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText((maxVal*i/4).toFixed(0), PAD.left-4, y+4);
+  }
+
+  // Draw series
+  function drawLine(data, color, dashed=false) {
+    if (data.length < 2) return;
+    ctx.beginPath();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    if (dashed) ctx.setLineDash([4,3]);
+    else ctx.setLineDash([]);
+    data.forEach((v,i) => {
+      const x = PAD.left + (i/(MAX_CHART_POINTS-1))*w;
+      const y = PAD.top + h - (v/maxVal)*h;
+      i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    });
+    ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  drawLine(dl, '#4dd9ff');
+  drawLine(ul, '#4dffa6');
+  drawLine(ping.map(p=>p/10), '#ffd166', true);
+
+  // Dots at last point
+  function dot(data, color) {
+    if (!data.length) return;
+    const x = PAD.left + ((data.length-1)/(MAX_CHART_POINTS-1))*w;
+    const y = PAD.top + h - (data[data.length-1]/maxVal)*h;
+    ctx.beginPath(); ctx.arc(x,y,3,0,Math.PI*2);
+    ctx.fillStyle = color; ctx.fill();
+  }
+  dot(dl, '#4dd9ff'); dot(ul, '#4dffa6'); dot(ping.map(p=>p/10), '#ffd166');
+}
+
+function drawHistChart() {
+  const canvas = document.getElementById('histChart');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width = canvas.offsetWidth;
+  const H = canvas.height = canvas.offsetHeight;
+  const PAD = { top:8, bottom:22, left:36, right:8 };
+  const w = W - PAD.left - PAD.right;
+  const h = H - PAD.top - PAD.bottom;
+
+  ctx.clearRect(0,0,W,H);
+  ctx.fillStyle = '#080f14'; ctx.fillRect(0,0,W,H);
+
+  const dls = results.map(r=>r.download).filter(Boolean);
+  if (dls.length < 2) {
+    ctx.fillStyle = '#2a5870'; ctx.font = '.55rem Share Tech Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText('Need more tests for distribution', W/2, H/2);
+    return;
+  }
+
+  const maxVal = Math.max(...dls, 30);
+  const bucketCount = 10;
+  const bucketSize = maxVal / bucketCount;
+  const buckets = Array(bucketCount).fill(0);
+  dls.forEach(v => {
+    const i = Math.min(Math.floor(v / bucketSize), bucketCount-1);
+    buckets[i]++;
+  });
+  const maxBucket = Math.max(...buckets, 1);
+
+  const barW = (w / bucketCount) - 2;
+
+  buckets.forEach((count, i) => {
+    const midDl = (i + 0.5) * bucketSize;
+    const q = quality(midDl, 40); // assume decent ping for color
+    const color = q==='good' ? '#4dffa6' : q==='fair' ? '#ffd166' : '#ff5577';
+    const barH = (count / maxBucket) * h;
+    const x = PAD.left + i*(w/bucketCount) + 1;
+    const y = PAD.top + h - barH;
+
+    ctx.fillStyle = color + '40';
+    ctx.fillRect(x, y, barW, barH);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(x, y, barW, barH);
+
+    // X label
+    ctx.fillStyle = '#2a5870'; ctx.font = '.44rem Share Tech Mono, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(Math.round((i+1)*bucketSize), x+barW/2, H-4);
+  });
+
+  // Y axis
+  ctx.fillStyle = '#2a5870'; ctx.font = '.5rem Share Tech Mono, monospace';
+  ctx.textAlign = 'right';
+  ctx.fillText(maxBucket, PAD.left-2, PAD.top+6);
+  ctx.fillText('0', PAD.left-2, PAD.top+h+2);
+
+  // X label
+  ctx.fillStyle = '#1a3a50'; ctx.textAlign = 'right';
+  ctx.fillText('Mbps', W-2, H-4);
+}
+
+// ── LOG ────────────────────────────────────────────────────────
+
+function renderLog() {
+  const list = document.getElementById('logList');
+  if (!results.length) {
+    list.innerHTML = '<div class="empty-state"><div class="empty-icon">📊</div><div class="empty-text">NO TESTS YET</div></div>';
+    return;
+  }
+  list.innerHTML = results.map(r => {
+    const ts = new Date(r.timestamp).toLocaleString([], {
+      month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'
+    });
+    const qc = 'q-'+r.quality;
+    return `<div class="log-row">
+      <span>${ts}</span>
+      <span style="color:var(--accent)">${r.download.toFixed(1)}</span>
+      <span style="color:var(--accent3)">${r.upload.toFixed(1)}</span>
+      <span style="color:var(--gold)">${r.ping}ms</span>
+      <span class="${qc}">${r.quality.toUpperCase()}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── PERSISTENCE ────────────────────────────────────────────────
+
+function save() {
+  try {
+    localStorage.setItem(STORE, JSON.stringify({
+      savedAt: new Date().toISOString(),
+      results: results.slice(0,500)
+    }));
+  } catch {}
+}
+
+function load() {
+  try {
+    const d = JSON.parse(localStorage.getItem(STORE)||'{}');
+    if (d.results && d.results.length) {
+      results = d.results;
+      // Rebuild chart data from most recent 60
+      const recent = [...results].reverse().slice(0, MAX_CHART_POINTS);
+      chartData.dl   = recent.map(r=>r.download);
+      chartData.ul   = recent.map(r=>r.upload);
+      chartData.ping = recent.map(r=>r.ping);
+      updateUI(results[0]);
+    }
+  } catch {}
+}
+
+function clearData() {
+  if (!confirm('Clear all test history?')) return;
+  results = []; chartData = {dl:[],ul:[],ping:[]};
+  save(); renderLog(); drawSpeedChart(); drawHistChart();
+  ['dlVal','ulVal','pingVal'].forEach(id => document.getElementById(id).textContent='--');
+  document.getElementById('qualityBadge').textContent = 'NO DATA';
+  document.getElementById('qualityBadge').className = 'quality-badge';
+  document.getElementById('monitorDot').classList.remove('active');
+}
+
+// ── EXPORT ────────────────────────────────────────────────────
+
+function exportCSV() {
+  if (!results.length) { alert('No data to export.'); return; }
+  const header = 'timestamp,download_mbps,upload_mbps,ping_ms,quality\n';
+  const rows = results.map(r =>
+    `${r.timestamp},${r.download},${r.upload},${r.ping},${r.quality}`
+  ).join('\n');
+  download('silas_creek_parkway_' + dateStamp() + '.csv', header+rows, 'text/csv');
+}
+
+function exportJSON() {
+  if (!results.length) { alert('No data to export.'); return; }
+  const data = JSON.stringify({ exportedAt: new Date().toISOString(), results }, null, 2);
+  download('silas_creek_parkway_' + dateStamp() + '.json', data, 'application/json');
+}
+
+function download(filename, content, type) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([content], {type}));
+  a.download = filename;
+  a.click();
+}
+
+function dateStamp() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// ── AUTO-TEST ──────────────────────────────────────────────────
+
+function setAutoTest(seconds) {
+  clearInterval(autoTimer);
+  autoTimer = null;
+  if (parseInt(seconds) > 0) {
+    autoTimer = setInterval(runTest, parseInt(seconds) * 1000);
+  }
+}
+
+// ── TABS ───────────────────────────────────────────────────────
+
+function showTab(name, btn) {
+  document.getElementById('tab-speed').style.display    = name==='speed'    ? 'grid'  : 'none';
+  document.getElementById('tab-log').style.display      = name==='log'      ? 'flex'  : 'none';
+  document.getElementById('tab-networks').style.display = name==='networks' ? 'flex'  : 'none';
+  document.getElementById('tab-packets').style.display  = name==='packets'  ? 'flex'  : 'none';
+  document.querySelectorAll('.tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if (name==='speed')    { drawSpeedChart(); drawHistChart(); }
+  if (name==='networks') { drawChannelChart({}); }
+  if (name==='packets')  { updatePktStatus(); }
+}
+
+// ── INIT ───────────────────────────────────────────────────────
+
+// Resize redraws
+window.addEventListener('resize', () => {
+  drawSpeedChart();
+  drawHistChart();
+});
+
+// Start auto-test at default interval (5 min)
+setAutoTest(300);
+
+// Load saved data
+load();
+
+// Initial empty chart draw
+if (!results.length) {
+  setTimeout(() => { drawSpeedChart(); drawHistChart(); }, 100);
+}
+
+// ================================================================
+// NETWORKS TAB
+// WiFi intelligence via PMTransport (T-Beam BLE or bridge WebSocket)
+// Shows: nearby APs, connected LAN devices, channel congestion
+// ================================================================
+
+let beam       = null;
+let apMap      = {};        // bssid  -> AP object
+let deviceMap  = {};        // ip     -> device object
+let scanActive = false;
+let netView    = 'aps';     // 'aps' | 'devices'
+
+// ── Transport ─────────────────────────────────────────────────────
+
+function dlog(level, msg) {
+  debugEventCount++;
+  document.getElementById('debugCount').textContent = debugEventCount + ' events';
+  const log = document.getElementById('debugLog');
+  const now = new Date();
+  const ts = now.getHours().toString().padStart(2,'0') + ':' +
+             now.getMinutes().toString().padStart(2,'0') + ':' +
+             now.getSeconds().toString().padStart(2,'0');
+  const el = document.createElement('div');
+  el.innerHTML = '<span class="dlog-time">' + ts + '</span>' +
+                 '<span class="dlog-' + level + '">' + msg + '</span>';
+  log.appendChild(el);
+  // Keep last 100 lines
+  while (log.children.length > 100) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;
+}
+
+// HTML escape helper used throughout the app
+function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function initTransport() {
+    dlog('info', 'initTransport called');
+    dlog(typeof PMTransport !== 'undefined' ? 'ok' : 'error', 'PMTransport: ' + typeof PMTransport);
+    // Always show native connection info immediately
+    showNativeConnectionInfo();
+
+    if (typeof PMTransport === 'undefined') {
+        setEdgeStatus('offline', 'EDGE OFFLINE');
+        startRetryLoop();
+        return;
+    }
+    beam = new PMTransport({
+        wsUrl:     (() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1' : host;
+    return `ws://${bridgeHost}:8080`;
+})(),
+        onMessage: handleEdgeMessage,
+        onStatus:  handleEdgeStatus,
+    });
+    beam.connect().catch(() => {
+        setEdgeStatus('offline', 'EDGE OFFLINE');
+        startRetryLoop();
+    });
+}
+
+let retryTimer = null;
+function startRetryLoop() {
+    if (retryTimer) return; // already running
+    retryTimer = setInterval(() => {
+        if (beam && beam.connected) {
+            clearInterval(retryTimer);
+            retryTimer = null;
+            return;
+        }
+        dlog('warn', 'Bridge offline - retrying...');
+        // Silently retry connection
+        if (typeof PMTransport !== 'undefined') {
+            beam = new PMTransport({
+                wsUrl:     (() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1' : host;
+    return `ws://${bridgeHost}:8080`;
+})(),
+                onMessage: handleEdgeMessage,
+                onStatus:  handleEdgeStatus,
+            });
+            beam.connect().catch(() => {});
+        }
+    }, 10000); // retry every 10 seconds
+}
+
+function showNativeConnectionInfo() {
+    const conn    = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    const summary = document.getElementById('netSummary');
+    const apTable = document.getElementById('apTable');
+    const badge   = document.getElementById('edgeBadge');
+
+    // Badge
+    if (badge) {
+        badge.textContent  = 'NO BRIDGE';
+        badge.className    = 'quality-badge fair';
+    }
+
+    // Summary bar
+    if (summary) {
+        if (conn) {
+            const type      = conn.type || '';
+            const effective = conn.effectiveType || '';
+            const downlink  = conn.downlink ? conn.downlink + ' Mbps est.' : '';
+            const rtt       = conn.rtt      ? conn.rtt + 'ms RTT'         : '';
+            const isWifi    = type === 'wifi' || type === '' || !type;
+            const parts     = [
+                isWifi ? 'WiFi' : type || 'Connected',
+                effective,
+                downlink,
+                rtt
+            ].filter(Boolean);
+            summary.textContent = parts.join('  |  ') + '  |  Run bridge for full scan';
+        } else {
+            summary.textContent = 'Run bridge for full AP scan';
+        }
+    }
+
+    // Replace the empty state with a helpful no-bridge panel
+    if (apTable) {
+        const cmd = 'sudo python3 silas_creek_bridge.py';
+        apTable.innerHTML =
+            '<div style="padding:24px;display:flex;flex-direction:column;gap:16px;">' +
+
+            // Current connection card
+            (conn ? (
+            '<div style="background:linear-gradient(155deg,rgba(77,217,255,.1),rgba(0,0,0,.2));' +
+            'border:1px solid rgba(77,217,255,.2);border-top:1px solid rgba(77,217,255,.35);' +
+            'border-radius:6px;padding:16px 20px;' +
+            'box-shadow:inset 0 1px 0 rgba(255,255,255,.15),0 4px 20px rgba(0,0,0,.4);">' +
+            '<div style="font-family:Outfit,sans-serif;font-size:.5rem;letter-spacing:3px;' +
+            'color:var(--text-dim);text-transform:uppercase;margin-bottom:12px;opacity:.7">' +
+            'CURRENT CONNECTION</div>' +
+            '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;">' +
+            _connStatCell('TYPE',     (conn.type || 'WiFi').toUpperCase(),       'var(--accent)') +
+            _connStatCell('SPEED',    conn.downlink ? conn.downlink + ' Mbps' : '--', 'var(--accent3)') +
+            _connStatCell('RTT',      conn.rtt      ? conn.rtt + ' ms'        : '--', 'var(--gold)') +
+            _connStatCell('QUALITY',  (conn.effectiveType || '--').toUpperCase(), 'var(--text-bright)') +
+            '</div></div>'
+            ) : '') +
+
+            // How-to card
+            '<div style="background:linear-gradient(155deg,rgba(255,255,255,.05),rgba(0,0,0,.2));' +
+            'border:1px solid rgba(255,255,255,.1);border-top:1px solid rgba(255,255,255,.18);' +
+            'border-radius:6px;padding:16px 20px;' +
+            'box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 4px 20px rgba(0,0,0,.4);">' +
+            '<div style="font-family:Outfit,sans-serif;font-size:.5rem;letter-spacing:3px;' +
+            'color:var(--text-dim);text-transform:uppercase;margin-bottom:10px;opacity:.7">' +
+            'ENABLE FULL NETWORK SCAN</div>' +
+            '<div style="font-family:DM Mono,monospace;font-size:.65rem;color:var(--accent3);' +
+            'background:rgba(0,0,0,.3);padding:10px 14px;border-radius:4px;' +
+            'border:1px solid rgba(77,255,166,.15);letter-spacing:1px;margin-bottom:10px;">' +
+            esc(cmd) + '</div>' +
+            '<div style="font-family:Outfit,sans-serif;font-size:.58rem;color:var(--text-dim);' +
+            'line-height:1.6;">' +
+            'Bridge uses the built-in WiFi radio to scan nearby networks.<br>' +
+            'Auto-detects T-Beam if connected. Retrying every 10 seconds.' +
+            '</div></div>' +
+
+            '</div>';
+    }
+}
+
+function _connStatCell(label, value, color) {
+    return '<div style="background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08);' +
+           'border-top:1px solid rgba(255,255,255,.15);border-radius:5px;padding:8px;text-align:center;">' +
+           '<div style="font-family:Orbitron,sans-serif;font-size:.9rem;font-weight:500;color:' + color + ';' +
+           'text-shadow:0 0 16px ' + color + ';line-height:1;">' + esc(value) + '</div>' +
+           '<div style="font-family:Outfit,sans-serif;font-size:.44rem;letter-spacing:2px;' +
+           'color:var(--text-dim);margin-top:4px;text-transform:uppercase;">' + label + '</div>' +
+           '</div>';
+}
+
+function handleEdgeStatus(s) {
+    dlog('info', 'EdgeStatus: ' + s.state + (s.activeMode ? ' / ' + s.activeMode : ''));
+    if (s.state === 'connected') {
+        const label = s.activeMode === 'websocket' ? 'BRIDGE' : 'BLE';
+        setEdgeStatus('online', label);
+        // Request status (returns cached networks immediately)
+        beam.send({cmd: 'status'});
+        dlog('ok', 'Connected via ' + label + ' - requesting scan...');
+        // Auto-trigger a fresh scan on connect
+        setTimeout(() => {
+            beam.send({cmd: 'scan_start'});
+            beam.send({cmd: 'scan_devices'});
+            dlog('info', 'scan_start + scan_devices sent');
+        }, 500);
+    } else if (s.state === 'connecting') {
+        setEdgeStatus('connecting', 'CONNECTING');
+    } else {
+        setEdgeStatus('offline', 'EDGE OFFLINE');
+        // Show native connection info while bridge is offline
+        showNativeConnectionInfo();
+    }
+}
+
+function handleEdgeMessage(msg) {
+    dlog('msg', 'MSG: ' + msg.type + (msg.ssid ? ' ' + msg.ssid : '') + (msg.bssid ? ' ' + msg.bssid : '') + (msg.rssi ? ' ' + msg.rssi + 'dBm' : ''));
+    const type = msg.type || '';
+
+    // Route packet messages to packet tab handler
+    if (type === 'packet' || type === 'threat' ||
+        type === 'packet_status' || type === 'packet_error') {
+        handlePacketMessage(msg);
+        return;
+    }
+
+    if (type === 'wardrive') {
+        // BSSID may be empty on macOS Tahoe (CoreWLAN restriction)
+        // Fall back to a synthetic key from SSID+channel so we still display
+        let bssid = msg.bssid || '';
+        const key = bssid || ('~' + (msg.ssid || '') + '_ch' + (msg.ch || 0));
+        dlog('msg', 'wardrive: ' + (msg.ssid || '(hidden)') + ' ' + (bssid || 'no-bssid') + ' ' + msg.rssi + 'dBm ch' + msg.ch);
+        apMap[key] = {
+            ssid:    msg.ssid   || '',
+            bssid,
+            rssi:    typeof msg.rssi === 'number' ? msg.rssi : -80,
+            ch:      msg.ch     || 0,
+            enc:     msg.enc    !== false,
+            vendor:  msg.vendor || '',
+            seen:    Date.now(),
+            source:  msg.source || 'tbeam',
+        };
+        if (netView === 'aps') renderAPs();
+
+    } else if (type === 'ble') {
+        // BLE device discovered over the air
+        const mac = msg.mac || '';
+        if (!mac) return;
+        const isApple = (msg.vendor || '').toLowerCase() === 'apple';
+        deviceMap['ble_' + mac] = {
+            type:    'ble',
+            ip:      '',
+            mac,
+            hostname: msg.name || '',
+            vendor:   msg.vendor || '',
+            rssi:     msg.rssi || -80,
+            seen:     Date.now(),
+            status:   'broadcasting',
+            isApple,
+        };
+        dlog('msg', 'BLE: ' + (msg.name || '(unnamed)') + ' ' + mac.substring(0,17) + ' ' + msg.rssi + 'dBm' + (msg.vendor ? ' [' + msg.vendor + ']' : ''));
+        if (netView === 'devices') renderDevices();
+
+    } else if (type === 'arp' || type === 'device') {
+        // LAN device from native bridge ARP scan
+        const ip = msg.ip || '';
+        if (!ip) return;
+        deviceMap[ip] = {
+            type: 'lan', ip, mac: msg.mac || '',
+            hostname: msg.hostname || msg.name || '',
+            vendor: msg.vendor || '',
+            ping: msg.ping || msg.latency || null,
+            seen: Date.now(),
+            status: msg.status || 'online',
+        };
+        if (netView === 'devices') renderDevices();
+
+    } else if (type === 'scan_start') {
+        scanActive = true;
+        document.getElementById('netSummary').textContent = 'Scanning...';
+        document.getElementById('monitorDot').classList.add('active');
+
+    } else if (type === 'scan_complete') {
+        scanActive = false;
+        document.getElementById('monitorDot').classList.remove('active');
+        renderAPs();
+        renderDevices();
+        updateSummary();
+
+    } else if (type === 'bridge_status') {
+        const mode  = msg.mode     || 'unknown';
+        const plat  = msg.platform || '';
+        const label = mode === 'serial' ? 'T-BEAM' : ('NATIVE ' + plat).trim();
+        setEdgeStatus('online', label);
+
+    } else if (type === 'pong' || type === 'status') {
+        const label = (msg.bridge_mode || msg.mode || '') === 'serial' ? 'T-BEAM' : 'BRIDGE';
+        setEdgeStatus('online', label);
+    }
+}
+
+function setEdgeStatus(state, label) {
+    const badge = document.getElementById('edgeBadge');
+    if (!badge) return;
+    badge.textContent = label || state.toUpperCase();
+    badge.className = 'quality-badge ' + (
+        state === 'online'     ? 'good' :
+        state === 'connecting' ? 'fair' : ''
+    );
+}
+
+function triggerScan() {
+    if (beam && beam.connected) {
+        beam.send({cmd: 'scan_start'});
+        // Combined scan: LAN ARP + BLE + WiFi probes
+        beam.send({cmd: 'scan_air'});
+        document.getElementById('netSummary').textContent = 'Scanning air + LAN...';
+        document.getElementById('monitorDot').classList.add('active');
+    } else {
+        document.getElementById('netSummary').textContent = 'Edge node offline';
+    }
+}
+
+function switchNetView(view, btn) {
+    netView = view;
+    document.querySelectorAll('.net-view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('apSection').style.display    = view === 'aps'     ? 'contents' : 'none';
+    document.getElementById('deviceSection').style.display = view === 'devices' ? 'contents' : 'none';
+    if (view === 'aps')     renderAPs();
+    if (view === 'devices') renderDevices();
+}
+
+// ── AP Rendering ──────────────────────────────────────────────────
+
+function signalColor(rssi) {
+    const pct = Math.max(0, Math.min(100, (rssi + 100) * 2));
+    return pct > 65 ? '#4dffa6' : pct > 35 ? '#ffd166' : '#ff5577';
+}
+
+function renderAPs() {
+    const aps = Object.values(apMap).sort((a, b) => b.rssi - a.rssi);
+    dlog('ok', 'renderAPs: ' + aps.length + ' networks in map');
+    const table = document.getElementById('apTable');
+    if (!table) return;
+
+    if (!aps.length) {
+        table.innerHTML = '<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-text">NO NETWORKS FOUND</div></div>';
+        return;
+    }
+
+    // Channel congestion map
+    const chCounts = {};
+    aps.forEach(ap => { chCounts[ap.ch] = (chCounts[ap.ch] || 0) + 1; });
+
+    table.innerHTML = aps.map(ap => {
+        const pct      = Math.max(0, Math.min(100, (ap.rssi + 100) * 2));
+        const color    = signalColor(ap.rssi);
+        const ssid     = ap.ssid || '(hidden)';
+        const hidden   = !ap.ssid;
+        const chCount  = chCounts[ap.ch] || 1;
+        const chClass  = chCount >= 5 ? 'crowded' : chCount >= 3 ? 'busy' : 'clear';
+        const encLabel = ap.enc ? 'WPA' : 'OPEN';
+        const encClass = ap.enc ? 'secure' : 'open';
+        const icon     = ap.enc ? '🔒' : '🔓';
+        const band     = ap.ch > 14 ? '5G' : '2.4G';
+        const bandCls  = ap.ch > 14 ? 'band-5g' : 'band-24g';
+
+        return '<div class="net-row ap-row">' +
+            '<span style="font-size:.8rem;opacity:.6">' + icon + '</span>' +
+            '<span class="net-ssid' + (hidden ? ' hidden-net' : '') + '">' + esc(ssid) + '</span>' +
+            '<span class="net-bssid">' + (ap.bssid || '--') + '</span>' +
+            '<span style="color:' + color + ';font-family:Orbitron,sans-serif;font-size:.62rem;font-weight:500">' + ap.rssi + '</span>' +
+            '<span class="ch-badge ' + chClass + '">' + (ap.ch || '-') + '</span>' +
+            '<span class="band-badge ' + bandCls + '">' + band + '</span>' +
+            '<span class="enc-badge ' + encClass + '">' + encLabel + '</span>' +
+            '<span class="net-vendor">' + esc(ap.vendor) + '</span>' +
+            '<span><div class="rssi-bar-wrap"><div class="rssi-bar" style="width:' + pct + '%;background:' + color + ';box-shadow:0 0 6px ' + color + '"></div></div></span>' +
+            '</div>';
+    }).join('');
+
+    drawChannelChart(chCounts);
+    updateSummary();
+}
+
+// ── Device Rendering ──────────────────────────────────────────────
+
+function renderDevices() {
+    const devices = Object.values(deviceMap).sort((a, b) => {
+        // BLE/broadcasting first (sorted by RSSI), then LAN (sorted by IP)
+        if (a.type !== b.type) return a.type === 'ble' ? -1 : 1;
+        if (a.type === 'ble') return (b.rssi || -100) - (a.rssi || -100);
+        const aip = (a.ip || '').split('.').map(n => parseInt(n) || 0);
+        const bip = (b.ip || '').split('.').map(n => parseInt(n) || 0);
+        for (let i = 0; i < 4; i++) if (aip[i] !== bip[i]) return aip[i] - bip[i];
+        return 0;
+    });
+
+    const table = document.getElementById('deviceTable');
+    if (!table) return;
+
+    if (!devices.length) {
+        table.innerHTML = '<div class="empty-state"><div class="empty-icon">📡</div><div class="empty-text">SCAN TO DISCOVER DEVICES AROUND YOU</div><div style="font-family:Outfit,sans-serif;font-size:.55rem;letter-spacing:1.5px;color:var(--text-dim);margin-top:8px">BLE + LAN + T-DECK MONITOR FRAMES</div></div>';
+        return;
+    }
+
+    table.innerHTML = devices.map(d => {
+        const isBle    = d.type === 'ble';
+        const online   = d.status === 'online' || d.status === 'broadcasting';
+        const statusCl = isBle ? 'status-broadcasting' : (online ? 'status-online' : 'status-offline');
+        // Icon based on device characteristics
+        const hostLower = (d.hostname || '').toLowerCase();
+        const vendLower = (d.vendor   || '').toLowerCase();
+        let icon;
+        if (isBle) {
+            icon = vendLower.includes('apple')      ? '🍎' :
+                   vendLower.includes('samsung')    ? '📱' :
+                   vendLower.includes('google')     ? '📱' :
+                   vendLower.includes('garmin')     ? '⌚' :
+                   vendLower.includes('bose')       ? '🎧' :
+                   vendLower.includes('sonos')      ? '🔊' :
+                   vendLower.includes('tile')       ? '🏷' :
+                   vendLower.includes('amazon')     ? '🔘' :
+                   vendLower.includes('xiaomi')     ? '📱' :
+                   vendLower.includes('logitech')   ? '🖱' :
+                   hostLower.includes('headphone')  ? '🎧' :
+                   hostLower.includes('airpod')     ? '🎧' :
+                   hostLower.includes('watch')      ? '⌚' :
+                   hostLower.includes('tv')         ? '📺' :
+                   '📡';
+        } else {
+            icon = hostLower.includes('ipad')        ? '📱' :
+                   hostLower.includes('iphone')      ? '📱' :
+                   hostLower.includes('android')     ? '📱' :
+                   hostLower.includes('printer')     ? '🖨' :
+                   hostLower.includes('macbook')     ? '💻' :
+                   hostLower.includes('apple-tv')    ? '📺' :
+                   vendLower.includes('raspberry')   ? '🍓' :
+                   vendLower.includes('cisco')       ? '🌐' :
+                   vendLower.includes('ubiquiti')    ? '📡' :
+                   '🖥';
+        }
+
+        const signalLabel = isBle
+            ? (d.rssi + ' dBm')
+            : (d.ping ? d.ping + 'ms' : '--');
+        const signalColor = isBle
+            ? (d.rssi > -50 ? '#4dffa6' : d.rssi > -75 ? '#ffd166' : '#ff5577')
+            : (!d.ping ? '#c8e6f5' :
+               d.ping < 10  ? '#4dffa6' :
+               d.ping < 50  ? '#ffd166' : '#ff5577');
+
+        const statusLabel = isBle ? 'BROADCAST' : (online ? 'ONLINE' : 'OFFLINE');
+        const idLabel = d.ip || (isBle ? 'BLE' : '--');
+
+        return '<div class="net-row dev-row' + (online ? '' : ' dev-offline') + (isBle ? ' dev-ble' : '') + '">' +
+            '<span style="font-size:.85rem">' + icon + '</span>' +
+            '<span class="dev-ip">' + idLabel + '</span>' +
+            '<span class="net-bssid">' + (d.mac || '-').substring(0, 17) + '</span>' +
+            '<span class="dev-hostname">' + esc(d.hostname || '-') + '</span>' +
+            '<span class="net-vendor">' + esc(d.vendor || '-') + '</span>' +
+            '<span class="' + statusCl + '">' + statusLabel + '</span>' +
+            '<span style="color:' + signalColor + ';font-family:Orbitron,sans-serif;font-size:.58rem">' + signalLabel + '</span>' +
+            '</div>';
+    }).join('');
+
+    updateSummary();
+}
+
+// ── Channel chart ──────────────────────────────────────────────────
+
+function drawChannelChart(chCounts) {
+    const canvas = document.getElementById('chChart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width  = canvas.offsetWidth;
+    const H = canvas.height = canvas.offsetHeight || 60;
+    ctx.clearRect(0, 0, W, H);
+
+    const channels  = [1,2,3,4,5,6,7,8,9,10,11,12,13];
+    const maxCount  = Math.max(1, ...channels.map(ch => chCounts[ch] || 0));
+    const barSlot   = W / channels.length;
+    const barW      = barSlot - 3;
+
+    channels.forEach((ch, i) => {
+        const count = chCounts[ch] || 0;
+        if (!count) {
+            // Draw empty slot
+            ctx.fillStyle = 'rgba(255,255,255,.03)';
+            ctx.fillRect(i * barSlot + 1, H - 14, barW, 1);
+        } else {
+            const barH  = Math.max(4, (count / maxCount) * (H - 20));
+            const x     = i * barSlot + 1;
+            const y     = H - 14 - barH;
+            const color = count >= 5 ? '#ff5577' : count >= 3 ? '#ffd166' : '#4dffa6';
+
+            const grad = ctx.createLinearGradient(0, y, 0, H - 14);
+            grad.addColorStop(0, color + 'bb');
+            grad.addColorStop(1, color + '33');
+            ctx.fillStyle = grad;
+            ctx.fillRect(x, y, barW, barH);
+
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, barW, 1.5);
+
+            ctx.shadowColor = color;
+            ctx.shadowBlur  = 10;
+            ctx.fillStyle   = color + '44';
+            ctx.fillRect(x, y, barW, barH);
+            ctx.shadowBlur  = 0;
+
+            ctx.fillStyle   = color;
+            ctx.font        = '500 .46rem Outfit, sans-serif';
+            ctx.textAlign   = 'center';
+            ctx.fillText(count, x + barW / 2, y - 2);
+        }
+
+        ctx.fillStyle = '#5a8aa4';
+        ctx.font      = '.44rem Share Tech Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(ch, i * barSlot + barSlot / 2, H - 2);
+    });
+}
+
+// ── Summary bar ───────────────────────────────────────────────────
+
+function updateSummary() {
+    const aps     = Object.values(apMap);
+    const devices = Object.values(deviceMap);
+    const summary = document.getElementById('netSummary');
+    if (!summary) return;
+
+    if (netView === 'aps') {
+        const open  = aps.filter(a => !a.enc).length;
+        const ghz5  = aps.filter(a => a.ch > 14).length;
+        const ghz24 = aps.filter(a => a.ch > 0 && a.ch <= 14).length;
+        summary.textContent = aps.length
+            ? aps.length + ' networks  |  ' + open + ' open  |  2.4GHz: ' + ghz24 + '  5GHz: ' + ghz5
+            : 'No networks found';
+    } else {
+        const online  = devices.filter(d => d.status === 'online').length;
+        const offline = devices.filter(d => d.status !== 'online').length;
+        summary.textContent = devices.length
+            ? online + ' online  ' + (offline ? offline + ' offline  ' : '') + '|  ' + devices.length + ' total devices'
+            : 'No devices found - tap Scan';
+    }
+}
+
+// ── Exports ───────────────────────────────────────────────────────
+
+function exportNetCSV() {
+    if (netView === 'aps') {
+        const aps = Object.values(apMap);
+        if (!aps.length) { alert('No AP data to export.'); return; }
+        const rows = ['ssid,bssid,rssi,channel,band,encrypted,vendor']
+            .concat(aps.map(a => '"' + a.ssid + '",' + a.bssid + ',' + a.rssi + ',' + a.ch + ',' + (a.ch > 14 ? '5GHz' : '2.4GHz') + ',' + a.enc + ',"' + a.vendor + '"'))
+            .join('\n');
+        download('silas_creek_aps_' + dateStamp() + '.csv', rows, 'text/csv');
+    } else {
+        const devs = Object.values(deviceMap);
+        if (!devs.length) { alert('No device data to export.'); return; }
+        const rows = ['ip,mac,hostname,vendor,status,ping']
+            .concat(devs.map(d => d.ip + ',' + d.mac + ',"' + d.hostname + '","' + d.vendor + '",' + d.status + ',' + (d.ping || '')))
+            .join('\n');
+        download('silas_creek_devices_' + dateStamp() + '.csv', rows, 'text/csv');
+    }
+}
+
+// ================================================================
+// PACKETS TAB
+// ================================================================
+
+let capturing      = false;
+let frameCount     = 0;
+let threatCount    = 0;
+let probeCount     = 0;
+let showBeacons    = false;
+let probeSSIDs     = {};     // ssid -> count
+const MAX_FRAMES   = 500;    // max rows in DOM before pruning
+let frames         = [];
+
+function toggleCapture() {
+    if (!beam || !beam.connected) {
+        document.getElementById('pktStatus').textContent = 'Edge node required for packet capture';
+        return;
+    }
+    if (!capturing) {
+        const ch = document.getElementById('chSel').value || null;
+        beam.send({cmd: 'packet_start', channel: ch ? parseInt(ch) : null});
+        document.getElementById('pktStartBtn').textContent = 'STOP CAPTURE';
+        document.getElementById('pktStartBtn').classList.add('danger');
+        document.getElementById('pktStartBtn').classList.remove('primary');
+        capturing = true;
+        document.getElementById('pktEmpty').style.display = 'none';
+        updatePktStatus();
+    } else {
+        beam.send({cmd: 'packet_stop'});
+        document.getElementById('pktStartBtn').textContent = 'START CAPTURE';
+        document.getElementById('pktStartBtn').classList.remove('danger');
+        document.getElementById('pktStartBtn').classList.add('primary');
+        capturing = false;
+        updatePktStatus();
+    }
+}
+
+function toggleBeacons(show) {
+    showBeacons = show;
+    // Re-render visible frames
+    renderFrameStream();
+}
+
+function handlePacketMessage(msg) {
+    const type = msg.type || '';
+
+    if (type === 'packet') {
+        // Bridge sends frame_type, older code uses subtype - accept both
+        msg.subtype = msg.subtype || msg.frame_type || 'unknown';
+        // Normalize ts if not set - bridge usually doesn't include it
+        if (!msg.ts) {
+            const d = new Date();
+            msg.ts = String(d.getHours()).padStart(2,'0') + ':' +
+                     String(d.getMinutes()).padStart(2,'0') + ':' +
+                     String(d.getSeconds()).padStart(2,'0');
+        }
+        if (!showBeacons && msg.subtype === 'beacon') return;
+
+        frames.unshift(msg);
+        if (frames.length > MAX_FRAMES) frames.length = MAX_FRAMES;
+
+        frameCount++;
+        document.getElementById('pktFrameCount').textContent = frameCount;
+
+        if (msg.subtype === 'probe-req') {
+            probeCount++;
+            document.getElementById('pktProbeCount').textContent = probeCount;
+            const ssid = msg.ssid || '(hidden)';
+            probeSSIDs[ssid] = (probeSSIDs[ssid] || 0) + 1;
+            renderProbeTags();
+        }
+
+        // Prepend single row (faster than full re-render)
+        prependFrameRow(msg);
+
+    } else if (type === 'threat') {
+        threatCount++;
+        document.getElementById('pktThreatCount').textContent = threatCount;
+        showThreatAlert(msg);
+
+    } else if (type === 'packet_status') {
+        const state = msg.state || '';
+        if (state === 'capturing') {
+            document.getElementById('pktStatus').textContent =
+                'Capturing on ' + (msg.iface || 'unknown') + ' (' + (msg.mode || 'monitor') + ')';
+            document.getElementById('monitorDot').classList.add('active');
+        } else if (state === 'stopped') {
+            document.getElementById('pktStatus').textContent =
+                'Stopped - ' + (msg.frames_captured || 0) + ' frames, ' +
+                (msg.threats_detected || 0) + ' threats';
+            document.getElementById('monitorDot').classList.remove('active');
+            capturing = false;
+            document.getElementById('pktStartBtn').textContent = 'START CAPTURE';
+            document.getElementById('pktStartBtn').classList.remove('danger');
+            document.getElementById('pktStartBtn').classList.add('primary');
+        }
+
+    } else if (type === 'packet_error') {
+        document.getElementById('pktStatus').textContent = 'Error: ' + msg.message;
+        document.getElementById('pktStatus').style.color = 'var(--accent4)';
+        capturing = false;
+    }
+}
+
+function prependFrameRow(frame) {
+    const stream  = document.getElementById('pktStream');
+    const empty   = document.getElementById('pktEmpty');
+    if (empty) empty.style.display = 'none';
+
+    const row     = document.createElement('div');
+    row.className = 'pkt-row';
+    const subtype = frame.subtype || 'unknown';
+    const detail  = buildDetail(frame);
+    const src     = frame.src ? frame.src.substring(0, 17) : '-';
+    const dst     = frame.dst ? (frame.dst === 'FF:FF:FF:FF:FF:FF' ? 'broadcast' : frame.dst.substring(0, 17)) : '-';
+
+    row.innerHTML =
+        '<span class="pkt-ts">' + (frame.ts || '').substring(0, 8) + '</span>' +
+        '<span class="pkt-src" title="' + (frame.vendor || '') + '">' + src + '</span>' +
+        '<span class="pkt-dst">' + dst + '</span>' +
+        '<span><span class="pkt-type ' + subtype + '">' + subtype + '</span></span>' +
+        '<span class="pkt-detail">' + detail + '</span>';
+
+    // Flash deauth rows
+    if (subtype === 'deauth' || subtype === 'disassoc') {
+        row.style.background = 'rgba(255,85,119,.08)';
+        setTimeout(() => { row.style.background = ''; }, 1000);
+    }
+
+    // Insert after header row (sticky top)
+    const hdr = stream.querySelector('.pkt-row.hdr');
+    if (hdr && hdr.nextSibling) {
+        stream.insertBefore(row, hdr.nextSibling);
+    } else {
+        stream.appendChild(row);
+    }
+
+    // Prune old rows
+    const rows = stream.querySelectorAll('.pkt-row:not(.hdr)');
+    if (rows.length > MAX_FRAMES) {
+        rows[rows.length - 1].remove();
+    }
+}
+
+function buildDetail(frame) {
+    const sub  = frame.subtype || '';
+    const ssid = frame.ssid ? '<span class="ssid">' + esc(frame.ssid) + '</span>' : '';
+    const vend = frame.vendor ? ' <span style="opacity:.5">[' + esc(frame.vendor) + ']</span>' : '';
+
+    if (sub === 'probe-req')  return 'Looking for ' + (ssid || '<span style="opacity:.5">(wildcard)</span>') + vend;
+    if (sub === 'probe-resp') return 'Responding: ' + ssid + vend;
+    if (sub === 'beacon')     return 'Beacon: ' + ssid + vend;
+    if (sub === 'deauth')     return '<span style="color:var(--accent4)">DEAUTHENTICATION</span>' + vend;
+    if (sub === 'disassoc')   return '<span style="color:var(--accent4)">DISASSOCIATION</span>' + vend;
+    if (sub === 'auth')       return 'Authentication' + vend;
+    if (sub === 'assoc-req')  return 'Wants to join' + (ssid ? ': ' + ssid : '') + vend;
+    if (sub === 'assoc-resp') return 'Association response' + vend;
+    if (sub === 'action')     return 'Action frame' + vend;
+    if (sub === 'ble_adv')    return 'BLE ad' + (frame.ssid ? ': ' + esc(frame.ssid) : '') + vend;
+    return esc(frame.raw || frame.ssid || '').substring(0, 80);
+}
+
+function renderFrameStream() {
+    // Full re-render (used when toggling beacon visibility)
+    const stream = document.getElementById('pktStream');
+    const rows   = stream.querySelectorAll('.pkt-row:not(.hdr)');
+    rows.forEach(r => r.remove());
+    const visible = showBeacons ? frames : frames.filter(f => f.subtype !== 'beacon');
+    visible.forEach(f => prependFrameRow(f));
+}
+
+function renderProbeTags() {
+    const container = document.getElementById('probeTags');
+    const sorted = Object.entries(probeSSIDs)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 30);
+    container.innerHTML = sorted.map(([ssid, count]) => {
+        const hidden = ssid === '(hidden)';
+        return '<span class="probe-tag' + (hidden ? ' hidden' : '') + '" title="' + count + ' requests">' +
+               esc(ssid) + ' <span style="opacity:.5">x' + count + '</span></span>';
+    }).join('');
+}
+
+function showThreatAlert(threat) {
+    const bar  = document.getElementById('threatBar');
+    const text = document.getElementById('threatText');
+    const sev  = document.getElementById('threatSeverity');
+
+    bar.className  = 'threat-bar active';
+    text.textContent = threat.name + ': ' + threat.detail;
+    sev.textContent  = (threat.severity || 'warning').toUpperCase();
+    sev.style.color  = threat.severity === 'critical' ? 'var(--accent4)' : 'var(--gold)';
+    sev.style.borderColor = sev.style.color;
+
+    // Auto-dismiss non-critical after 8 seconds
+    if (threat.severity !== 'critical') {
+        setTimeout(() => { bar.className = 'threat-bar'; }, 8000);
+    }
+}
+
+function clearPackets() {
+    frames = [];
+    frameCount = threatCount = probeCount = 0;
+    probeSSIDs = {};
+    document.getElementById('pktFrameCount').textContent  = '0';
+    document.getElementById('pktThreatCount').textContent = '0';
+    document.getElementById('pktProbeCount').textContent  = '0';
+    document.getElementById('probeTags').innerHTML = '';
+    document.getElementById('threatBar').className = 'threat-bar';
+    const stream = document.getElementById('pktStream');
+    const rows   = stream.querySelectorAll('.pkt-row:not(.hdr)');
+    rows.forEach(r => r.remove());
+    document.getElementById('pktEmpty').style.display = 'flex';
+}
+
+function updatePktStatus() {
+    if (!beam || !beam.connected) {
+        document.getElementById('pktStatus').textContent = 'Edge node offline - start silas_creek_bridge.py';
+    } else if (capturing) {
+        document.getElementById('pktStatus').textContent = 'Capturing...';
+    } else {
+        document.getElementById('pktStatus').textContent = 'Ready - select channel and press Start';
+        beam.send({cmd: 'packet_status'});
+    }
+}
+// ── Debug overlay functions ────────────────────────────────────
+let debugVisible    = false;
+let debugEventCount = 0;
+
+function toggleDebug() {
+  debugVisible = !debugVisible;
+  document.getElementById('debugPanel').style.display = debugVisible ? 'flex' : 'none';
+}
+
+function dlog(level, msg) {
+  debugEventCount++;
+  const countEl = document.getElementById('debugCount');
+  if (countEl) countEl.textContent = debugEventCount + ' events';
+  const log = document.getElementById('debugLog');
+  if (!log) return;
+  const now = new Date();
+  const ts = now.getHours().toString().padStart(2,'0') + ':' +
+             now.getMinutes().toString().padStart(2,'0') + ':' +
+             now.getSeconds().toString().padStart(2,'0');
+  const el = document.createElement('div');
+  el.innerHTML = '<span class="dlog-time">' + ts + '</span>' +
+                 '<span class="dlog-' + level + '">' + msg + '</span>';
+  log.appendChild(el);
+  while (log.children.length > 100) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;
+}
+// ── End debug overlay functions ────────────────────────────────
+
+initTransport();
+
+</script>
+
+<button id="debugToggle" onclick="toggleDebug()">DEBUG</button>
+<div id="debugPanel">
+  <div id="debugHeader" onclick="toggleDebug()">
+    <span>⬡ BRIDGE DEBUG LOG</span>
+    <span id="debugCount">0 events</span>
+  </div>
+  <div id="debugLog"></div>
+</div>
+
+
+</body></html>

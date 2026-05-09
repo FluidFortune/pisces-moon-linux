@@ -1,0 +1,3782 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS — THE CLINICIAN
+  RF Intelligence Analysis Platform
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  fluidfortune.com
+
+  The SPSS of RF data. Clinical analysis for wireless intelligence.
+  Import from Pisces Moon, Kali, Marauder, Flipper, WiGLE.
+  Local-first. No telemetry. The user owns everything.
+  Clark Beddows Protocol.
+-->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PISCES MOON // THE CLINICIAN</title>
+<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_theme.css">
+<link rel="stylesheet" href="lib/leaflet.min.css">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   THE CLINICIAN — Design System Extension
+   Extends pm_theme.css with clinical-instrument language
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  /* THE CLINICIAN — Clinical-instrument palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel-border: #1f4060;
+
+  /* The cyberpunk palette — ACTUAL hex values, no var() chains */
+  --cl-gold:     #ffd166;   /* primary structural accent */
+  --cl-yellow:   #ffe066;   /* data emphasis */
+  --cl-cyan:     #4dd9ff;   /* default body / interactive */
+  --cl-green:    #4dffa6;   /* success / strong / positive */
+  --cl-red:      #ff5577;   /* danger / open / warning */
+  --cl-orange:   #ffa040;   /* weak signal / caution */
+  --cl-purple:   #c89eff;   /* gps / vendor */
+  --cl-white:    #ffffff;
+
+  /* Aliases for compatibility */
+  --gold:        #ffd166;
+  --accent:      #4dd9ff;
+  --accent2:     #ffa040;
+  --accent3:     #4dffa6;
+  --accent4:     #ff5577;
+  --warn:        #ffe066;
+  --purple:      #c89eff;
+  --text:        #4dd9ff;
+  --text-bright: #ffffff;
+  --text-mid:    #4dd9ff;
+  --text-dim:    #4dd9ff;
+
+  --cl-panel:    rgba(15,30,44,.92);
+  --cl-border:   #1f4060;
+  --cl-hover:    rgba(255,209,102,.08);
+  --cl-selected: rgba(255,209,102,.16);
+  --cl-row-alt:  rgba(255,255,255,.03);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Share Tech Mono', monospace;
+  background: var(--bg);
+  color: var(--cl-cyan);
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Header ────────────────────────────────────────────── */
+.cl-header {
+  height: 42px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--cl-border);
+  display: flex;
+  align-items: center;
+  padding: 0 14px;
+  gap: 16px;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.cl-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--cl-gold);
+  white-space: nowrap;
+}
+
+.cl-logo em {
+  color: var(--cl-white);
+  font-style: normal;
+}
+
+.cl-tabs {
+  display: flex;
+  gap: 2px;
+  flex: 1;
+}
+
+.cl-tab {
+  padding: 0 14px;
+  height: 42px;
+  display: flex;
+  align-items: center;
+  font-size: .58rem;
+  letter-spacing: 2px;
+  color: var(--cl-cyan);opacity:.75;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all .15s;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.cl-tab:hover { color: var(--cl-white); background: var(--cl-hover); }
+.cl-tab.active {
+  color: var(--cl-gold);
+  border-bottom-color: var(--cl-gold);
+  background: rgba(255,209,102,.08);
+}
+
+.cl-hdr-stats {
+  display: flex;
+  gap: 16px;
+  font-size: .58rem;
+  color: var(--cl-cyan);opacity:.75;
+  white-space: nowrap;
+}
+
+.cl-hdr-stat span { color: var(--cl-gold); }
+
+/* Override numeric value spans inside header stats with brighter color */
+.cl-hdr-stats > div span { color: var(--cl-yellow); font-weight: 600; }
+
+.cl-hdr-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.cl-btn {
+  padding: 5px 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .62rem;
+  letter-spacing: 1px;
+  background: var(--bg);
+  border: 1px solid var(--cl-cyan);
+  color: var(--cl-cyan);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all .15s;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.cl-btn:hover {
+  border-color: var(--cl-gold);
+  color: var(--cl-gold);
+  background: var(--bg2);
+}
+
+.cl-btn.primary {
+  border-color: var(--cl-gold);
+  background: var(--cl-gold);
+  color: #000;
+}
+
+.cl-btn.danger {
+  border-color: var(--cl-red);
+  color: var(--cl-red);
+  background: var(--bg);
+}
+
+.cl-btn.danger:hover {
+  background: var(--cl-red);
+  color: #000;
+}
+
+.cl-btn.success {
+  border-color: var(--cl-green);
+  color: var(--cl-green);
+  background: var(--bg);
+}
+
+.cl-btn.success:hover {
+  background: var(--cl-green);
+  color: #000;
+}
+
+/* ── Main Layout ────────────────────────────────────────── */
+.cl-body {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* ── Sidebar ────────────────────────────────────────────── */
+.cl-sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 2px solid var(--cl-gold);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cl-sidebar-section {
+  border-bottom: 1px solid var(--cl-border);
+  padding: 10px;
+}
+
+.cl-sidebar-title {
+  font-family: 'Orbitron', monospace;
+  font-size: .62rem;
+  letter-spacing: 3px;
+  color: var(--cl-gold);
+  margin-bottom: 10px;
+  font-weight: 700;
+  border-bottom: 1px solid var(--cl-gold);
+  padding-bottom: 6px;
+}
+
+.cl-session-item {
+  padding: 8px 10px;
+  font-size: .62rem;
+  color: var(--cl-cyan);
+  cursor: pointer;
+  border-radius: 3px;
+  border: 1px solid transparent;
+  margin-bottom: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: all .1s;
+  background: rgba(255,255,255,.02);
+}
+
+.cl-session-item:hover {
+  border-color: var(--cl-gold);
+  background: rgba(255,209,102,.08);
+  color: var(--cl-white);
+}
+
+.cl-session-item.active {
+  border-color: var(--cl-gold);
+  background: rgba(255,209,102,.12);
+  color: var(--cl-yellow);
+}
+
+.cl-session-meta {
+  font-size: .5rem;
+  color: var(--cl-cyan);opacity:.6;
+}
+
+.cl-import-zone {
+  margin: 8px 0;
+  padding: 14px;
+  border: 2px dashed var(--cl-cyan);
+  border-radius: 4px;
+  text-align: center;
+  font-size: .62rem;
+  color: var(--cl-cyan);
+  cursor: pointer;
+  transition: all .15s;
+  background: var(--bg);
+  font-weight: 600;
+}
+
+.cl-import-zone:hover, .cl-import-zone.drag-over {
+  border-color: var(--cl-green);
+  color: var(--cl-green);
+  background: var(--bg3);
+}
+
+.cl-import-zone .drop-icon {
+  font-size: 1.2rem;
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ── Pane Container ─────────────────────────────────────── */
+.cl-panes {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.cl-pane {
+  display: none;
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.cl-pane.active {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── DATA PANE ──────────────────────────────────────────── */
+
+/* Data type switcher bar (Phase 3) */
+.cl-datatype-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 10px 14px;
+  background: var(--bg2);
+  border-top: 1px solid var(--cl-gold);
+  border-bottom: 2px solid var(--cl-gold);
+  flex-shrink: 0;
+}
+
+.cl-datatype-label {
+  font-family: 'Orbitron', monospace;
+  font-size: .58rem;
+  letter-spacing: 2px;
+  color: var(--cl-yellow);
+  margin-right: 4px;
+  font-weight: 700;
+}
+
+.cl-dt-btn {
+  padding: 6px 14px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .65rem;
+  letter-spacing: 1px;
+  background: var(--bg);
+  border: 1px solid var(--cl-cyan);
+  color: var(--cl-cyan);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all .15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.cl-dt-btn:hover {
+  border-color: var(--cl-gold);
+  color: var(--cl-gold);
+  background: var(--bg2);
+}
+
+.cl-dt-btn.active {
+  background: var(--cl-gold);
+  border-color: var(--cl-gold);
+  color: #000;
+  font-weight: 700;
+}
+
+.cl-dt-count {
+  font-size: .58rem;
+  padding: 2px 8px;
+  background: var(--bg);
+  border-radius: 8px;
+  color: var(--cl-yellow);
+  font-weight: 700;
+  border: 1px solid currentColor;
+}
+
+.cl-dt-btn.active .cl-dt-count {
+  background: rgba(0,0,0,.7);
+  color: var(--cl-yellow);
+  border-color: rgba(0,0,0,.9);
+}
+
+/* Time slider (Phase 4) */
+.cl-time-slider {
+  display: none;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 14px;
+  background: rgba(77,255,166,.04);
+  border-bottom: 1px solid var(--cl-green);
+  flex-shrink: 0;
+  font-size: .58rem;
+  color: var(--cl-cyan);
+}
+
+.cl-time-slider.visible { display: flex; }
+
+.cl-time-slider input[type=range] {
+  flex: 1;
+  accent-color: var(--cl-green);
+}
+
+.cl-time-slider .cl-time-label {
+  color: var(--cl-yellow);
+  font-family: 'Share Tech Mono', monospace;
+  min-width: 90px;
+  font-weight: 600;
+}
+
+/* Lasso indicator */
+.cl-lasso-active {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(77,255,166,.15);
+  border: 1px solid var(--cl-green);
+  color: var(--cl-green);
+  padding: 6px 14px;
+  border-radius: 4px;
+  font-size: .6rem;
+  z-index: 1000;
+  font-family: 'Orbitron', monospace;
+  letter-spacing: 2px;
+  display: none;
+}
+
+.cl-lasso-active.visible { display: block; }
+
+.dp-toolbar {
+  padding: 8px 12px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--cl-border);
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
+.dp-search {
+  flex: 1;
+  min-width: 180px;
+  padding: 6px 12px;
+  background: var(--bg);
+  border: 1px solid var(--cl-cyan);
+  border-radius: 3px;
+  color: var(--cl-white);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .65rem;
+  outline: none;
+  transition: all .15s;
+}
+
+.dp-search:focus {
+  border-color: var(--cl-gold);
+}
+.dp-search::placeholder { color: var(--cl-cyan); opacity: .6; }
+
+.dp-filter-group {
+  display: flex;
+  gap: 4px;
+}
+
+.dp-filter-btn {
+  padding: 5px 11px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .62rem;
+  letter-spacing: 1px;
+  background: var(--bg);
+  border: 1px solid var(--cl-cyan);
+  color: var(--cl-cyan);
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all .1s;
+  font-weight: 600;
+}
+
+.dp-filter-btn:hover {
+  border-color: var(--cl-gold);
+  color: var(--cl-gold);
+  background: var(--bg2);
+}
+
+.dp-filter-btn.active {
+  background: var(--cl-gold);
+  border-color: var(--cl-gold);
+  color: #000;
+  font-weight: 700;
+}
+
+.dp-filter-btn.wpa { }
+.dp-filter-btn.open { }
+.dp-filter-btn.strong { }
+
+/* Grid container */
+.dp-grid-wrap {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.dp-grid {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .6rem;
+}
+
+.dp-grid thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg2);
+}
+
+.dp-grid th {
+  padding: 6px 10px;
+  text-align: left;
+  font-family: 'Orbitron', monospace;
+  font-size: .45rem;
+  letter-spacing: 2px;
+  color: var(--cl-gold);
+  border-bottom: 1px solid var(--cl-gold);
+  border-right: 1px solid rgba(31,64,96,.5);
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+  transition: color .1s;
+  background: rgba(255,209,102,.05);
+}
+
+.dp-grid th:hover { color: var(--cl-white); background: rgba(255,209,102,.12); }
+.dp-grid th.sort-asc::after { content: ' ↑'; color: var(--cl-green); }
+.dp-grid th.sort-desc::after { content: ' ↓'; color: var(--cl-green); }
+
+.dp-grid tbody tr {
+  cursor: pointer;
+  transition: background .08s;
+  border-bottom: 1px solid rgba(31,64,96,.3);
+}
+
+.dp-grid tbody tr:nth-child(even) { background: var(--cl-row-alt); }
+.dp-grid tbody tr:hover { background: var(--cl-hover); }
+.dp-grid tbody tr.selected { background: var(--cl-selected) !important; }
+
+.dp-grid td {
+  padding: 5px 10px;
+  color: var(--cl-cyan);
+  white-space: nowrap;
+  border-right: 1px solid rgba(31,64,96,.3);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dp-grid td.ssid { color: var(--cl-white); font-weight: bold; }
+.dp-grid td.bssid { color: var(--cl-cyan);opacity:.75; font-family: monospace; }
+.dp-grid td.vendor { color: var(--cl-purple); font-size: .55rem; }
+
+/* RSSI cell color coding */
+.rssi-excellent { color: var(--cl-green) !important; }
+.rssi-good      { color: var(--cl-gold) !important; }
+.rssi-fair      { color: #ffe066 !important; }
+.rssi-poor      { color: var(--cl-orange) !important; }
+.rssi-bad       { color: var(--cl-red) !important; }
+
+/* Enc badge */
+.enc-badge {
+  display: inline-block;
+  padding: 1px 5px;
+  border-radius: 2px;
+  font-size: .5rem;
+  letter-spacing: 1px;
+}
+
+.enc-open {
+  background: rgba(255,85,119,.15);
+  border: 1px solid var(--cl-red);
+  color: var(--cl-red);
+}
+
+.enc-wpa {
+  background: rgba(77,217,255,.08);
+  border: 1px solid rgba(77,217,255,.3);
+  color: var(--cl-cyan);
+}
+
+.dp-status {
+  padding: 4px 12px;
+  font-size: .58rem;
+  color: var(--cl-gold);
+  border-top: 1px solid var(--cl-gold);
+  background: var(--bg2);
+  display: flex;
+  gap: 16px;
+  flex-shrink: 0;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.dp-status span { color: var(--cl-yellow); font-weight: 700; }
+
+/* ── MAP PANE ───────────────────────────────────────────── */
+.mp-container {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+}
+
+#cl-map {
+  flex: 1;
+  min-height: 0;
+}
+
+.mp-sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-left: 1px solid var(--cl-border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.mp-sidebar-section {
+  padding: 10px;
+  border-bottom: 1px solid var(--cl-border);
+}
+
+.mp-section-title {
+  font-family: 'Orbitron', monospace;
+  font-size: .5rem;
+  letter-spacing: 2px;
+  color: var(--cl-gold);
+  margin-bottom: 8px;
+}
+
+.mp-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: .62rem;
+  color: var(--cl-cyan);
+}
+
+.mp-toggle {
+  width: 32px;
+  height: 16px;
+  background: rgba(0,0,0,.4);
+  border: 1px solid var(--cl-border);
+  border-radius: 8px;
+  cursor: pointer;
+  position: relative;
+  transition: all .15s;
+}
+
+.mp-toggle.on {
+  background: rgba(77,217,255,.2);
+  border-color: var(--cl-cyan);
+}
+
+.mp-toggle::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  background: var(--text-dim);
+  border-radius: 50%;
+  transition: all .15s;
+}
+
+.mp-toggle.on::after {
+  left: 18px;
+  background: var(--cl-cyan);
+}
+
+.mp-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .6rem;
+  color: var(--cl-cyan);
+  margin-bottom: 4px;
+}
+
+.mp-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.mp-selected-info {
+  padding: 10px;
+  flex: 1;
+  overflow-y: auto;
+  font-size: .58rem;
+}
+
+.mp-sel-ssid {
+  font-family: 'Orbitron', monospace;
+  font-size: .6rem;
+  color: var(--cl-gold);
+  margin-bottom: 8px;
+  word-break: break-all;
+}
+
+.mp-sel-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 0;
+  border-bottom: 1px solid rgba(31,64,96,.5);
+  color: var(--cl-cyan);opacity:.75;
+}
+
+.mp-sel-row span { color: var(--cl-white); }
+
+/* ── STATISTICS PANE ────────────────────────────────────── */
+.sp-layout {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 1px;
+  background: var(--cl-border);
+  overflow: hidden;
+  min-height: 0;
+}
+
+.sp-panel {
+  background: var(--bg2);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 12px;
+}
+
+.sp-panel-title {
+  font-family: 'Orbitron', monospace;
+  font-size: .55rem;
+  letter-spacing: 2px;
+  color: var(--cl-gold);
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.sp-panel canvas {
+  flex: 1;
+  min-height: 0;
+}
+
+/* Stats table */
+.sp-stats-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .62rem;
+  flex: 1;
+  overflow-y: auto;
+  display: block;
+}
+
+.sp-stats-table tr { border-bottom: 1px solid rgba(31,64,96,.4); }
+.sp-stats-table tr:hover { background: var(--cl-hover); }
+.sp-stats-table td { padding: 5px 8px; color: var(--cl-cyan); }
+.sp-stats-table td:last-child { color: var(--cl-yellow); text-align: right; font-weight: 600; }
+
+/* Channel grid */
+.sp-channel-grid {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 3px;
+  flex: 1;
+  align-content: start;
+}
+
+.sp-ch-bar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.sp-ch-fill {
+  width: 100%;
+  border-radius: 2px 2px 0 0;
+  transition: height .3s ease;
+  min-height: 2px;
+}
+
+.sp-ch-label {
+  font-size: .55rem;
+  color: var(--cl-yellow);
+  font-weight: 600;
+}
+
+/* Vendor bars */
+.sp-vendor-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.sp-vendor-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .62rem;
+}
+
+.sp-vendor-name {
+  width: 100px;
+  color: var(--cl-white);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sp-vendor-bar-wrap {
+  flex: 1;
+  height: 12px;
+  background: rgba(0,0,0,.3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.sp-vendor-bar {
+  height: 100%;
+  border-radius: 2px;
+  background: var(--cl-gold);
+  transition: width .3s ease;
+}
+
+.sp-vendor-count {
+  width: 30px;
+  text-align: right;
+  color: var(--cl-yellow);
+  font-size: .6rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+/* ── REPORT PANE ────────────────────────────────────────── */
+.rp-layout {
+  flex: 1;
+  display: flex;
+  gap: 0;
+  overflow: hidden;
+  min-height: 0;
+}
+
+.rp-config {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--cl-border);
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.rp-section-title {
+  font-family: 'Orbitron', monospace;
+  font-size: .55rem;
+  letter-spacing: 2px;
+  color: var(--cl-gold);
+  margin-bottom: 8px;
+}
+
+.rp-field {
+  margin-bottom: 8px;
+}
+
+.rp-label {
+  font-size: .58rem;
+  color: var(--cl-cyan);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.rp-input {
+  width: 100%;
+  padding: 5px 8px;
+  background: rgba(0,0,0,.4);
+  border: 1px solid var(--cl-border);
+  border-radius: 3px;
+  color: var(--cl-white);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .62rem;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.rp-input:focus { border-color: var(--cl-gold); }
+
+.rp-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .62rem;
+  color: var(--cl-cyan);
+  cursor: pointer;
+  margin-bottom: 6px;
+}
+
+.rp-checkbox input { accent-color: var(--cl-gold); }
+
+.rp-preview {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  background: #0a1018;
+}
+
+.rp-report {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #0d1820;
+  border: 1px solid var(--cl-gold);
+  border-radius: 4px;
+  padding: 32px;
+  font-size: .7rem;
+  line-height: 1.7;
+}
+
+.rp-report-header {
+  border-bottom: 2px solid var(--cl-gold);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.rp-report-title {
+  font-family: 'Orbitron', monospace;
+  font-size: 1rem;
+  color: var(--cl-gold);
+  letter-spacing: 3px;
+}
+
+.rp-report-org {
+  font-size: .6rem;
+  color: var(--cl-cyan);
+  text-align: right;
+}
+
+.rp-report-section {
+  margin-bottom: 20px;
+}
+
+.rp-report-section-title {
+  font-family: 'Orbitron', monospace;
+  font-size: .65rem;
+  letter-spacing: 2px;
+  color: var(--cl-yellow);
+  margin-bottom: 10px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255,224,102,.3);
+}
+
+.rp-report p {
+  color: var(--cl-cyan);
+  margin: 0 0 8px 0;
+}
+
+.rp-report-stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 12px 0;
+}
+
+.rp-stat-box {
+  background: rgba(255,209,102,.08);
+  border: 1px solid var(--cl-gold);
+  border-radius: 3px;
+  padding: 12px;
+  text-align: center;
+}
+
+.rp-stat-value {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.3rem;
+  color: var(--cl-yellow);
+  display: block;
+}
+
+.rp-stat-label {
+  font-size: .55rem;
+  color: var(--cl-cyan);
+  letter-spacing: 1px;
+  display: block;
+  margin-top: 4px;
+}
+
+/* ── Drop state ─────────────────────────────────────────── */
+.cl-drop-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255,209,102,.12);
+  border: 3px dashed var(--cl-gold);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.cl-drop-overlay.active { display: flex; }
+
+.cl-drop-msg {
+  font-family: 'Orbitron', monospace;
+  font-size: 1.4rem;
+  color: var(--cl-gold);
+  letter-spacing: 4px;
+}
+
+/* ── Empty state ────────────────────────────────────────── */
+.cl-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--cl-cyan);opacity:.6;
+}
+
+.cl-empty-icon {
+  font-size: 3rem;
+  opacity: 1;
+  filter: drop-shadow(0 0 16px rgba(255,209,102,.5));
+}
+
+.cl-empty-title {
+  font-family: 'Orbitron', monospace;
+  font-size: .9rem;
+  letter-spacing: 4px;
+  color: var(--cl-yellow);
+  font-weight: 700;
+}
+
+.cl-empty-sub {
+  font-size: .72rem;
+  color: var(--cl-cyan);
+  text-align: center;
+  max-width: 360px;
+  line-height: 1.7;
+}
+
+.cl-empty-formats {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.cl-fmt-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border: 1px solid var(--cl-gold);
+  border-radius: 4px;
+  font-size: .62rem;
+  color: var(--cl-yellow);
+  background: var(--bg3);
+  font-weight: 600;
+}
+
+/* ── Anomaly banner ─────────────────────────────────────── */
+.cl-anomaly-banner {
+  display: none;
+  padding: 8px 14px;
+  background: rgba(255,85,119,.15);
+  border-bottom: 2px solid var(--cl-red);
+  font-size: .68rem;
+  color: var(--cl-red);
+  font-weight: 600;
+  flex-shrink: 0;
+  gap: 12px;
+  align-items: center;
+}
+
+.cl-anomaly-banner.visible { display: flex; }
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--cl-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }
+</style>
+</head>
+<body>
+
+<!-- Drop overlay -->
+<div class="cl-drop-overlay" id="dropOverlay">
+  <div class="cl-drop-icon" style="font-size:3rem">⬇</div>
+  <div class="cl-drop-msg">DROP RF DATA FILE</div>
+  <div style="font-size:.6rem;color:var(--cl-cyan);opacity:.75">WiGLE CSV · Kali airodump · Wireshark CSV · XLSX</div>
+</div>
+
+<!-- Header -->
+<header class="cl-header">
+  <div class="cl-logo">☽ <em>THE CLINICIAN</em></div>
+
+  <nav class="cl-tabs">
+    <div class="cl-tab active" data-pane="data" onclick="switchPane('data')">⊞ DATA</div>
+    <div class="cl-tab" data-pane="map" onclick="switchPane('map')">◈ MAP</div>
+    <div class="cl-tab" data-pane="stats" onclick="switchPane('stats')">∿ STATISTICS</div>
+    <div class="cl-tab" data-pane="report" onclick="switchPane('report')">▤ REPORT</div>
+  </nav>
+
+  <div class="cl-hdr-stats">
+    <div>RECORDS <span id="hdrRecords">—</span></div>
+    <div>OPEN <span id="hdrOpen">—</span></div>
+    <div>VENDORS <span id="hdrVendors">—</span></div>
+    <div>VISIBLE <span id="hdrVisible">—</span></div>
+  </div>
+
+  <div class="cl-hdr-actions">
+    <button class="cl-btn" onclick="document.getElementById('fileInput').click()">⬆ IMPORT</button>
+    <button class="cl-btn" onclick="exportCSV()">⬇ EXPORT</button>
+    <button class="cl-btn" id="liveBridgeBtn" onclick="toggleLiveBridge()">📡 LIVE BRIDGE</button>
+    <button class="cl-btn primary" onclick="runAnalysis()">⚡ ANALYZE</button>
+    <button class="cl-btn danger" onclick="clearAll()">✕ CLEAR</button>
+  </div>
+</header>
+
+<!-- Anomaly banner -->
+<div class="cl-anomaly-banner" id="anomalyBanner">
+  <span>⚠</span>
+  <span id="anomalyText"></span>
+</div>
+
+<!-- Main body -->
+<div class="cl-body">
+
+  <!-- Sidebar -->
+  <aside class="cl-sidebar">
+    <div class="cl-sidebar-section">
+      <div class="cl-sidebar-title">SESSIONS</div>
+
+      <div class="cl-import-zone" id="importZone" onclick="document.getElementById('fileInput').click()">
+        <span class="drop-icon">📂</span>
+        Drop file or click to import
+      </div>
+
+      <div id="sessionList">
+        <div style="font-size:.55rem;color:var(--cl-cyan);opacity:.6;text-align:center;padding:8px">
+          No sessions loaded
+        </div>
+      </div>
+    </div>
+
+    <div class="cl-sidebar-section" style="flex:1;overflow-y:auto">
+      <div class="cl-sidebar-title">QUICK FILTERS</div>
+
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="dp-filter-btn" id="fAll" onclick="setFilter('all')" style="width:100%;text-align:left">ALL RECORDS</button>
+        <button class="dp-filter-btn" id="fOpen" onclick="setFilter('open')" style="width:100%;text-align:left;color:var(--cl-red)">⚠ OPEN NETWORKS</button>
+        <button class="dp-filter-btn" id="fStrong" onclick="setFilter('strong')" style="width:100%;text-align:left;color:var(--cl-green)">▲ STRONG (&gt;-60dBm)</button>
+        <button class="dp-filter-btn" id="fWeak" onclick="setFilter('weak')" style="width:100%;text-align:left;color:var(--cl-orange)">▼ WEAK (&lt;-85dBm)</button>
+        <button class="dp-filter-btn" id="f5g" onclick="setFilter('5g')" style="width:100%;text-align:left;color:var(--cl-cyan)">📶 5GHz ONLY</button>
+        <button class="dp-filter-btn" id="f24g" onclick="setFilter('2.4g')" style="width:100%;text-align:left;color:var(--cl-cyan)">📶 2.4GHz ONLY</button>
+        <button class="dp-filter-btn" id="fGps" onclick="setFilter('gps')" style="width:100%;text-align:left;color:var(--cl-purple)">🛰 GPS-TAGGED</button>
+        <button class="dp-filter-btn" id="fNew" onclick="setFilter('new')" style="width:100%;text-align:left;color:var(--cl-yellow)">✦ UNIQUE SSIDs</button>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="cl-sidebar-title">COLUMN VISIBILITY</div>
+        <div id="colToggleList" style="display:flex;flex-direction:column;gap:4px;font-size:.62rem;color:var(--cl-cyan)">
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Panes -->
+  <div class="cl-panes">
+
+    <!-- DATA PANE -->
+    <div class="cl-pane active" id="paneData">
+      <!-- Data type switcher (Phase 3) -->
+      <div class="cl-datatype-bar" id="dataTypeBar">
+        <div class="cl-datatype-label">DATA TYPE:</div>
+        <button class="cl-dt-btn active" id="dtBtnWifi"  onclick="switchDataType('wifi')">📡 WIFI <span class="cl-dt-count" id="dtCountWifi">0</span></button>
+        <button class="cl-dt-btn"        id="dtBtnBle"   onclick="switchDataType('ble')">📶 BLE <span class="cl-dt-count" id="dtCountBle">0</span></button>
+        <button class="cl-dt-btn"        id="dtBtnProbe" onclick="switchDataType('probe')">🔍 PROBES <span class="cl-dt-count" id="dtCountProbe">0</span></button>
+        <button class="cl-dt-btn"        id="dtBtnLora"  onclick="switchDataType('lora')">📻 LORA <span class="cl-dt-count" id="dtCountLora">0</span></button>
+        <button class="cl-btn" style="margin-left:auto" onclick="toggleTimeSlider()">⏱ TIME</button>
+      </div>
+
+      <!-- Time slider (Phase 4) -->
+      <div class="cl-time-slider" id="timeSlider">
+        <span class="cl-time-label" id="timeStartLabel">—</span>
+        <input type="range" id="timeRangeStart" min="0" max="100" value="0"
+               oninput="onTimeSliderChange()">
+        <input type="range" id="timeRangeEnd" min="0" max="100" value="100"
+               oninput="onTimeSliderChange()">
+        <span class="cl-time-label" id="timeEndLabel">—</span>
+        <button class="cl-btn" onclick="clearTimeFilter()">CLEAR</button>
+      </div>
+      <div class="dp-toolbar">
+        <input class="dp-search" id="searchInput" type="text"
+               placeholder="Search..."
+               oninput="onSearch(this.value)">
+        <div class="dp-filter-group">
+          <button class="dp-filter-btn active" id="fBtnAll" onclick="setFilter('all')">ALL</button>
+          <button class="dp-filter-btn" id="fBtnOpen" onclick="setFilter('open')">OPEN</button>
+          <button class="dp-filter-btn" id="fBtnStrong" onclick="setFilter('strong')">STRONG</button>
+          <button class="dp-filter-btn" id="fBtnGps" onclick="setFilter('gps')">GPS</button>
+        </div>
+        <button class="cl-btn" onclick="sortBy('rssi')">↕ RSSI</button>
+        <button class="cl-btn" id="sortBtn2" onclick="sortBy('ssid')">↕ NAME</button>
+        <button class="cl-btn" onclick="sortBy('firstseen')">↕ TIME</button>
+        <button class="cl-btn success" onclick="copySelection()">⎘ COPY SEL</button>
+      </div>
+
+      <div class="dp-grid-wrap" id="gridWrap">
+        <div class="cl-empty" id="dataEmpty">
+          <div class="cl-empty-icon">🔬</div>
+          <div class="cl-empty-title">THE CLINICIAN</div>
+          <div class="cl-empty-sub">
+            Import RF intelligence data to begin clinical analysis.
+            Drag and drop a file anywhere on this window.
+          </div>
+          <div class="cl-empty-formats">
+            <span class="cl-fmt-badge">WiGLE CSV</span>
+            <span class="cl-fmt-badge">Kali airodump</span>
+            <span class="cl-fmt-badge">Wireshark CSV</span>
+            <span class="cl-fmt-badge">XLSX</span>
+            <span class="cl-fmt-badge">Generic CSV</span>
+          </div>
+        </div>
+        <table class="dp-grid" id="dataGrid" style="display:none">
+          <thead>
+            <tr id="gridHeader"></tr>
+          </thead>
+          <tbody id="gridBody"></tbody>
+        </table>
+      </div>
+
+      <div class="dp-status" id="gridStatus">
+        <div>RECORDS <span id="statusCount">0</span></div>
+        <div>SELECTED <span id="statusSelected">0</span></div>
+        <div>OPEN <span id="statusOpen">0</span></div>
+        <div>5GHz <span id="status5g">0</span></div>
+        <div>GPS-TAGGED <span id="statusGps">0</span></div>
+        <div id="statusSort" style="margin-left:auto;color:var(--cl-cyan);opacity:.6"></div>
+      </div>
+    </div>
+
+    <!-- MAP PANE -->
+    <div class="cl-pane" id="paneMap">
+      <div class="mp-container">
+        <div id="cl-map" style="position:relative">
+          <div class="cl-lasso-active" id="lassoIndicator">
+            🎯 LASSO MODE — click points to draw, double-click to close
+          </div>
+        </div>
+        <div class="mp-sidebar">
+          <div class="mp-sidebar-section">
+            <div class="mp-section-title">MAP LAYERS</div>
+            <div class="mp-control">
+              <span>Heatmap</span>
+              <div class="mp-toggle" id="toggleHeatmap" onclick="toggleLayer('heatmap')"></div>
+            </div>
+            <div class="mp-control">
+              <span>Markers</span>
+              <div class="mp-toggle on" id="toggleMarkers" onclick="toggleLayer('markers')"></div>
+            </div>
+            <div class="mp-control">
+              <span>Open only</span>
+              <div class="mp-toggle" id="toggleOpenOnly" onclick="toggleLayer('openonly')"></div>
+            </div>
+            <div class="mp-control">
+              <span>GPS track</span>
+              <div class="mp-toggle" id="toggleTrack" onclick="toggleLayer('track')"></div>
+            </div>
+            <div class="mp-control">
+              <span>DBSCAN clusters</span>
+              <div class="mp-toggle" id="toggleClusters" onclick="toggleLayer('clusters')"></div>
+            </div>
+          </div>
+
+          <div class="mp-sidebar-section">
+            <div class="mp-section-title">SPATIAL TOOLS</div>
+            <button class="cl-btn" onclick="startLasso()" style="width:100%;margin-bottom:6px">
+              🎯 LASSO SELECT
+            </button>
+            <button class="cl-btn" onclick="clearLasso()" style="width:100%;margin-bottom:6px">
+              ✕ CLEAR LASSO
+            </button>
+            <button class="cl-btn" onclick="runClustering()" style="width:100%">
+              ⚛ RUN DBSCAN
+            </button>
+            <div id="clusterInfo" style="margin-top:8px;font-size:.55rem;color:var(--cl-cyan);opacity:.75"></div>
+          </div>
+
+          <div class="mp-sidebar-section">
+            <div class="mp-section-title">SESSION OVERLAY</div>
+            <div id="sessionOverlayList" style="font-size:.6rem;color:var(--cl-cyan);opacity:.75">
+              Load multiple sessions to compare
+            </div>
+          </div>
+
+          <div class="mp-sidebar-section">
+            <div class="mp-section-title">SIGNAL LEGEND</div>
+            <div class="mp-legend-item">
+              <div class="mp-legend-dot" style="background:#4dffa6"></div>
+              <span>Excellent (&gt;-50dBm)</span>
+            </div>
+            <div class="mp-legend-item">
+              <div class="mp-legend-dot" style="background:#ffd166"></div>
+              <span>Good (-50 to -65)</span>
+            </div>
+            <div class="mp-legend-item">
+              <div class="mp-legend-dot" style="background:#ffe066"></div>
+              <span>Fair (-65 to -75)</span>
+            </div>
+            <div class="mp-legend-item">
+              <div class="mp-legend-dot" style="background:#ffa040"></div>
+              <span>Poor (-75 to -85)</span>
+            </div>
+            <div class="mp-legend-item">
+              <div class="mp-legend-dot" style="background:#ff5577"></div>
+              <span>Bad (&lt;-85dBm)</span>
+            </div>
+          </div>
+
+          <div class="mp-selected-info" id="mapSelectedInfo">
+            <div style="font-size:.55rem;color:var(--cl-cyan);opacity:.6;text-align:center;padding:12px">
+              Click a marker to inspect
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATISTICS PANE -->
+    <div class="cl-pane" id="paneStats">
+      <div class="cl-empty" id="statsEmpty">
+        <div class="cl-empty-icon">∿</div>
+        <div class="cl-empty-title">NO DATA</div>
+        <div class="cl-empty-sub">Import RF data to generate statistical analysis.</div>
+      </div>
+      <div class="sp-layout" id="statsLayout" style="display:none">
+        <!-- Channel utilization -->
+        <div class="sp-panel">
+          <div class="sp-panel-title">CHANNEL UTILIZATION</div>
+          <div class="sp-channel-grid" id="channelGrid"></div>
+        </div>
+
+        <!-- Vendor distribution -->
+        <div class="sp-panel">
+          <div class="sp-panel-title">VENDOR DISTRIBUTION</div>
+          <div class="sp-vendor-list" id="vendorList"></div>
+        </div>
+
+        <!-- Summary stats -->
+        <div class="sp-panel">
+          <div class="sp-panel-title">CLINICAL SUMMARY</div>
+          <table class="sp-stats-table">
+            <tbody id="summaryStats"></tbody>
+          </table>
+        </div>
+
+        <!-- Security breakdown -->
+        <div class="sp-panel">
+          <div class="sp-panel-title">SECURITY BREAKDOWN</div>
+          <canvas id="securityCanvas" style="max-height:220px"></canvas>
+          <div id="securityLegend" style="margin-top:8px;font-size:.55rem;display:flex;flex-wrap:wrap;gap:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REPORT PANE -->
+    <div class="cl-pane" id="paneReport">
+      <div class="rp-layout">
+        <div class="rp-config">
+          <div>
+            <div class="rp-section-title">REPORT METADATA</div>
+            <div class="rp-field">
+              <label class="rp-label">Client / Organization</label>
+              <input class="rp-input" id="rptClient" placeholder="Fluid Fortune">
+            </div>
+            <div class="rp-field">
+              <label class="rp-label">Analyst</label>
+              <input class="rp-input" id="rptAnalyst" placeholder="Eric Becker">
+            </div>
+            <div class="rp-field">
+              <label class="rp-label">Engagement Type</label>
+              <input class="rp-input" id="rptType" placeholder="RF Security Audit">
+            </div>
+            <div class="rp-field">
+              <label class="rp-label">Location</label>
+              <input class="rp-input" id="rptLocation" placeholder="Site name / address">
+            </div>
+            <div class="rp-field">
+              <label class="rp-label">Classification</label>
+              <input class="rp-input" id="rptClass" placeholder="CONFIDENTIAL">
+            </div>
+          </div>
+
+          <div>
+            <div class="rp-section-title">INCLUDE SECTIONS</div>
+            <label class="rp-checkbox">
+              <input type="checkbox" id="rptExec" checked> Executive Summary
+            </label>
+            <label class="rp-checkbox">
+              <input type="checkbox" id="rptStats" checked> Statistical Analysis
+            </label>
+            <label class="rp-checkbox">
+              <input type="checkbox" id="rptAnomalies" checked> Anomalies & Threats
+            </label>
+            <label class="rp-checkbox">
+              <input type="checkbox" id="rptVendors" checked> Vendor Analysis
+            </label>
+            <label class="rp-checkbox">
+              <input type="checkbox" id="rptChannels" checked> Channel Analysis
+            </label>
+            <label class="rp-checkbox">
+              <input type="checkbox" id="rptOpenNets" checked> Open Networks List
+            </label>
+            <label class="rp-checkbox">
+              <input type="checkbox" id="rptRecs" checked> Recommendations
+            </label>
+          </div>
+
+          <div style="display:flex;flex-direction:column;gap:6px;margin-top:auto">
+            <button class="cl-btn primary" onclick="buildReport()" style="width:100%">⚡ BUILD REPORT</button>
+            <button class="cl-btn success" onclick="printReport()" style="width:100%">🖨 PRINT / PDF</button>
+          </div>
+        </div>
+
+        <div class="rp-preview">
+          <div class="rp-report" id="reportContent">
+            <div style="text-align:center;padding:40px;color:var(--cl-cyan);opacity:.6;font-size:.6rem">
+              Configure report metadata and click BUILD REPORT
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /cl-panes -->
+</div><!-- /cl-body -->
+
+<!-- Hidden file input -->
+<input type="file" id="fileInput" accept=".csv,.txt,.xlsx,.xls"
+       style="display:none" onchange="onFileSelected(this)">
+
+<script src="lib/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet.heat@0.2.0/dist/leaflet-heat.js"
+        onerror="console.warn('Leaflet.heat CDN unavailable — heatmap layer disabled')"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"
+        onerror="console.warn('SheetJS CDN unavailable — XLSX import disabled')"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"
+        onerror="console.warn('JSZip CDN unavailable — .pmsession archive import disabled')"></script>
+<script src="pm_lib.js"></script>
+<script src="pm_viz.js"></script>
+<script src="pm_stats.js"></script>
+<script src="pm_transport.js"></script>
+
+<script>
+// Global error capture so "Script error" actually shows details
+window.addEventListener('error', function(e) {
+  // CORS-masked script errors arrive as "Script error." with no details.
+  // For local debugging, log what we can.
+  if (e.message === 'Script error.' || !e.message) {
+    console.warn('[Clinician] Cross-origin script error — likely CDN blocked or offline.');
+    return;
+  }
+  console.error('[Clinician error]', e.message, 'at', e.filename + ':' + e.lineno);
+});
+window.addEventListener('unhandledrejection', function(e) {
+  console.error('[Clinician promise rejection]', e.reason);
+});
+</script>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// THE CLINICIAN — RF Intelligence Analysis Platform
+// Pisces Moon OS / Fluid Fortune
+// Copyright (C) 2026 Eric Becker / AGPL-3.0-or-later
+// ═══════════════════════════════════════════════════════════════════
+
+// ── OUI VENDOR LOOKUP TABLE (top 120 RF-relevant vendors) ──────────
+const OUI_TABLE = {
+  // Apple
+  '00:03:93':'Apple','00:0a:95':'Apple','00:0d:93':'Apple','00:11:24':'Apple',
+  '00:14:51':'Apple','00:16:cb':'Apple','00:17:f2':'Apple','00:19:e3':'Apple',
+  '00:1c:b3':'Apple','00:1d:4f':'Apple','00:1e:52':'Apple','00:1e:c2':'Apple',
+  '00:1f:5b':'Apple','00:1f:f3':'Apple','00:21:e9':'Apple','00:22:41':'Apple',
+  '00:23:12':'Apple','00:23:32':'Apple','00:23:6c':'Apple','00:24:36':'Apple',
+  '00:25:00':'Apple','00:25:4b':'Apple','00:25:bc':'Apple','00:26:08':'Apple',
+  '00:26:4a':'Apple','00:26:b0':'Apple','00:26:bb':'Apple','00:3e:e1':'Apple',
+  '04:0c:ce':'Apple','04:15:52':'Apple','04:26:65':'Apple','04:48:9a':'Apple',
+  '04:52:f3':'Apple','04:54:53':'Apple','04:69:f8':'Apple','04:d3:cf':'Apple',
+  '04:e5:36':'Apple','04:f1:3e':'Apple','04:f7:e4':'Apple','08:00:07':'Apple',
+  '08:6d:41':'Apple','08:70:45':'Apple','0c:30:21':'Apple','10:40:f3':'Apple',
+  // Samsung
+  '00:02:78':'Samsung','00:07:ab':'Samsung','00:12:47':'Samsung','00:15:99':'Samsung',
+  '00:16:32':'Samsung','00:17:c9':'Samsung','00:18:af':'Samsung','00:1a:8a':'Samsung',
+  '00:1b:98':'Samsung','00:1d:25':'Samsung','00:1e:7d':'Samsung','00:21:19':'Samsung',
+  '00:23:39':'Samsung','00:24:54':'Samsung','00:24:90':'Samsung','00:25:38':'Samsung',
+  '08:08:c2':'Samsung','08:37:3d':'Samsung','0c:14:20':'Samsung','0c:71:5d':'Samsung',
+  // Espressif (ESP32)
+  '10:52:1c':'Espressif','18:fe:34':'Espressif','24:0a:c4':'Espressif',
+  '24:6f:28':'Espressif','30:ae:a4':'Espressif','3c:71:bf':'Espressif',
+  '40:91:51':'Espressif','4c:75:25':'Espressif','54:43:b2':'Espressif',
+  '5c:cf:7f':'Espressif','60:01:94':'Espressif','68:67:25':'Espressif',
+  '7c:9e:bd':'Espressif','84:0d:8e':'Espressif','84:cc:a8':'Espressif',
+  '94:b5:55':'Espressif','a0:20:a6':'Espressif','a4:cf:12':'Espressif',
+  'b4:e6:2d':'Espressif','c4:4f:33':'Espressif','c8:2b:96':'Espressif',
+  // Google
+  '00:1a:11':'Google','00:1c:d0':'Google','08:9e:01':'Google',
+  '1c:f2:9a':'Google','20:df:b9':'Google','3c:5a:b4':'Google',
+  '48:d6:d5':'Google','50:dc:e7':'Google','54:60:09':'Google',
+  '6c:ad:f8':'Google','70:3a:51':'Google','94:95:a0':'Google',
+  // TP-Link
+  '00:1d:0f':'TP-Link','00:23:cd':'TP-Link','00:25:86':'TP-Link',
+  '00:27:19':'TP-Link','10:fe:ed':'TP-Link','14:cc:20':'TP-Link',
+  '18:a6:f7':'TP-Link','1c:61:b4':'TP-Link','20:dc:e6':'TP-Link',
+  '28:28:5d':'TP-Link','2c:4d:54':'TP-Link','30:b5:c2':'TP-Link',
+  '38:2c:4a':'TP-Link','3c:84:6a':'TP-Link','40:16:9f':'TP-Link',
+  // Netgear
+  '00:09:5b':'Netgear','00:0f:b5':'Netgear','00:14:6c':'Netgear',
+  '00:18:4d':'Netgear','00:1b:2f':'Netgear','00:1e:2a':'Netgear',
+  '00:24:b2':'Netgear','00:26:f2':'Netgear','20:4e:7f':'Netgear',
+  '28:c6:8e':'Netgear','2c:30:33':'Netgear','30:46:9a':'Netgear',
+  // Cisco
+  '00:01:42':'Cisco','00:01:43':'Cisco','00:01:63':'Cisco','00:01:64':'Cisco',
+  '00:01:96':'Cisco','00:01:97':'Cisco','00:01:c7':'Cisco','00:01:c9':'Cisco',
+  // Intel
+  '00:02:b3':'Intel','00:03:47':'Intel','00:04:23':'Intel','00:0c:f1':'Intel',
+  '00:0e:35':'Intel','00:0e:d7':'Intel','00:12:f0':'Intel','00:13:02':'Intel',
+  // Ubiquiti
+  '00:15:6d':'Ubiquiti','00:27:22':'Ubiquiti','04:18:d6':'Ubiquiti',
+  '0a:18:d6':'Ubiquiti','18:e8:29':'Ubiquiti','24:a4:3c':'Ubiquiti',
+  '44:d9:e7':'Ubiquiti','68:72:51':'Ubiquiti','74:83:c2':'Ubiquiti',
+  // Aruba
+  '00:0b:86':'Aruba','00:1a:1e':'Aruba','00:24:6c':'Aruba',
+  '04:bd:88':'Aruba','08:ed:02':'Aruba','24:de:c6':'Aruba',
+};
+
+function oui(mac) {
+  if (!mac) return '';
+  const prefix = mac.toLowerCase().substring(0,8);
+  return OUI_TABLE[prefix] || '';
+}
+
+function rssiClass(rssi) {
+  const r = parseInt(rssi) || -100;
+  if (r > -50) return 'rssi-excellent';
+  if (r > -65) return 'rssi-good';
+  if (r > -75) return 'rssi-fair';
+  if (r > -85) return 'rssi-poor';
+  return 'rssi-bad';
+}
+
+function rssiColor(rssi) {
+  const r = parseInt(rssi) || -100;
+  if (r > -50) return '#4dffa6';
+  if (r > -65) return '#ffd166';
+  if (r > -75) return '#ffe066';
+  if (r > -85) return '#ffa040';
+  return '#ff5577';
+}
+
+function freqToChannel(freq) {
+  const f = parseInt(freq) || 0;
+  if (f >= 2412 && f <= 2484) return Math.round((f - 2412) / 5) + 1;
+  if (f >= 5170 && f <= 5825) return Math.round((f - 5000) / 5);
+  return 0;
+}
+
+function freqToBand(freq) {
+  return parseInt(freq) >= 5000 ? '5GHz' : '2.4GHz';
+}
+
+// ── STATE ─────────────────────────────────────────────────────────
+let allRecords    = [];  // all imported records (current data type)
+let filteredRecords = []; // after filter/search
+let selectedRows  = new Set();
+let sessions      = [];  // { name, records, color, visible, dataType }
+let currentFilter = 'all';
+let searchQuery   = '';
+let sortCol       = 'rssi';
+let sortDir       = 'desc';
+let mapInstance   = null;
+let mapMarkers    = [];
+let mapLayers     = { heatmap: false, markers: true, openonly: false, track: false,
+                      clusters: false, lasso: false };
+let columns       = ['ssid','bssid','rssi','channel','band','enc','vendor','lat','lon','firstseen','lastseen'];
+let visibleCols   = new Set(['ssid','bssid','rssi','channel','band','enc','vendor']);
+
+// Phase 3: Multi-data-type support
+let currentDataType = 'wifi';   // wifi | ble | probe | lora
+let dataStore = {
+  wifi:  [],   // wardrive records
+  ble:   [],   // BLE observations
+  probe: [],   // probe requests
+  lora:  [],   // LoRa mesh links
+};
+
+// Phase 4: Temporal & spatial selection
+let timeRange    = null;   // { start, end } in ms — null = no temporal filter
+let lassoPolygon = null;   // [[lat,lon], ...] — null = no lasso filter
+let clusterData  = null;   // PMStats.dbscan result, cached per data set
+let clusterLayer = null;   // Leaflet layer group for cluster polygons
+let lassoLayer   = null;   // Leaflet layer for the lasso polygon
+let lassoDrawing = false;
+let lassoPoints  = [];
+let timelineBins = [];     // PMStats.timeline result for current data
+let activeSessionsForOverlay = new Set();  // Phase 4: multi-session map overlay
+
+// ── COLUMN CONFIGS PER DATA TYPE (Phase 3) ─────────────────────────
+const DATA_TYPE_COLUMNS = {
+  wifi: {
+    columns: ['ssid','bssid','rssi','channel','band','enc','vendor','lat','lon','firstseen','lastseen'],
+    visible: new Set(['ssid','bssid','rssi','channel','band','enc','vendor']),
+    primary: 'bssid',
+    label:   'WIFI',
+    icon:    '📡',
+  },
+  ble: {
+    columns: ['name','mac','rssi','vendor','addr_type','mfg_data','service_uuids','lat','lon','firstseen','lastseen'],
+    visible: new Set(['name','mac','rssi','vendor','addr_type']),
+    primary: 'mac',
+    label:   'BLE',
+    icon:    '📶',
+  },
+  probe: {
+    columns: ['mac','ssid','rssi','count','vendor','lat','lon','firstseen','lastseen'],
+    visible: new Set(['mac','ssid','rssi','count','vendor']),
+    primary: 'mac',
+    label:   'PROBES',
+    icon:    '🔍',
+  },
+  lora: {
+    columns: ['node_from','node_to','rssi','snr','frequency','sf','bandwidth','quality','firstseen'],
+    visible: new Set(['node_from','node_to','rssi','snr','frequency','quality']),
+    primary: 'node_from',
+    label:   'LORA',
+    icon:    '📻',
+  },
+};
+
+// ── COLUMN CONFIG ─────────────────────────────────────────────────
+const COL_LABELS = {
+  ssid:          'SSID',
+  bssid:         'BSSID',
+  mac:           'MAC',
+  name:          'NAME',
+  rssi:          'RSSI',
+  channel:       'CH',
+  band:          'BAND',
+  enc:           'ENC',
+  vendor:        'VENDOR',
+  addr_type:     'ADDR TYPE',
+  mfg_data:      'MFG DATA',
+  service_uuids: 'SERVICES',
+  count:         'SIGHTINGS',
+  node_from:     'FROM',
+  node_to:       'TO',
+  snr:           'SNR',
+  frequency:     'FREQ',
+  sf:            'SF',
+  bandwidth:     'BW',
+  quality:       'QUALITY',
+  lat:           'LAT',
+  lon:           'LON',
+  firstseen:     'FIRST SEEN',
+  lastseen:      'LAST SEEN',
+};
+
+// ── PANE SWITCHING ────────────────────────────────────────────────
+function switchPane(name) {
+  document.querySelectorAll('.cl-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.pane === name);
+  });
+  document.querySelectorAll('.cl-pane').forEach(p => {
+    p.classList.toggle('active', p.id === 'pane' + name.charAt(0).toUpperCase() + name.slice(1));
+  });
+  if (name === 'map') initMap();
+  if (name === 'stats') renderStats();
+  if (name === 'report') buildReport();
+}
+
+// ── PHASE 3: DATA TYPE SWITCHING ──────────────────────────────────
+function switchDataType(type) {
+  if (!DATA_TYPE_COLUMNS[type]) return;
+  currentDataType = type;
+
+  // Update active button
+  ['wifi', 'ble', 'probe', 'lora'].forEach(t => {
+    const btn = document.getElementById('dtBtn' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.classList.toggle('active', t === type);
+  });
+
+  // Update active records pointer
+  allRecords = dataStore[type] || [];
+
+  // Switch column visibility to type's preset
+  const cfg = DATA_TYPE_COLUMNS[type];
+  columns = [...cfg.columns];
+  visibleCols = new Set(cfg.visible);
+
+  // Update search placeholder
+  const search = document.getElementById('searchInput');
+  if (search) {
+    if (type === 'wifi')   search.placeholder = 'Search SSID, BSSID, vendor...';
+    if (type === 'ble')    search.placeholder = 'Search MAC, name, vendor...';
+    if (type === 'probe')  search.placeholder = 'Search MAC, requested SSID...';
+    if (type === 'lora')   search.placeholder = 'Search node IDs...';
+  }
+
+  // Update sort default per type
+  if (type === 'lora') sortCol = 'rssi';
+  else if (type === 'probe') sortCol = 'count';
+  else sortCol = 'rssi';
+
+  // Update column toggle UI
+  initColToggles();
+
+  // Reset filter to ALL (some filters don't apply to all types)
+  currentFilter = 'all';
+
+  // Rebuild grid
+  applyFilter();
+  updateDataTypeCounts();
+
+  // Refresh map and stats if those panes are open
+  if (mapInstance) renderMapMarkers();
+  renderStats();
+}
+
+function updateDataTypeCounts() {
+  ['wifi', 'ble', 'probe', 'lora'].forEach(t => {
+    const el = document.getElementById('dtCount' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (el) el.textContent = (dataStore[t] || []).length.toLocaleString();
+  });
+}
+
+// ── IMPORT ────────────────────────────────────────────────────────
+function onFileSelected(input) {
+  const file = input.files[0];
+  if (!file) return;
+  importFile(file);
+  input.value = '';
+}
+
+function importFile(file) {
+  const name = file.name.toLowerCase();
+  const reader = new FileReader();
+
+  if (name.endsWith('.pmsession') || name.endsWith('.zip')) {
+    // Phase 4: .pmsession archive — unpack via JSZip if available
+    reader.onload = e => importPMSession(e.target.result, file.name);
+    reader.readAsArrayBuffer(file);
+  } else if (name.endsWith('.xlsx') || name.endsWith('.xls')) {
+    reader.onload = e => importXLSX(e.target.result, file.name);
+    reader.readAsArrayBuffer(file);
+  } else {
+    reader.onload = e => importCSV(e.target.result, file.name);
+    reader.readAsText(file);
+  }
+}
+
+function importCSV(text, filename) {
+  const lines = text.split('\n').map(l => l.trim()).filter(Boolean);
+  if (!lines.length) return;
+
+  // Detect format from header AND filename for the new PM data types
+  const header = lines[0].toLowerCase();
+  const fname = (filename || '').toLowerCase();
+
+  let records = [];
+  let dataType = 'wifi';
+
+  // Phase 3: Pisces Moon native multi-format detection
+  if (header.includes('piscesmoonble') || fname.includes('ble_')) {
+    records = parseBleCSV(lines);
+    dataType = 'ble';
+  } else if (header.includes('piscesmoonprobe') || fname.includes('probes_')) {
+    records = parseProbeCSV(lines);
+    dataType = 'probe';
+  } else if (header.includes('piscesmoonlora') || fname.includes('lora_')) {
+    records = parseLoraCSV(lines);
+    dataType = 'lora';
+  } else if (header.includes('wigle') || header.includes('wifinetworkid') ||
+      header.startsWith('netid') || header.includes('firstseen') ||
+      fname.includes('wardrive_')) {
+    records = parseWiGLE(lines);
+    dataType = 'wifi';
+  } else if (header.includes('bssid') && header.includes('power')) {
+    records = parseKali(lines);
+    dataType = 'wifi';
+  } else if (header.includes('mac') && header.includes('ssid') && !header.includes('bssid')) {
+    // Could be a probe-style dump
+    records = parseGenericCSV(lines);
+    dataType = 'wifi';  // default to wifi unless very explicit
+  } else if (header.includes('bssid') || header.includes('mac')) {
+    records = parseGenericCSV(lines);
+    dataType = 'wifi';
+  } else {
+    // Last-ditch: try WiGLE
+    records = parseWiGLE(lines);
+    dataType = 'wifi';
+  }
+
+  if (!records.length) {
+    alert('Could not parse file. Supported formats:\n' +
+          '• WiGLE 1.4 CSV (Pisces Moon wardrive)\n' +
+          '• Pisces Moon BLE CSV (ble_*.csv)\n' +
+          '• Pisces Moon Probe CSV (probes_*.csv)\n' +
+          '• Pisces Moon LoRa CSV (lora_*.csv)\n' +
+          '• Kali airodump CSV\n' +
+          '• Generic WiFi CSV\n' +
+          '• .pmsession archive');
+    return;
+  }
+
+  // Enrich
+  records.forEach(r => {
+    r._dataType = dataType;
+    if (dataType === 'wifi') {
+      if (!r.vendor && r.bssid) r.vendor = oui(r.bssid);
+      if (!r.band && r.channel) {
+        r.band = parseInt(r.channel) > 14 ? '5GHz' : '2.4GHz';
+      }
+    } else if (dataType === 'ble' || dataType === 'probe') {
+      if (!r.vendor && r.mac) r.vendor = oui(r.mac);
+    }
+  });
+
+  const sessionName = filename.replace(/\.[^.]+$/, '').substring(0, 30);
+  const sessionColor = ['#4dd9ff','#4dffa6','#ffd166','#ffa040','#c89eff'][sessions.length % 5];
+
+  sessions.push({
+    name: sessionName,
+    records: records,
+    color: sessionColor,
+    visible: true,
+    dataType: dataType,
+  });
+
+  // Add to the appropriate data store
+  dataStore[dataType] = dataStore[dataType].concat(records);
+
+  saveToStorage();
+  switchDataType(dataType);  // switch to the imported type
+  renderSessionList();
+  updateHeader();
+  detectAnomalies();
+
+  switchPane('data');
+}
+
+// ── PHASE 3: NEW PARSERS ──────────────────────────────────────────
+
+function parseBleCSV(lines) {
+  // Schema: MAC,Name,RSSI,FirstSeen,LastSeen,Vendor,CurrentLatitude,CurrentLongitude,
+  //         AltitudeMeters,ManufacturerData,ServiceUUIDs,AddrType,Source,Type
+  const records = [];
+  let headerRow = -1;
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const l = lines[i].toLowerCase();
+    if (l.includes('mac') && l.includes('rssi')) { headerRow = i; break; }
+  }
+  if (headerRow < 0) return [];
+
+  const headers = lines[headerRow].split(',').map(h => h.trim().toLowerCase().replace(/"/g,''));
+  const idx = key => headers.findIndex(h => h.includes(key));
+  const iMac    = idx('mac');
+  const iName   = idx('name');
+  const iRssi   = idx('rssi');
+  const iFirst  = idx('firstseen') >= 0 ? idx('firstseen') : idx('first');
+  const iLast   = idx('lastseen') >= 0 ? idx('lastseen') : idx('last');
+  const iVendor = idx('vendor');
+  const iLat    = idx('lat') >= 0 ? idx('lat') : idx('latitude');
+  const iLon    = idx('lon') >= 0 ? idx('lon') : idx('longitude');
+  const iMfg    = idx('manufacturerdata') >= 0 ? idx('manufacturerdata') : idx('mfg');
+  const iUuids  = idx('serviceuuids') >= 0 ? idx('serviceuuids') : idx('uuids');
+  const iAddr   = idx('addrtype') >= 0 ? idx('addrtype') : idx('addr');
+  const iSrc    = idx('source');
+
+  for (let i = headerRow + 1; i < lines.length; i++) {
+    const parts = csvSplit(lines[i]);
+    if (parts.length < 3) continue;
+    const mac = (iMac >= 0 ? parts[iMac].trim().replace(/"/g,'') : '');
+    if (!mac) continue;
+    records.push({
+      mac:           mac,
+      name:          iName >= 0 ? parts[iName].trim().replace(/"/g,'') : '',
+      rssi:          iRssi >= 0 ? parseInt(parts[iRssi]) || -80 : -80,
+      vendor:        iVendor >= 0 ? parts[iVendor].trim() : '',
+      addr_type:     iAddr >= 0 ? parts[iAddr].trim() : 'unknown',
+      mfg_data:      iMfg >= 0 ? parts[iMfg].trim() : '',
+      service_uuids: iUuids >= 0 ? parts[iUuids].trim() : '',
+      lat:           iLat >= 0 ? parseFloat(parts[iLat]) || null : null,
+      lon:           iLon >= 0 ? parseFloat(parts[iLon]) || null : null,
+      firstseen:     iFirst >= 0 ? parts[iFirst].trim() : '',
+      lastseen:      iLast >= 0 ? parts[iLast].trim() : '',
+      source:        iSrc >= 0 ? parts[iSrc].trim() : 'imported',
+    });
+  }
+  return records;
+}
+
+function parseProbeCSV(lines) {
+  // Schema: ClientMAC,SSIDRequested,RSSI,FirstSeen,LastSeen,SightingCount,Vendor,
+  //         CurrentLatitude,CurrentLongitude,AltitudeMeters,Source,Type
+  const records = [];
+  let headerRow = -1;
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const l = lines[i].toLowerCase();
+    if (l.includes('mac') || l.includes('client')) { headerRow = i; break; }
+  }
+  if (headerRow < 0) return [];
+
+  const headers = lines[headerRow].split(',').map(h => h.trim().toLowerCase().replace(/"/g,''));
+  const idx = key => headers.findIndex(h => h.includes(key));
+  const iMac    = idx('clientmac') >= 0 ? idx('clientmac') : idx('mac');
+  const iSsid   = idx('ssid');
+  const iRssi   = idx('rssi');
+  const iCount  = idx('sighting') >= 0 ? idx('sighting') : idx('count');
+  const iVendor = idx('vendor');
+  const iLat    = idx('lat');
+  const iLon    = idx('lon');
+  const iFirst  = idx('first');
+  const iLast   = idx('last');
+  const iSrc    = idx('source');
+
+  for (let i = headerRow + 1; i < lines.length; i++) {
+    const parts = csvSplit(lines[i]);
+    if (parts.length < 3) continue;
+    const mac = (iMac >= 0 ? parts[iMac].trim().replace(/"/g,'') : '');
+    if (!mac) continue;
+    records.push({
+      mac:       mac,
+      ssid:      iSsid >= 0 ? parts[iSsid].trim().replace(/"/g,'') : '',
+      rssi:      iRssi >= 0 ? parseInt(parts[iRssi]) || -80 : -80,
+      count:     iCount >= 0 ? parseInt(parts[iCount]) || 1 : 1,
+      vendor:    iVendor >= 0 ? parts[iVendor].trim() : '',
+      lat:       iLat >= 0 ? parseFloat(parts[iLat]) || null : null,
+      lon:       iLon >= 0 ? parseFloat(parts[iLon]) || null : null,
+      firstseen: iFirst >= 0 ? parts[iFirst].trim() : '',
+      lastseen:  iLast >= 0 ? parts[iLast].trim() : '',
+      source:    iSrc >= 0 ? parts[iSrc].trim() : 'imported',
+    });
+  }
+  return records;
+}
+
+function parseLoraCSV(lines) {
+  // Schema: NodeFrom,NodeTo,RSSI,SNR,Frequency,SF,Bandwidth,FirstSeen,
+  //         LinkQuality,GPSLatFrom,GPSLonFrom,GPSLatTo,GPSLonTo,Type
+  const records = [];
+  let headerRow = -1;
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const l = lines[i].toLowerCase();
+    if (l.includes('nodefrom') || (l.includes('rssi') && l.includes('snr'))) {
+      headerRow = i; break;
+    }
+  }
+  if (headerRow < 0) return [];
+
+  const headers = lines[headerRow].split(',').map(h => h.trim().toLowerCase().replace(/"/g,''));
+  const idx = key => headers.findIndex(h => h.includes(key));
+  const iFrom   = idx('nodefrom') >= 0 ? idx('nodefrom') : idx('from');
+  const iTo     = idx('nodeto') >= 0 ? idx('nodeto') : idx('to');
+  const iRssi   = idx('rssi');
+  const iSnr    = idx('snr');
+  const iFreq   = idx('frequency');
+  const iSf     = idx('sf');
+  const iBw     = idx('bandwidth');
+  const iQual   = idx('quality');
+  const iFirst  = idx('first');
+  const iLatF   = idx('latfrom');
+  const iLonF   = idx('lonfrom');
+  const iLatT   = idx('latto');
+  const iLonT   = idx('lonto');
+
+  for (let i = headerRow + 1; i < lines.length; i++) {
+    const parts = csvSplit(lines[i]);
+    if (parts.length < 3) continue;
+    const from = (iFrom >= 0 ? parts[iFrom].trim().replace(/"/g,'') : '');
+    if (!from) continue;
+    records.push({
+      node_from:  from,
+      node_to:    iTo >= 0 ? parts[iTo].trim().replace(/"/g,'') : '',
+      rssi:       iRssi >= 0 ? parseInt(parts[iRssi]) || -100 : -100,
+      snr:        iSnr >= 0 ? parseFloat(parts[iSnr]) || 0 : 0,
+      frequency:  iFreq >= 0 ? parseFloat(parts[iFreq]) || 915 : 915,
+      sf:         iSf >= 0 ? parseInt(parts[iSf]) || 7 : 7,
+      bandwidth:  iBw >= 0 ? parseInt(parts[iBw]) || 125 : 125,
+      quality:    iQual >= 0 ? parseInt(parts[iQual]) || 0 : 0,
+      lat:        iLatF >= 0 ? parseFloat(parts[iLatF]) || null : null,
+      lon:        iLonF >= 0 ? parseFloat(parts[iLonF]) || null : null,
+      lat_to:     iLatT >= 0 ? parseFloat(parts[iLatT]) || null : null,
+      lon_to:     iLonT >= 0 ? parseFloat(parts[iLonT]) || null : null,
+      firstseen:  iFirst >= 0 ? parts[iFirst].trim() : '',
+    });
+  }
+  return records;
+}
+
+// ── PHASE 4: .PMSESSION ARCHIVE IMPORT ─────────────────────────────
+async function importPMSession(buffer, filename) {
+  if (typeof JSZip === 'undefined') {
+    alert('JSZip not loaded — cannot read .pmsession archive.\n' +
+          'Extract the archive manually and import individual CSV files.');
+    return;
+  }
+  try {
+    const zip = await JSZip.loadAsync(buffer);
+    let count = 0;
+    for (const fname of Object.keys(zip.files)) {
+      if (fname === 'manifest.json') continue;
+      if (!fname.endsWith('.csv')) continue;
+      const text = await zip.files[fname].async('string');
+      importCSV(text, fname);
+      count++;
+    }
+    if (count === 0) {
+      alert('No CSV files found in archive.');
+    }
+  } catch(e) {
+    alert('Failed to read .pmsession archive: ' + e.message);
+  }
+}
+
+function parseWiGLE(lines) {
+  const records = [];
+  let headerRow = -1;
+
+  // Find the header row (WiGLE has a metadata line first)
+  for (let i = 0; i < Math.min(5, lines.length); i++) {
+    const l = lines[i].toLowerCase();
+    if (l.includes('netid') || l.includes('bssid') || l.includes('mac')) {
+      headerRow = i;
+      break;
+    }
+  }
+
+  if (headerRow < 0) return [];
+
+  const headers = lines[headerRow].split(',').map(h => h.trim().toLowerCase().replace(/"/g,''));
+
+  const idx = key => headers.findIndex(h => h.includes(key));
+  const iMAC    = idx('mac') >= 0 ? idx('mac') : idx('netid') >= 0 ? idx('netid') : idx('bssid');
+  const iSSID   = idx('ssid');
+  const iRSSI   = idx('rssi') >= 0 ? idx('rssi') : idx('signal') >= 0 ? idx('signal') : idx('snr');
+  const iCh     = idx('channel') >= 0 ? idx('channel') : idx('ch');
+  const iAuth   = idx('auth') >= 0 ? idx('auth') : idx('encryption') >= 0 ? idx('encryption') : idx('enc');
+  const iLat    = idx('lat') >= 0 ? idx('lat') : idx('latitude');
+  const iLon    = idx('lon') >= 0 ? idx('lon') : idx('longitude') >= 0 ? idx('longitude') : idx('lng');
+  const iFirst  = idx('firstseen') >= 0 ? idx('firstseen') : idx('first');
+  const iLast   = idx('lastseen') >= 0 ? idx('lastseen') : idx('last');
+  const iFreq   = idx('freq') >= 0 ? idx('freq') : idx('frequency');
+
+  for (let i = headerRow + 1; i < lines.length; i++) {
+    const parts = csvSplit(lines[i]);
+    if (parts.length < 3) continue;
+
+    const ch = iCh >= 0 ? parseInt(parts[iCh]) || 0 : 0;
+    const freq = iFreq >= 0 ? parseInt(parts[iFreq]) || 0 : 0;
+    const lat = iLat >= 0 ? parseFloat(parts[iLat]) || null : null;
+    const lon = iLon >= 0 ? parseFloat(parts[iLon]) || null : null;
+    const enc = iAuth >= 0 ? parts[iAuth].trim().replace(/"/g,'') : '';
+
+    records.push({
+      bssid:     iMAC >= 0 ? parts[iMAC].trim().replace(/"/g,'') : '',
+      ssid:      iSSID >= 0 ? parts[iSSID].trim().replace(/"/g,'') : '',
+      rssi:      iRSSI >= 0 ? parseInt(parts[iRSSI]) || -80 : -80,
+      channel:   ch || (freq ? freqToChannel(freq) : 0),
+      frequency: freq,
+      band:      freq ? freqToBand(freq) : (ch > 14 ? '5GHz' : '2.4GHz'),
+      enc:       enc.toUpperCase().includes('OPEN') || enc === '' ? 'OPEN' :
+                 enc.toUpperCase().includes('WPA3') ? 'WPA3' :
+                 enc.toUpperCase().includes('WPA2') ? 'WPA2' :
+                 enc.toUpperCase().includes('WPA') ? 'WPA' :
+                 enc.toUpperCase().includes('WEP') ? 'WEP' : enc || 'WPA',
+      lat:       lat,
+      lon:       lon,
+      firstseen: iFirst >= 0 ? parts[iFirst].trim().replace(/"/g,'') : '',
+      lastseen:  iLast >= 0 ? parts[iLast].trim().replace(/"/g,'') : '',
+      vendor:    '',
+    });
+  }
+
+  return records.filter(r => r.bssid);
+}
+
+function parseKali(lines) {
+  // airodump-ng CSV has two sections: APs and clients
+  const records = [];
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const idx = key => headers.findIndex(h => h.includes(key));
+
+  const iMAC   = idx('bssid');
+  const iSSID  = idx('essid');
+  const iPwr   = idx('power') >= 0 ? idx('power') : idx('pwr');
+  const iCh    = idx('channel') >= 0 ? idx('channel') : idx('ch');
+  const iPriv  = idx('privacy') >= 0 ? idx('privacy') : idx('auth');
+  const iFirst = idx('first');
+  const iLast  = idx('last');
+
+  for (let i = 1; i < lines.length; i++) {
+    const parts = csvSplit(lines[i]);
+    if (parts.length < 3) continue;
+    const ssid = iSSID >= 0 ? parts[iSSID].trim() : '';
+    const rssi = iPwr >= 0 ? parseInt(parts[iPwr]) : -80;
+    const priv = iPriv >= 0 ? parts[iPriv].trim().toUpperCase() : '';
+
+    records.push({
+      bssid:    iMAC >= 0 ? parts[iMAC].trim() : '',
+      ssid:     ssid,
+      rssi:     rssi || -80,
+      channel:  iCh >= 0 ? parseInt(parts[iCh]) || 0 : 0,
+      band:     '2.4GHz',
+      enc:      priv.includes('WPA2') ? 'WPA2' : priv.includes('WPA') ? 'WPA' :
+                priv.includes('WEP') ? 'WEP' : priv === 'OPN' ? 'OPEN' : 'WPA',
+      lat:      null,
+      lon:      null,
+      firstseen: iFirst >= 0 ? parts[iFirst].trim() : '',
+      lastseen:  iLast >= 0 ? parts[iLast].trim() : '',
+      vendor:    '',
+    });
+  }
+
+  return records.filter(r => r.bssid && r.bssid.match(/([0-9a-f]{2}:){5}[0-9a-f]{2}/i));
+}
+
+function parseGenericCSV(lines) {
+  const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+  const idx = key => headers.findIndex(h => h.includes(key));
+
+  const iMAC  = idx('bssid') >= 0 ? idx('bssid') : idx('mac');
+  const iSSID = idx('ssid') >= 0 ? idx('ssid') : idx('name');
+  const iRSSI = idx('rssi') >= 0 ? idx('rssi') : idx('signal') >= 0 ? idx('signal') : idx('level');
+  const iCh   = idx('channel') >= 0 ? idx('channel') : idx('ch');
+  const iEnc  = idx('enc') >= 0 ? idx('enc') : idx('security') >= 0 ? idx('security') : idx('auth');
+  const iLat  = idx('lat');
+  const iLon  = idx('lon') >= 0 ? idx('lon') : idx('lng');
+
+  const records = [];
+  for (let i = 1; i < lines.length; i++) {
+    const parts = csvSplit(lines[i]);
+    if (parts.length < 2) continue;
+    const enc = iEnc >= 0 ? parts[iEnc].trim().toUpperCase() : '';
+    records.push({
+      bssid:   iMAC >= 0 ? parts[iMAC].trim() : '',
+      ssid:    iSSID >= 0 ? parts[iSSID].trim() : '',
+      rssi:    iRSSI >= 0 ? parseInt(parts[iRSSI]) || -80 : -80,
+      channel: iCh >= 0 ? parseInt(parts[iCh]) || 0 : 0,
+      band:    '2.4GHz',
+      enc:     enc.includes('OPEN') || enc === '' ? 'OPEN' :
+               enc.includes('WPA3') ? 'WPA3' :
+               enc.includes('WPA2') ? 'WPA2' :
+               enc.includes('WPA') ? 'WPA' :
+               enc.includes('WEP') ? 'WEP' : 'WPA',
+      lat:     iLat >= 0 ? parseFloat(parts[iLat]) || null : null,
+      lon:     iLon >= 0 ? parseFloat(parts[iLon]) || null : null,
+      firstseen: '',
+      lastseen:  '',
+      vendor:  '',
+    });
+  }
+  return records.filter(r => r.bssid);
+}
+
+function importXLSX(buffer, filename) {
+  if (typeof XLSX === 'undefined') {
+    alert('SheetJS not loaded. Check internet connection or use CSV format.');
+    return;
+  }
+  try {
+    const wb = XLSX.read(buffer, { type: 'array' });
+    const sheetName = wb.SheetNames[0];
+    const sheet = wb.Sheets[sheetName];
+    const csv = XLSX.utils.sheet_to_csv(sheet);
+    importCSV(csv, filename || 'xlsx_import.xlsx');
+  } catch(e) {
+    alert('XLSX parse error: ' + e.message);
+  }
+}
+
+// CSV split handling quoted fields
+function csvSplit(line) {
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    if (line[i] === '"') {
+      inQuotes = !inQuotes;
+    } else if (line[i] === ',' && !inQuotes) {
+      result.push(current);
+      current = '';
+    } else {
+      current += line[i];
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+// ── FILTER / SEARCH ───────────────────────────────────────────────
+function setFilter(f) {
+  currentFilter = f;
+  // Update sidebar buttons
+  ['fAll','fOpen','fStrong','fWeak','f5g','f24g','fGps','fNew'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const filterMap = {
+    all:'fAll', open:'fOpen', strong:'fStrong', weak:'fWeak',
+    '5g':'f5g', '2.4g':'f24g', gps:'fGps', new:'fNew'
+  };
+  const sid = filterMap[f];
+  if (sid) { const el = document.getElementById(sid); if(el) el.classList.add('active'); }
+
+  // Update toolbar buttons
+  ['fBtnAll','fBtnOpen','fBtnStrong','fBtnGps'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+  const btnMap = { all:'fBtnAll', open:'fBtnOpen', strong:'fBtnStrong', gps:'fBtnGps' };
+  if (btnMap[f]) { const el = document.getElementById(btnMap[f]); if(el) el.classList.add('active'); }
+
+  applyFilter();
+}
+
+function onSearch(q) {
+  searchQuery = q.toLowerCase();
+  applyFilter();
+}
+
+function applyFilter() {
+  let records = [...allRecords];
+
+  // Apply quick filter (some don't apply to non-WiFi types)
+  switch (currentFilter) {
+    case 'open':
+      if (currentDataType === 'wifi') records = records.filter(r => r.enc === 'OPEN');
+      break;
+    case 'strong':
+      records = records.filter(r => (parseInt(r.rssi)||0) > -60);
+      break;
+    case 'weak':
+      records = records.filter(r => (parseInt(r.rssi)||0) < -85);
+      break;
+    case '5g':
+      if (currentDataType === 'wifi') {
+        records = records.filter(r => r.band === '5GHz' || (r.channel && r.channel > 14));
+      }
+      break;
+    case '2.4g':
+      if (currentDataType === 'wifi') {
+        records = records.filter(r => r.band === '2.4GHz' || (r.channel && r.channel <= 14));
+      }
+      break;
+    case 'gps':
+      records = records.filter(r => r.lat && r.lon);
+      break;
+    case 'new': {
+      const seen = new Set();
+      const key = currentDataType === 'wifi' ? 'ssid' :
+                  currentDataType === 'lora' ? 'node_from' : 'mac';
+      records = records.filter(r => {
+        if (seen.has(r[key])) return false;
+        seen.add(r[key]);
+        return true;
+      });
+      break;
+    }
+  }
+
+  // Apply search (search across all string fields)
+  if (searchQuery) {
+    records = records.filter(r => {
+      const haystack = [r.ssid, r.bssid, r.mac, r.name, r.vendor, r.enc,
+                        r.node_from, r.node_to, r.addr_type]
+        .filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(searchQuery);
+    });
+  }
+
+  // Phase 4: Apply time range filter
+  if (timeRange && (timeRange.start || timeRange.end)) {
+    records = records.filter(r => {
+      const ts = parseTimestamp(r.firstseen) || parseTimestamp(r.lastseen);
+      if (!ts) return true;  // keep records without timestamps
+      if (timeRange.start && ts < timeRange.start) return false;
+      if (timeRange.end && ts > timeRange.end) return false;
+      return true;
+    });
+  }
+
+  // Phase 4: Apply lasso polygon filter
+  if (lassoPolygon && lassoPolygon.length >= 3) {
+    records = records.filter(r => {
+      if (!r.lat || !r.lon) return false;
+      return pointInPolygon([parseFloat(r.lat), parseFloat(r.lon)], lassoPolygon);
+    });
+  }
+
+  // Sort
+  records.sort((a, b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (sortCol === 'rssi' || sortCol === 'channel' || sortCol === 'count' ||
+        sortCol === 'snr' || sortCol === 'quality') {
+      av = parseFloat(av)||0; bv = parseFloat(bv)||0;
+    }
+    if (av < bv) return sortDir === 'asc' ? -1 : 1;
+    if (av > bv) return sortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  filteredRecords = records;
+  renderGrid();
+  updateHeader();
+
+  // Refresh map markers if map is open
+  if (mapInstance && document.getElementById('paneMap').classList.contains('active')) {
+    renderMapMarkers();
+  }
+}
+
+// Phase 4: timestamp parsing helper
+function parseTimestamp(ts) {
+  if (!ts) return null;
+  const n = parseInt(ts);
+  if (n > 946684800000) return n;
+  if (n > 946684800)    return n * 1000;
+  const d = new Date(ts);
+  return isNaN(d.getTime()) ? null : d.getTime();
+}
+
+// Phase 4: ray-casting point-in-polygon test
+function pointInPolygon(point, polygon) {
+  const [x, y] = point;
+  let inside = false;
+  for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+    const [xi, yi] = polygon[i];
+    const [xj, yj] = polygon[j];
+    const intersect = ((yi > y) !== (yj > y)) &&
+                      (x < (xj - xi) * (y - yi) / (yj - yi) + xi);
+    if (intersect) inside = !inside;
+  }
+  return inside;
+}
+
+function sortBy(col) {
+  if (sortCol === col) {
+    sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortCol = col;
+    sortDir = col === 'rssi' ? 'desc' : 'asc';
+  }
+  applyFilter();
+}
+
+// ── GRID RENDERING ────────────────────────────────────────────────
+function renderGrid() {
+  const empty = document.getElementById('dataEmpty');
+  const grid  = document.getElementById('dataGrid');
+
+  if (!filteredRecords.length) {
+    empty.style.display = 'flex';
+    grid.style.display  = 'none';
+    return;
+  }
+
+  empty.style.display = 'none';
+  grid.style.display  = 'table';
+
+  // Header
+  const headerRow = document.getElementById('gridHeader');
+  headerRow.innerHTML = [...visibleCols].map(col => {
+    const isSort = sortCol === col;
+    const cls = isSort ? (sortDir === 'asc' ? 'sort-asc' : 'sort-desc') : '';
+    return `<th class="${cls}" onclick="sortBy('${col}')">${COL_LABELS[col] || col}</th>`;
+  }).join('') + '<th style="width:30px"></th>';
+
+  // Body — virtual rendering for large datasets
+  const RENDER_LIMIT = 2000;
+  const toRender = filteredRecords.slice(0, RENDER_LIMIT);
+  const primaryKey = DATA_TYPE_COLUMNS[currentDataType].primary;
+
+  document.getElementById('gridBody').innerHTML = toRender.map((r, i) => {
+    const rowKey = r[primaryKey] || '';
+    const isSelected = selectedRows.has(rowKey);
+    const cols = [...visibleCols].map(col => {
+      if (col === 'rssi') {
+        return `<td class="${rssiClass(r.rssi)}">${r.rssi} dBm</td>`;
+      }
+      if (col === 'snr') {
+        const snrCls = r.snr > 5 ? 'rssi-excellent' : r.snr > 0 ? 'rssi-good' : 'rssi-poor';
+        return `<td class="${snrCls}">${r.snr} dB</td>`;
+      }
+      if (col === 'quality') {
+        const q = parseInt(r.quality) || 0;
+        const qCls = q > 70 ? 'rssi-excellent' : q > 40 ? 'rssi-good' : 'rssi-poor';
+        return `<td class="${qCls}">${q}%</td>`;
+      }
+      if (col === 'ssid') {
+        return `<td class="ssid">${PM.esc(r.ssid || '(hidden)')}</td>`;
+      }
+      if (col === 'name') {
+        return `<td class="ssid">${PM.esc(r.name || '(unnamed)')}</td>`;
+      }
+      if (col === 'bssid' || col === 'mac') {
+        return `<td class="bssid">${PM.esc(r[col] || '—')}</td>`;
+      }
+      if (col === 'node_from' || col === 'node_to') {
+        return `<td class="ssid">${PM.esc(r[col] || '—')}</td>`;
+      }
+      if (col === 'vendor') {
+        return `<td class="vendor">${PM.esc(r.vendor || '—')}</td>`;
+      }
+      if (col === 'enc') {
+        const cls = r.enc === 'OPEN' ? 'enc-open' : 'enc-wpa';
+        return `<td><span class="enc-badge ${cls}">${r.enc || 'WPA'}</span></td>`;
+      }
+      if (col === 'lat' || col === 'lon') {
+        const v = r[col];
+        return `<td>${v ? parseFloat(v).toFixed(5) : '—'}</td>`;
+      }
+      if (col === 'frequency') {
+        return `<td>${r.frequency ? r.frequency + ' MHz' : '—'}</td>`;
+      }
+      if (col === 'mfg_data' || col === 'service_uuids') {
+        const v = r[col] || '';
+        return `<td style="font-family:monospace;font-size:.5rem;color:var(--cl-cyan);opacity:.75">${PM.esc(v.substring(0, 24))}${v.length > 24 ? '…' : ''}</td>`;
+      }
+      return `<td>${PM.esc(String(r[col] || '—'))}</td>`;
+    }).join('');
+
+    return `<tr class="${isSelected ? 'selected' : ''}" onclick="toggleRow(event, ${JSON.stringify(rowKey)}, ${i})"
+               ondblclick="inspectRow(${JSON.stringify(rowKey)})">${cols}<td></td></tr>`;
+  }).join('');
+
+  // Status bar — fields depend on data type
+  const total = filteredRecords.length;
+  const gpsCount = filteredRecords.filter(r => r.lat && r.lon).length;
+  let typeSpecific = '';
+  if (currentDataType === 'wifi') {
+    const openCount  = filteredRecords.filter(r => r.enc === 'OPEN').length;
+    const fiveGCount = filteredRecords.filter(r => r.band === '5GHz').length;
+    typeSpecific = `<div>OPEN <span id="statusOpen">${openCount}</span></div>` +
+                   `<div>5GHz <span id="status5g">${fiveGCount}</span></div>`;
+  } else if (currentDataType === 'ble') {
+    const named = filteredRecords.filter(r => r.name && r.name !== '(unnamed)').length;
+    typeSpecific = `<div>NAMED <span>${named}</span></div>`;
+  } else if (currentDataType === 'probe') {
+    const repeats = filteredRecords.filter(r => (r.count || 1) > 1).length;
+    typeSpecific = `<div>REPEAT <span>${repeats}</span></div>`;
+  } else if (currentDataType === 'lora') {
+    const goodLinks = filteredRecords.filter(r => r.quality > 50).length;
+    typeSpecific = `<div>QUALITY <span>${goodLinks}</span></div>`;
+  }
+
+  const statusBar = document.getElementById('gridStatus');
+  if (statusBar) {
+    statusBar.innerHTML = `
+      <div>RECORDS <span id="statusCount">${total.toLocaleString()}</span></div>
+      <div>SELECTED <span id="statusSelected">${selectedRows.size}</span></div>
+      ${typeSpecific}
+      <div>GPS-TAGGED <span id="statusGps">${gpsCount}</span></div>
+      <div id="statusSort" style="margin-left:auto;color:var(--cl-cyan);opacity:.75">
+        Sort: ${COL_LABELS[sortCol] || sortCol} ${sortDir === 'asc' ? '↑' : '↓'}
+        ${total > RENDER_LIMIT ? ` | Showing first ${RENDER_LIMIT.toLocaleString()} of ${total.toLocaleString()}` : ''}
+        ${timeRange ? ` | ⏱ TIME FILTER ACTIVE` : ''}
+        ${lassoPolygon ? ` | 🎯 LASSO ACTIVE` : ''}
+      </div>
+    `;
+  }
+}
+
+function toggleRow(event, key, idx) {
+  if (event.shiftKey) {
+    selectedRows.add(key);
+  } else if (event.ctrlKey || event.metaKey) {
+    if (selectedRows.has(key)) selectedRows.delete(key);
+    else selectedRows.add(key);
+  } else {
+    selectedRows.clear();
+    selectedRows.add(key);
+  }
+  renderGrid();
+  updateMapSelection();
+}
+
+function inspectRow(key) {
+  const primaryKey = DATA_TYPE_COLUMNS[currentDataType].primary;
+  const r = allRecords.find(rec => rec[primaryKey] === key);
+  if (!r) return;
+  const info = document.getElementById('mapSelectedInfo');
+  if (!info) return;
+
+  let title = '';
+  let details = {};
+
+  if (currentDataType === 'wifi') {
+    title = r.ssid || '(hidden)';
+    details = {
+      'BSSID':       r.bssid,
+      'RSSI':        r.rssi + ' dBm',
+      'Channel':     r.channel,
+      'Band':        r.band,
+      'Encryption':  r.enc,
+      'Vendor':      r.vendor || 'Unknown',
+      'First Seen':  r.firstseen || '—',
+      'Last Seen':   r.lastseen || '—',
+      'Coordinates': r.lat ? `${parseFloat(r.lat).toFixed(5)}, ${parseFloat(r.lon).toFixed(5)}` : 'None',
+    };
+  } else if (currentDataType === 'ble') {
+    title = r.name || '(unnamed BLE device)';
+    details = {
+      'MAC':         r.mac,
+      'RSSI':        r.rssi + ' dBm',
+      'Vendor':      r.vendor || 'Unknown',
+      'Address':     r.addr_type || 'unknown',
+      'Mfg Data':    (r.mfg_data || '—').substring(0, 32),
+      'Services':    (r.service_uuids || '—').substring(0, 32),
+      'First Seen':  r.firstseen || '—',
+      'Last Seen':   r.lastseen || '—',
+      'Coordinates': r.lat ? `${parseFloat(r.lat).toFixed(5)}, ${parseFloat(r.lon).toFixed(5)}` : 'None',
+    };
+  } else if (currentDataType === 'probe') {
+    title = '🔍 ' + (r.ssid || '(empty probe)');
+    details = {
+      'Client MAC':  r.mac,
+      'RSSI':        r.rssi + ' dBm',
+      'Sightings':   r.count,
+      'Vendor':      r.vendor || 'Unknown',
+      'First Seen':  r.firstseen || '—',
+      'Last Seen':   r.lastseen || '—',
+      'Coordinates': r.lat ? `${parseFloat(r.lat).toFixed(5)}, ${parseFloat(r.lon).toFixed(5)}` : 'None',
+    };
+  } else if (currentDataType === 'lora') {
+    title = `📻 ${r.node_from} → ${r.node_to}`;
+    details = {
+      'From Node':   r.node_from,
+      'To Node':     r.node_to,
+      'RSSI':        r.rssi + ' dBm',
+      'SNR':         r.snr + ' dB',
+      'Frequency':   r.frequency + ' MHz',
+      'Spread Factor': 'SF' + r.sf,
+      'Bandwidth':   r.bandwidth + ' kHz',
+      'Quality':     r.quality + '%',
+      'First Seen':  r.firstseen || '—',
+    };
+  }
+
+  info.innerHTML = `
+    <div class="mp-sel-ssid">${PM.esc(title)}</div>
+    ${Object.entries(details).map(([k,v]) => `
+      <div class="mp-sel-row">
+        <span>${k}</span><span>${PM.esc(String(v))}</span>
+      </div>`).join('')}`;
+}
+
+// ── MAP ───────────────────────────────────────────────────────────
+function initMap() {
+  if (mapInstance) {
+    renderMapMarkers();
+    return;
+  }
+
+  mapInstance = L.map('cl-map', {
+    center: [34.05, -118.24],
+    zoom: 10,
+    zoomControl: true,
+  });
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 19,
+  }).addTo(mapInstance);
+
+  renderMapMarkers();
+}
+
+let mapHeatLayer = null;
+
+function renderMapMarkers() {
+  if (!mapInstance) return;
+
+  // Clear existing markers
+  mapMarkers.forEach(m => mapInstance.removeLayer(m));
+  mapMarkers = [];
+
+  // Clear existing heat layer
+  if (mapHeatLayer) {
+    mapInstance.removeLayer(mapHeatLayer);
+    mapHeatLayer = null;
+  }
+
+  const records = mapLayers.openonly
+    ? filteredRecords.filter(r => r.enc === 'OPEN')
+    : filteredRecords;
+
+  const gpsRecords = records.filter(r => r.lat && r.lon &&
+    Math.abs(r.lat) > 0.001 && Math.abs(r.lon) > 0.001);
+
+  if (!gpsRecords.length) return;
+
+  // Fit map to data
+  const lats = gpsRecords.map(r => parseFloat(r.lat));
+  const lons = gpsRecords.map(r => parseFloat(r.lon));
+  const bounds = [[Math.min(...lats), Math.min(...lons)], [Math.max(...lats), Math.max(...lons)]];
+  mapInstance.fitBounds(bounds, { padding: [30, 30] });
+
+  // Heatmap layer
+  if (mapLayers.heatmap && typeof L.heatLayer === 'function') {
+    const heatPoints = gpsRecords.map(r => {
+      // Normalize RSSI to 0..1 intensity
+      const rssi = parseInt(r.rssi) || -80;
+      const intensity = Math.max(0.1, Math.min(1, (rssi + 100) / 60));
+      return [parseFloat(r.lat), parseFloat(r.lon), intensity];
+    });
+    mapHeatLayer = L.heatLayer(heatPoints, {
+      radius: 25, blur: 18, maxZoom: 18,
+      gradient: { 0.2: '#ff5577', 0.4: '#ffa040', 0.6: '#ffe066',
+                  0.8: '#ffd166', 1.0: '#4dffa6' },
+    }).addTo(mapInstance);
+  }
+
+  // Marker layer
+  if (mapLayers.markers) {
+    gpsRecords.forEach(r => {
+      const color = rssiColor(r.rssi);
+      const isSelected = selectedRows.has(r.bssid);
+      const marker = L.circleMarker([parseFloat(r.lat), parseFloat(r.lon)], {
+        radius: isSelected ? 8 : 5,
+        color: isSelected ? '#ffffff' : color,
+        fillColor: color,
+        fillOpacity: 0.8,
+        weight: isSelected ? 2 : 1,
+      });
+
+      marker.bindPopup(`
+        <div style="font-family:monospace;font-size:.7rem">
+          <strong>${r.ssid || '(hidden)'}</strong><br>
+          ${r.bssid}<br>
+          RSSI: ${r.rssi} dBm | Ch: ${r.channel}<br>
+          ${r.enc} | ${r.vendor || 'Unknown vendor'}
+        </div>
+      `);
+
+      marker.on('click', () => {
+        selectedRows.clear();
+        selectedRows.add(r.bssid);
+        renderGrid();
+        inspectRow(r.bssid);
+      });
+
+      marker.addTo(mapInstance);
+      mapMarkers.push(marker);
+    });
+  }
+
+  // Phase 4: Render overlay sessions
+  if (activeSessionsForOverlay.size > 0) {
+    activeSessionsForOverlay.forEach(idx => {
+      const s = sessions[idx];
+      if (!s) return;
+      const sessGps = s.records.filter(r => r.lat && r.lon &&
+        Math.abs(r.lat) > 0.001 && Math.abs(r.lon) > 0.001);
+      sessGps.forEach(r => {
+        const marker = L.circleMarker([parseFloat(r.lat), parseFloat(r.lon)], {
+          radius: 4,
+          color: s.color,
+          fillColor: s.color,
+          fillOpacity: 0.6,
+          weight: 1,
+        });
+        marker.bindTooltip(`${s.name}: ${r.ssid || r.name || r.mac || '?'}`);
+        marker.addTo(mapInstance);
+        mapMarkers.push(marker);
+      });
+    });
+  }
+}
+
+function updateMapSelection() {
+  renderMapMarkers();
+}
+
+function toggleLayer(layer) {
+  mapLayers[layer] = !mapLayers[layer];
+  const toggle = document.getElementById('toggle' + layer.charAt(0).toUpperCase() + layer.slice(1));
+  if (toggle) toggle.classList.toggle('on', mapLayers[layer]);
+
+  // Cluster layer needs special handling
+  if (layer === 'clusters') {
+    if (mapLayers.clusters) {
+      if (!clusterData) runClustering();
+      else renderClusterPolygons();
+    } else {
+      clearClusterPolygons();
+    }
+  }
+
+  renderMapMarkers();
+}
+
+// ── PHASE 4: LASSO SELECTION ──────────────────────────────────────
+function startLasso() {
+  if (!mapInstance) {
+    alert('Open the MAP pane first.');
+    switchPane('map');
+    return;
+  }
+  lassoDrawing = true;
+  lassoPoints = [];
+  document.getElementById('lassoIndicator').classList.add('visible');
+  if (lassoLayer) {
+    mapInstance.removeLayer(lassoLayer);
+    lassoLayer = null;
+  }
+  // Disable map dragging while drawing
+  mapInstance.dragging.disable();
+
+  // Click handler for adding points
+  mapInstance.on('click', _lassoClickHandler);
+  mapInstance.on('dblclick', _lassoCloseHandler);
+  mapInstance.doubleClickZoom.disable();
+}
+
+function _lassoClickHandler(e) {
+  if (!lassoDrawing) return;
+  lassoPoints.push([e.latlng.lat, e.latlng.lng]);
+  // Render in-progress polyline
+  if (lassoLayer) mapInstance.removeLayer(lassoLayer);
+  if (lassoPoints.length >= 2) {
+    lassoLayer = L.polyline(lassoPoints, {
+      color: '#4dffa6', weight: 2, dashArray: '5,5', opacity: 0.8,
+    }).addTo(mapInstance);
+  }
+  // Add a marker at each point
+  L.circleMarker(e.latlng, {
+    radius: 4, color: '#4dffa6', fillColor: '#4dffa6', fillOpacity: 1,
+  }).addTo(mapInstance);
+}
+
+function _lassoCloseHandler(e) {
+  if (!lassoDrawing || lassoPoints.length < 3) return;
+  L.DomEvent.preventDefault(e);
+  // Close the polygon
+  if (lassoLayer) mapInstance.removeLayer(lassoLayer);
+  lassoLayer = L.polygon(lassoPoints, {
+    color: '#4dffa6', weight: 2, fillColor: '#4dffa6', fillOpacity: 0.1,
+  }).addTo(mapInstance);
+
+  lassoPolygon = [...lassoPoints];
+  lassoDrawing = false;
+  document.getElementById('lassoIndicator').classList.remove('visible');
+
+  // Re-enable map interactions
+  mapInstance.dragging.enable();
+  mapInstance.doubleClickZoom.enable();
+  mapInstance.off('click', _lassoClickHandler);
+  mapInstance.off('dblclick', _lassoCloseHandler);
+
+  // Apply lasso filter
+  applyFilter();
+}
+
+function clearLasso() {
+  lassoPolygon = null;
+  lassoPoints = [];
+  lassoDrawing = false;
+  if (lassoLayer && mapInstance) {
+    mapInstance.removeLayer(lassoLayer);
+    lassoLayer = null;
+  }
+  if (mapInstance) {
+    mapInstance.dragging.enable();
+    mapInstance.doubleClickZoom.enable();
+    mapInstance.off('click', _lassoClickHandler);
+    mapInstance.off('dblclick', _lassoCloseHandler);
+  }
+  document.getElementById('lassoIndicator').classList.remove('visible');
+  applyFilter();
+}
+
+// ── PHASE 4: DBSCAN CLUSTERING ────────────────────────────────────
+function runClustering() {
+  if (typeof PMStats === 'undefined') {
+    alert('pm_stats.js not loaded.');
+    return;
+  }
+  if (!filteredRecords.length) {
+    alert('No records to cluster.');
+    return;
+  }
+
+  const eps = parseFloat(prompt('Cluster radius (meters)?', '50')) || 50;
+  const minPts = parseInt(prompt('Minimum points per cluster?', '3')) || 3;
+
+  const result = PMStats.dbscan(filteredRecords, eps, minPts);
+  clusterData = result;
+
+  const info = document.getElementById('clusterInfo');
+  if (info) {
+    info.innerHTML = `
+      <div style="color:var(--cl-yellow)">${result.cluster_count} clusters</div>
+      <div style="color:var(--cl-cyan);opacity:.75">${result.noise_count} noise points</div>
+      <div style="margin-top:6px;font-size:.5rem">eps=${eps}m, minPts=${minPts}</div>
+    `;
+  }
+
+  if (mapLayers.clusters) {
+    renderClusterPolygons();
+  } else {
+    // Auto-enable cluster layer
+    mapLayers.clusters = true;
+    document.getElementById('toggleClusters').classList.add('on');
+    renderClusterPolygons();
+  }
+}
+
+function renderClusterPolygons() {
+  if (!mapInstance || !clusterData) return;
+  clearClusterPolygons();
+
+  clusterLayer = L.layerGroup();
+  const colors = ['#4dd9ff', '#4dffa6', '#ffd166', '#c89eff', '#ffa040',
+                  '#ff5577', '#ffe066', '#8db8d0'];
+
+  clusterData.clusters.forEach((cluster, idx) => {
+    const color = colors[idx % colors.length];
+
+    // Compute convex hull (simplified — bounding box for now)
+    const lats = cluster.points.map(p => parseFloat(p.lat));
+    const lons = cluster.points.map(p => parseFloat(p.lon));
+    const polygon = L.polygon([
+      [Math.min(...lats), Math.min(...lons)],
+      [Math.min(...lats), Math.max(...lons)],
+      [Math.max(...lats), Math.max(...lons)],
+      [Math.max(...lats), Math.min(...lons)],
+    ], {
+      color: color, weight: 2, fillColor: color, fillOpacity: 0.15,
+    });
+
+    polygon.bindPopup(`
+      <div style="font-family:monospace;font-size:.7rem">
+        <strong>Cluster #${cluster.id}</strong><br>
+        ${cluster.size} devices<br>
+        Avg RSSI: ${cluster.avg_rssi.toFixed(1)} dBm<br>
+        Density: ${cluster.density_m2.toFixed(4)} dev/m²
+      </div>
+    `);
+
+    polygon.addTo(clusterLayer);
+
+    // Centroid marker
+    L.marker([cluster.centroid.lat, cluster.centroid.lon], {
+      icon: L.divIcon({
+        className: 'cluster-centroid',
+        html: `<div style="background:${color};color:#000;border-radius:50%;
+                width:24px;height:24px;line-height:24px;text-align:center;
+                font-weight:bold;font-size:.7rem">${cluster.size}</div>`,
+        iconSize: [24, 24],
+      }),
+    }).addTo(clusterLayer);
+  });
+
+  clusterLayer.addTo(mapInstance);
+}
+
+function clearClusterPolygons() {
+  if (clusterLayer && mapInstance) {
+    mapInstance.removeLayer(clusterLayer);
+    clusterLayer = null;
+  }
+}
+
+// ── PHASE 4: SESSION OVERLAY ──────────────────────────────────────
+function renderSessionOverlay() {
+  const list = document.getElementById('sessionOverlayList');
+  if (!list) return;
+  if (!sessions.length) {
+    list.innerHTML = '<div style="font-size:.55rem;color:var(--cl-cyan);opacity:.6">No sessions loaded</div>';
+    return;
+  }
+  list.innerHTML = sessions.map((s, i) => {
+    const isActive = activeSessionsForOverlay.has(i);
+    return `
+      <div class="cl-session-overlay-item" onclick="toggleSessionOverlay(${i})"
+           style="display:flex;align-items:center;gap:6px;padding:4px 6px;cursor:pointer;
+                  font-size:.55rem;color:${isActive ? s.color : 'var(--text-mid)'};
+                  border-left:3px solid ${isActive ? s.color : 'transparent'}">
+        <span style="width:10px;height:10px;border-radius:50%;background:${s.color};
+                     opacity:${isActive ? 1 : 0.3}"></span>
+        <span style="flex:1">${PM.esc(s.name)} (${s.records.length})</span>
+        <span>${isActive ? '✓' : '○'}</span>
+      </div>`;
+  }).join('');
+}
+
+function toggleSessionOverlay(idx) {
+  if (activeSessionsForOverlay.has(idx)) {
+    activeSessionsForOverlay.delete(idx);
+  } else {
+    activeSessionsForOverlay.add(idx);
+  }
+  renderSessionOverlay();
+  renderMapMarkers();
+}
+
+// ── PHASE 4: TIME SLIDER ──────────────────────────────────────────
+let timeSliderActive = false;
+let timeSliderMin = 0;
+let timeSliderMax = 0;
+
+function toggleTimeSlider() {
+  const slider = document.getElementById('timeSlider');
+  timeSliderActive = !timeSliderActive;
+  slider.classList.toggle('visible', timeSliderActive);
+
+  if (timeSliderActive) {
+    initTimeSlider();
+  } else {
+    clearTimeFilter();
+  }
+}
+
+function initTimeSlider() {
+  const timestamps = allRecords
+    .map(r => parseTimestamp(r.firstseen) || parseTimestamp(r.lastseen))
+    .filter(Boolean);
+
+  if (!timestamps.length) {
+    document.getElementById('timeStartLabel').textContent = 'No timestamps';
+    document.getElementById('timeEndLabel').textContent = '';
+    return;
+  }
+
+  timeSliderMin = Math.min(...timestamps);
+  timeSliderMax = Math.max(...timestamps);
+
+  document.getElementById('timeRangeStart').value = 0;
+  document.getElementById('timeRangeEnd').value = 100;
+  updateTimeLabels(timeSliderMin, timeSliderMax);
+}
+
+function onTimeSliderChange() {
+  const startPct = parseInt(document.getElementById('timeRangeStart').value);
+  const endPct = parseInt(document.getElementById('timeRangeEnd').value);
+
+  // Ensure start < end
+  const lo = Math.min(startPct, endPct);
+  const hi = Math.max(startPct, endPct);
+
+  const span = timeSliderMax - timeSliderMin;
+  const start = timeSliderMin + (span * lo / 100);
+  const end = timeSliderMin + (span * hi / 100);
+
+  timeRange = { start, end };
+  updateTimeLabels(start, end);
+  applyFilter();
+}
+
+function updateTimeLabels(start, end) {
+  const fmt = ms => {
+    const d = new Date(ms);
+    return d.toLocaleString(undefined, {
+      month: 'short', day: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+    });
+  };
+  document.getElementById('timeStartLabel').textContent = fmt(start);
+  document.getElementById('timeEndLabel').textContent = fmt(end);
+}
+
+function clearTimeFilter() {
+  timeRange = null;
+  document.getElementById('timeRangeStart').value = 0;
+  document.getElementById('timeRangeEnd').value = 100;
+  applyFilter();
+}
+
+// ── STATISTICS ────────────────────────────────────────────────────
+function renderStats() {
+  if (!allRecords.length) {
+    document.getElementById('statsEmpty').style.display = 'flex';
+    document.getElementById('statsLayout').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('statsEmpty').style.display = 'none';
+  document.getElementById('statsLayout').style.display = 'grid';
+
+  renderChannelChart();
+  renderVendorChart();
+  renderSummaryStats();
+  renderAdvancedStats();  // PMStats-powered analysis
+  renderSecurityChart();
+}
+
+function renderChannelChart() {
+  const channelCounts = {};
+  filteredRecords.forEach(r => {
+    if (r.channel) channelCounts[r.channel] = (channelCounts[r.channel] || 0) + 1;
+  });
+
+  const max = Math.max(1, ...Object.values(channelCounts));
+  const channels = Array.from({length:14}, (_,i) => i+1);
+
+  document.getElementById('channelGrid').innerHTML = channels.map(ch => {
+    const count = channelCounts[ch] || 0;
+    const height = Math.max(2, (count / max) * 60);
+    const color = count > max * 0.7 ? '#ff5577' : count > max * 0.4 ? '#ffa040' : '#4dd9ff';
+    return `
+      <div class="sp-ch-bar" title="Ch ${ch}: ${count} networks">
+        <div style="flex:1;display:flex;align-items:flex-end">
+          <div class="sp-ch-fill" style="height:${height}px;background:${color};width:100%"></div>
+        </div>
+        <div class="sp-ch-label">${ch}</div>
+        ${count ? `<div style="font-size:.42rem;color:var(--cl-gold)">${count}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+function renderVendorChart() {
+  const vendorCounts = {};
+  filteredRecords.forEach(r => {
+    const v = r.vendor || 'Unknown';
+    vendorCounts[v] = (vendorCounts[v] || 0) + 1;
+  });
+
+  const sorted = Object.entries(vendorCounts).sort((a,b) => b[1]-a[1]).slice(0, 15);
+  const max = sorted[0]?.[1] || 1;
+  const colors = ['#4dd9ff','#4dffa6','#ffd166','#ffa040','#c89eff','#ff5577','#ffe066'];
+
+  document.getElementById('vendorList').innerHTML = sorted.map(([vendor, count], i) => `
+    <div class="sp-vendor-row">
+      <div class="sp-vendor-name" title="${PM.esc(vendor)}">${PM.esc(vendor)}</div>
+      <div class="sp-vendor-bar-wrap">
+        <div class="sp-vendor-bar" style="width:${(count/max*100).toFixed(1)}%;background:${colors[i%colors.length]}"></div>
+      </div>
+      <div class="sp-vendor-count">${count}</div>
+    </div>`).join('');
+}
+
+function renderSummaryStats() {
+  const r = filteredRecords;
+  if (!r.length) return;
+
+  const rssiValues = r.map(x => parseInt(x.rssi)||0).filter(Boolean);
+  const avgRSSI    = rssiValues.reduce((a,b) => a+b, 0) / rssiValues.length;
+  const openCount  = r.filter(x => x.enc === 'OPEN').length;
+  const gpsCount   = r.filter(x => x.lat && x.lon).length;
+  const vendors    = new Set(r.map(x => x.vendor).filter(Boolean));
+  const ssids      = new Set(r.map(x => x.ssid).filter(Boolean));
+  const channels   = new Set(r.map(x => x.channel).filter(Boolean));
+  const fiveG      = r.filter(x => x.band === '5GHz' || (x.channel && parseInt(x.channel) > 14)).length;
+
+  document.getElementById('summaryStats').innerHTML = [
+    ['Total Records',     r.length.toLocaleString()],
+    ['Unique SSIDs',      ssids.size.toLocaleString()],
+    ['Unique Vendors',    vendors.size.toLocaleString()],
+    ['Active Channels',   channels.size],
+    ['Open Networks',     openCount + ' (' + Math.round(openCount/r.length*100) + '%)'],
+    ['5GHz Networks',     fiveG + ' (' + Math.round(fiveG/r.length*100) + '%)'],
+    ['GPS-Tagged',        gpsCount + ' (' + Math.round(gpsCount/r.length*100) + '%)'],
+    ['Average RSSI',      Math.round(avgRSSI) + ' dBm'],
+    ['Best RSSI',         Math.max(...rssiValues) + ' dBm'],
+    ['Worst RSSI',        Math.min(...rssiValues) + ' dBm'],
+    ['WPA3 Networks',     r.filter(x => x.enc === 'WPA3').length],
+    ['WEP Networks',      r.filter(x => x.enc === 'WEP').length + ' (legacy, vulnerable)'],
+  ].map(([k,v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join('');
+}
+
+function renderSecurityChart() {
+  const canvas = document.getElementById('securityCanvas');
+  const ctx = canvas.getContext('2d');
+  const size = Math.min(canvas.offsetWidth, canvas.offsetHeight, 180);
+  canvas.width = size;
+  canvas.height = size;
+
+  const encCounts = {};
+  filteredRecords.forEach(r => {
+    const enc = r.enc || 'WPA';
+    encCounts[enc] = (encCounts[enc] || 0) + 1;
+  });
+
+  const entries = Object.entries(encCounts).sort((a,b) => b[1]-a[1]);
+  const total = entries.reduce((s,[,v]) => s+v, 0);
+  const colors = { 'OPEN':'#ff5577','WEP':'#ffa040','WPA':'#ffe066','WPA2':'#4dd9ff','WPA3':'#4dffa6' };
+
+  let angle = -Math.PI / 2;
+  const cx = size/2, cy = size/2, r = size/2 - 8;
+
+  ctx.clearRect(0,0,size,size);
+
+  entries.forEach(([enc, count]) => {
+    const slice = (count / total) * 2 * Math.PI;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, angle, angle + slice);
+    ctx.closePath();
+    ctx.fillStyle = colors[enc] || '#c89eff';
+    ctx.fill();
+    ctx.strokeStyle = '#020608';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    angle += slice;
+  });
+
+  // Center hole
+  ctx.beginPath();
+  ctx.arc(cx, cy, r * 0.45, 0, 2 * Math.PI);
+  ctx.fillStyle = '#040c10';
+  ctx.fill();
+
+  document.getElementById('securityLegend').innerHTML = entries.map(([enc, count]) => `
+    <div style="display:flex;align-items:center;gap:4px">
+      <div style="width:8px;height:8px;border-radius:50%;background:${colors[enc]||'#c89eff'}"></div>
+      <span>${enc}: ${count}</span>
+    </div>`).join('');
+}
+
+// ── ANOMALY DETECTION ─────────────────────────────────────────────
+function detectAnomalies() {
+  if (!allRecords.length || typeof PMStats === 'undefined') return;
+
+  const findings = PMStats.anomalies(allRecords);
+  const banner = document.getElementById('anomalyBanner');
+  const text   = document.getElementById('anomalyText');
+
+  if (findings.length) {
+    banner.classList.add('visible');
+    text.textContent = '⚠ ' + findings.map(f => f.title).join('  ·  ');
+    window._lastAnomalies = findings;
+  } else {
+    banner.classList.remove('visible');
+  }
+}
+
+// ── LIVE BRIDGE INTEGRATION ───────────────────────────────────────
+let liveBridge = null;
+let liveBridgeRecords = [];
+let liveBridgeActive = false;
+
+function toggleLiveBridge() {
+  if (liveBridgeActive) {
+    stopLiveBridge();
+  } else {
+    startLiveBridge();
+  }
+}
+
+function startLiveBridge() {
+  if (typeof PMTransport === 'undefined') {
+    alert('pm_transport.js not loaded');
+    return;
+  }
+
+  const btn = document.getElementById('liveBridgeBtn');
+  btn.textContent = '📡 CONNECTING...';
+  btn.classList.add('primary');
+
+  liveBridgeRecords = [];
+  liveBridge = new PMTransport({
+    onConnect: () => {
+      liveBridgeActive = true;
+      btn.textContent = '📡 LIVE • REC ' + liveBridgeRecords.length;
+      btn.classList.remove('primary');
+      btn.classList.add('success');
+      // Request wardrive stream
+      if (liveBridge.send) {
+        liveBridge.send({ cmd: 'wardrive_start' });
+        liveBridge.send({ cmd: 'status' });
+      }
+    },
+    onDisconnect: () => {
+      liveBridgeActive = false;
+      btn.textContent = '📡 LIVE BRIDGE';
+      btn.classList.remove('success', 'primary');
+    },
+    onError: (e) => {
+      console.warn('Bridge error:', e);
+      btn.textContent = '📡 LIVE BRIDGE (offline)';
+      btn.classList.remove('success', 'primary');
+    },
+  });
+
+  // Listen for wardrive events and add to records
+  liveBridge.on('wardrive', (msg) => {
+    if (!msg.bssid) return;
+    const rec = {
+      bssid:    msg.bssid,
+      ssid:     msg.ssid || '',
+      rssi:     parseInt(msg.rssi) || -80,
+      channel:  parseInt(msg.ch) || parseInt(msg.channel) || 0,
+      band:     msg.band || (parseInt(msg.ch) > 14 ? '5GHz' : '2.4GHz'),
+      enc:      msg.enc === false ? 'OPEN' : (msg.enc || 'WPA'),
+      lat:      msg.lat || null,
+      lon:      msg.lon || msg.lng || null,
+      vendor:   oui(msg.bssid),
+      firstseen: new Date().toISOString(),
+      lastseen:  new Date().toISOString(),
+      source:   'bridge',
+    };
+
+    // De-dup by bssid (keep strongest RSSI)
+    const existing = liveBridgeRecords.find(r => r.bssid === rec.bssid);
+    if (existing) {
+      if (rec.rssi > existing.rssi) Object.assign(existing, rec);
+    } else {
+      liveBridgeRecords.push(rec);
+      // Update in allRecords too if it's a new BSSID
+      if (!allRecords.find(r => r.bssid === rec.bssid)) {
+        allRecords.push(rec);
+      }
+    }
+
+    btn.textContent = '📡 LIVE • REC ' + liveBridgeRecords.length;
+
+    // Throttled UI refresh
+    if (!window._liveRefreshPending) {
+      window._liveRefreshPending = true;
+      setTimeout(() => {
+        applyFilter();
+        updateHeader();
+        window._liveRefreshPending = false;
+      }, 1000);
+    }
+  });
+
+  liveBridge.on('gps', (msg) => {
+    // Stamp incoming wardrive records with GPS if missing
+    if (msg.lat && msg.lon) {
+      window._lastGPS = { lat: msg.lat, lon: msg.lon };
+    }
+  });
+
+  liveBridge.connect();
+}
+
+function stopLiveBridge() {
+  if (liveBridge && liveBridge.disconnect) {
+    liveBridge.disconnect();
+  }
+
+  // Save the live session as a regular session
+  if (liveBridgeRecords.length) {
+    const sessionName = 'Live Bridge ' + new Date().toLocaleTimeString();
+    sessions.push({
+      name: sessionName,
+      records: [...liveBridgeRecords],
+      color: '#4dffa6',
+      visible: true,
+      live: true,
+    });
+    renderSessionList();
+    saveToStorage();
+  }
+
+  liveBridgeActive = false;
+  liveBridgeRecords = [];
+
+  const btn = document.getElementById('liveBridgeBtn');
+  btn.textContent = '📡 LIVE BRIDGE';
+  btn.classList.remove('success', 'primary');
+}
+
+// ── SESSION DIFF ──────────────────────────────────────────────────
+function diffSessions(idxA, idxB) {
+  if (typeof PMStats === 'undefined') return;
+  if (!sessions[idxA] || !sessions[idxB]) {
+    alert('Need two sessions to diff. Import multiple sessions first.');
+    return;
+  }
+
+  const result = PMStats.diff(sessions[idxA].records, sessions[idxB].records);
+
+  const html = `
+    <div style="padding:24px">
+      <h3 style="font-family:Orbitron,monospace;color:var(--cl-cyan);letter-spacing:2px;margin:0 0 16px">
+        SESSION DIFF
+      </h3>
+      <div style="font-size:.62rem;color:var(--cl-cyan);opacity:.75;margin-bottom:16px">
+        Comparing <strong style="color:${sessions[idxA].color}">${PM.esc(sessions[idxA].name)}</strong>
+        (${result.a_total} records) vs
+        <strong style="color:${sessions[idxB].color}">${PM.esc(sessions[idxB].name)}</strong>
+        (${result.b_total} records)
+      </div>
+
+      <div class="rp-report-stat-grid" style="margin-bottom:20px">
+        <div class="rp-stat-box">
+          <span class="rp-stat-value" style="color:var(--cl-green)">${result.new_networks.length}</span>
+          <span class="rp-stat-label">NEW</span>
+        </div>
+        <div class="rp-stat-box">
+          <span class="rp-stat-value" style="color:var(--cl-red)">${result.gone_networks.length}</span>
+          <span class="rp-stat-label">DISAPPEARED</span>
+        </div>
+        <div class="rp-stat-box">
+          <span class="rp-stat-value" style="color:var(--cl-orange)">${result.changed_networks.length}</span>
+          <span class="rp-stat-label">CHANGED</span>
+        </div>
+      </div>
+
+      ${result.new_networks.length ? `
+        <div style="margin-bottom:20px">
+          <div style="font-family:Orbitron,monospace;font-size:.55rem;color:var(--cl-green);
+                      letter-spacing:2px;margin-bottom:8px">NEW NETWORKS (${result.new_networks.length})</div>
+          <table style="width:100%;font-size:.6rem;border-collapse:collapse">
+            ${result.new_networks.slice(0,15).map(n => `
+              <tr style="border-bottom:1px solid var(--cl-border)">
+                <td style="padding:4px 8px;color:var(--cl-cyan)">${PM.esc(n.ssid || '(hidden)')}</td>
+                <td style="padding:4px 8px;color:var(--cl-cyan);opacity:.6;font-family:monospace">${PM.esc(n.bssid)}</td>
+                <td style="padding:4px 8px" class="${rssiClass(n.rssi)}">${n.rssi} dBm</td>
+                <td style="padding:4px 8px;color:var(--cl-purple)">${PM.esc(n.vendor||'—')}</td>
+              </tr>`).join('')}
+          </table>
+        </div>` : ''}
+
+      ${result.gone_networks.length ? `
+        <div style="margin-bottom:20px">
+          <div style="font-family:Orbitron,monospace;font-size:.55rem;color:var(--cl-red);
+                      letter-spacing:2px;margin-bottom:8px">DISAPPEARED (${result.gone_networks.length})</div>
+          <table style="width:100%;font-size:.6rem;border-collapse:collapse">
+            ${result.gone_networks.slice(0,15).map(n => `
+              <tr style="border-bottom:1px solid var(--cl-border)">
+                <td style="padding:4px 8px;color:var(--cl-cyan)">${PM.esc(n.ssid || '(hidden)')}</td>
+                <td style="padding:4px 8px;color:var(--cl-cyan);opacity:.6;font-family:monospace">${PM.esc(n.bssid)}</td>
+                <td style="padding:4px 8px" class="${rssiClass(n.rssi)}">${n.rssi} dBm</td>
+              </tr>`).join('')}
+          </table>
+        </div>` : ''}
+
+      ${result.changed_networks.length ? `
+        <div style="margin-bottom:20px">
+          <div style="font-family:Orbitron,monospace;font-size:.55rem;color:var(--cl-orange);
+                      letter-spacing:2px;margin-bottom:8px">CHANGED (${result.changed_networks.length})</div>
+          ${result.changed_networks.slice(0,10).map(c => `
+            <div style="padding:6px 8px;border-bottom:1px solid var(--cl-border);font-size:.6rem">
+              <div style="color:var(--cl-cyan);font-weight:bold">${PM.esc(c.ssid || '(hidden)')}</div>
+              <div style="color:var(--cl-cyan);opacity:.6;font-family:monospace;font-size:.55rem">${c.bssid}</div>
+              ${Object.entries(c.changes).map(([k,v]) => `
+                <div style="color:var(--cl-cyan);opacity:.75;margin-top:2px">
+                  ${k}: <span style="color:var(--cl-red)">${v.from}</span> →
+                  <span style="color:var(--cl-green)">${v.to}</span>
+                </div>`).join('')}
+            </div>`).join('')}
+        </div>` : ''}
+    </div>`;
+
+  // Show in report pane
+  document.getElementById('reportContent').innerHTML = html;
+  switchPane('report');
+}
+
+// ── ADVANCED STATISTICS (uses PMStats) ────────────────────────────
+function renderAdvancedStats() {
+  if (typeof PMStats === 'undefined' || !filteredRecords.length) return;
+
+  const summary = PMStats.summary(filteredRecords);
+  const channelHealth = PMStats.channelHealth(filteredRecords);
+  const vendorMix = PMStats.vendorMix(filteredRecords);
+
+  // Augment summary stats table with PMStats results
+  const tbody = document.getElementById('summaryStats');
+  if (!tbody) return;
+
+  let extraRows = '';
+  if (summary.rssi) {
+    extraRows += `
+      <tr><td>RSSI Median</td><td>${summary.rssi.median.toFixed(1)} dBm</td></tr>
+      <tr><td>RSSI Std Dev</td><td>${summary.rssi.stdev.toFixed(1)} dB</td></tr>
+      <tr><td>RSSI 25th–75th</td><td>${summary.rssi.p25.toFixed(0)} to ${summary.rssi.p75.toFixed(0)} dBm</td></tr>
+    `;
+  }
+
+  extraRows += `
+    <tr><td>Vendor Diversity</td><td>${(vendorMix.diversity_normalized * 100).toFixed(1)}% (Shannon ${vendorMix.shannon_entropy.toFixed(2)})</td></tr>
+    <tr><td>Dominant Vendor</td><td>${vendorMix.dominant_vendor || '—'} (${(vendorMix.dominance*100).toFixed(0)}%)</td></tr>
+    ${channelHealth.recommended_24ghz ?
+      `<tr><td>Recommended 2.4GHz</td><td>Channel ${channelHealth.recommended_24ghz.ch} (${channelHealth.recommended_24ghz.count} APs)</td></tr>` : ''}
+    ${channelHealth.recommended_5ghz ?
+      `<tr><td>Recommended 5GHz</td><td>Channel ${channelHealth.recommended_5ghz.ch} (${channelHealth.recommended_5ghz.count} APs)</td></tr>` : ''}
+  `;
+
+  // Append to existing rows
+  tbody.innerHTML += extraRows;
+}
+
+// ── REPORT BUILDER ────────────────────────────────────────────────
+function buildReport() {
+  const client   = document.getElementById('rptClient')?.value || 'Confidential';
+  const analyst  = document.getElementById('rptAnalyst')?.value || '—';
+  const type     = document.getElementById('rptType')?.value || 'RF Security Audit';
+  const location = document.getElementById('rptLocation')?.value || '—';
+  const classif  = document.getElementById('rptClass')?.value || 'CONFIDENTIAL';
+  const date     = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+
+  if (!allRecords.length) {
+    document.getElementById('reportContent').innerHTML =
+      '<div style="padding:40px;text-align:center;color:var(--cl-cyan);opacity:.6">Import data first</div>';
+    return;
+  }
+
+  const r = filteredRecords.length ? filteredRecords : allRecords;
+  const openNets  = r.filter(x => x.enc === 'OPEN');
+  const wepNets   = r.filter(x => x.enc === 'WEP');
+  const gpsNets   = r.filter(x => x.lat && x.lon);
+  const rssi      = r.map(x => parseInt(x.rssi)||0);
+  const avgRSSI   = rssi.reduce((a,b)=>a+b,0)/rssi.length;
+  const ssids     = new Set(r.map(x=>x.ssid).filter(Boolean));
+  const vendors   = new Set(r.map(x=>x.vendor).filter(Boolean));
+
+  let html = `
+    <div class="rp-report-header">
+      <div>
+        <div class="rp-report-title">CLINICAL RF ANALYSIS</div>
+        <div style="font-size:.55rem;color:var(--cl-cyan);opacity:.6;margin-top:4px;letter-spacing:2px">
+          ${type.toUpperCase()}
+        </div>
+      </div>
+      <div class="rp-report-org">
+        <div style="color:var(--cl-gold);font-family:Orbitron,monospace;font-size:.55rem">${PM.esc(client)}</div>
+        <div>Analyst: ${PM.esc(analyst)}</div>
+        <div>Date: ${date}</div>
+        <div>Location: ${PM.esc(location)}</div>
+        <div style="color:var(--cl-red);margin-top:4px;letter-spacing:1px">${PM.esc(classif)}</div>
+      </div>
+    </div>`;
+
+  // Key metrics
+  html += `
+    <div class="rp-report-section">
+      <div class="rp-report-section-title">KEY METRICS</div>
+      <div class="rp-report-stat-grid">
+        <div class="rp-stat-box">
+          <span class="rp-stat-value">${r.length.toLocaleString()}</span>
+          <span class="rp-stat-label">TOTAL RECORDS</span>
+        </div>
+        <div class="rp-stat-box">
+          <span class="rp-stat-value" style="color:${openNets.length?'#ff5577':'#4dffa6'}">${openNets.length}</span>
+          <span class="rp-stat-label">OPEN NETWORKS</span>
+        </div>
+        <div class="rp-stat-box">
+          <span class="rp-stat-value">${ssids.size}</span>
+          <span class="rp-stat-label">UNIQUE SSIDs</span>
+        </div>
+        <div class="rp-stat-box">
+          <span class="rp-stat-value">${gpsNets.length}</span>
+          <span class="rp-stat-label">GPS-TAGGED</span>
+        </div>
+        <div class="rp-stat-box">
+          <span class="rp-stat-value">${Math.round(avgRSSI)} dBm</span>
+          <span class="rp-stat-label">AVG SIGNAL</span>
+        </div>
+        <div class="rp-stat-box">
+          <span class="rp-stat-value">${vendors.size}</span>
+          <span class="rp-stat-label">VENDORS</span>
+        </div>
+      </div>
+    </div>`;
+
+  // Executive summary
+  if (document.getElementById('rptExec')?.checked) {
+    const risk = openNets.length > 5 ? 'HIGH' : openNets.length > 0 ? 'MEDIUM' : 'LOW';
+    const riskColor = risk === 'HIGH' ? '#ff5577' : risk === 'MEDIUM' ? '#ffa040' : '#4dffa6';
+    html += `
+      <div class="rp-report-section">
+        <div class="rp-report-section-title">EXECUTIVE SUMMARY</div>
+        <p>A clinical RF intelligence analysis was performed at <strong>${PM.esc(location)}</strong> on ${date}.
+        The analysis captured ${r.length.toLocaleString()} network observations across ${ssids.size} unique SSIDs
+        from ${vendors.size} identified vendors.</p>
+        <p>Overall risk assessment: <strong style="color:${riskColor}">${risk}</strong>
+        ${openNets.length ? `— ${openNets.length} unencrypted networks identified requiring immediate attention.` :
+          wepNets.length ? `— ${wepNets.length} networks using deprecated WEP encryption.` :
+          '— No open or WEP networks detected. Encryption posture is acceptable.'}</p>
+        ${gpsNets.length === 0 ? '<p style="color:var(--cl-cyan);opacity:.6;font-size:.58rem">Note: No GPS coordinates present in this dataset. Map visualization unavailable.</p>' : ''}
+      </div>`;
+  }
+
+  // Open networks list
+  if (document.getElementById('rptOpenNets')?.checked && openNets.length) {
+    html += `
+      <div class="rp-report-section">
+        <div class="rp-report-section-title">OPEN NETWORKS — IMMEDIATE ACTION REQUIRED</div>
+        <p>The following ${openNets.length} network${openNets.length>1?'s are':'is'} transmitting without encryption.
+        Any data transmitted on these networks is visible to passive observers.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:.58rem;margin-top:8px">
+          <thead><tr style="border-bottom:1px solid var(--cl-border)">
+            <th style="text-align:left;padding:4px 8px;color:var(--cl-cyan);opacity:.6">SSID</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--cl-cyan);opacity:.6">BSSID</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--cl-cyan);opacity:.6">RSSI</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--cl-cyan);opacity:.6">CHANNEL</th>
+            <th style="text-align:left;padding:4px 8px;color:var(--cl-cyan);opacity:.6">VENDOR</th>
+          </tr></thead>
+          <tbody>
+            ${openNets.slice(0,50).map(n => `
+              <tr style="border-bottom:1px solid rgba(15,37,53,.3)">
+                <td style="padding:4px 8px;color:var(--cl-red)">${PM.esc(n.ssid||'(hidden)')}</td>
+                <td style="padding:4px 8px;font-family:monospace;font-size:.55rem;color:var(--cl-cyan);opacity:.6">${PM.esc(n.bssid)}</td>
+                <td style="padding:4px 8px;color:var(--cl-orange)">${n.rssi} dBm</td>
+                <td style="padding:4px 8px;color:var(--cl-cyan);opacity:.75">${n.channel}</td>
+                <td style="padding:4px 8px;color:var(--cl-purple)">${PM.esc(n.vendor||'Unknown')}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+        ${openNets.length > 50 ? `<p style="color:var(--cl-cyan);opacity:.6;font-size:.55rem">...and ${openNets.length-50} more. Export CSV for full list.</p>` : ''}
+      </div>`;
+  }
+
+  // Recommendations
+  if (document.getElementById('rptRecs')?.checked) {
+    html += `
+      <div class="rp-report-section">
+        <div class="rp-report-section-title">RECOMMENDATIONS</div>
+        ${openNets.length ? `<p>1. <strong style="color:var(--cl-red)">IMMEDIATE:</strong> Enable WPA2 or WPA3 encryption on ${openNets.length} open network${openNets.length>1?'s':''}. Open networks expose all transmitted data to passive interception.</p>` : ''}
+        ${wepNets.length ? `<p>${openNets.length?2:1}. <strong style="color:var(--cl-orange)">HIGH:</strong> Migrate ${wepNets.length} WEP-encrypted network${wepNets.length>1?'s':''} to WPA2 minimum. WEP encryption has been broken since 2001.</p>` : ''}
+        <p>• Enable WPA3 where hardware supports it for strongest current encryption standard.</p>
+        <p>• Disable SSID broadcast on administrative/management networks.</p>
+        <p>• Implement network segmentation — guest, corporate, and IoT on separate VLANs.</p>
+        <p>• Schedule quarterly RF surveys to detect unauthorized access points.</p>
+        <p style="margin-top:12px;color:var(--cl-cyan);opacity:.6;font-size:.55rem">
+          Analysis performed with Pisces Moon OS — The Clinician v1.0<br>
+          Fluid Fortune / fluidfortune.com<br>
+          Clark Beddows Protocol — Local-first, no gatekeepers, user owns everything.
+        </p>
+      </div>`;
+  }
+
+  document.getElementById('reportContent').innerHTML = html;
+}
+
+function printReport() {
+  if (!allRecords.length) { alert('Import data first'); return; }
+  buildReport();
+  setTimeout(() => window.print(), 300);
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────
+function exportCSV() {
+  if (!filteredRecords.length) { alert('No data to export'); return; }
+  const headers = ['bssid','ssid','rssi','channel','band','enc','vendor','lat','lon','firstseen','lastseen'];
+  const lines = [
+    headers.join(','),
+    ...filteredRecords.map(r => headers.map(h => {
+      const v = String(r[h] || '');
+      return v.includes(',') ? `"${v}"` : v;
+    }).join(','))
+  ];
+  const blob = new Blob([lines.join('\n')], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `clinician_export_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+}
+
+function copySelection() {
+  const sel = filteredRecords.filter(r => selectedRows.has(r.bssid));
+  if (!sel.length) { alert('No rows selected'); return; }
+  const text = sel.map(r =>
+    `${r.bssid}\t${r.ssid||''}\t${r.rssi}\t${r.channel}\t${r.enc}\t${r.vendor||''}`
+  ).join('\n');
+  navigator.clipboard.writeText(text).then(() =>
+    alert(`${sel.length} row${sel.length>1?'s':''} copied to clipboard`)
+  );
+}
+
+function clearAll() {
+  if (!confirm('Clear all loaded data?')) return;
+  allRecords = [];
+  filteredRecords = [];
+  sessions = [];
+  selectedRows.clear();
+  renderGrid();
+  renderSessionList();
+  updateHeader();
+  document.getElementById('anomalyBanner').classList.remove('visible');
+}
+
+function runAnalysis() {
+  if (!allRecords.length) { alert('Import data first'); return; }
+  switchPane('stats');
+  detectAnomalies();
+}
+
+// ── SESSION LIST ──────────────────────────────────────────────────
+let diffSelection = [];
+
+function renderSessionList() {
+  const list = document.getElementById('sessionList');
+  if (!sessions.length) {
+    list.innerHTML = '<div style="font-size:.55rem;color:var(--cl-cyan);opacity:.6;text-align:center;padding:8px">No sessions loaded</div>';
+    return;
+  }
+
+  list.innerHTML = sessions.map((s, i) => {
+    const diffMark = diffSelection.includes(i) ?
+      ` style="border-color:${s.color}"` : '';
+    return `
+      <div class="cl-session-item active" onclick="activateSession(${i})" ${diffMark}>
+        <div style="color:${s.color};font-size:.58rem">${PM.esc(s.name)}</div>
+        <div class="cl-session-meta">
+          ${s.records.length.toLocaleString()} records
+          ${s.live ? '<span style="color:#4dffa6">• LIVE</span>' : ''}
+        </div>
+        <div style="display:flex;gap:4px;margin-top:4px">
+          <button class="dp-filter-btn" onclick="event.stopPropagation();selectForDiff(${i})"
+                  style="font-size:.5rem;padding:2px 6px">
+            ${diffSelection.includes(i) ? '✓ DIFF' : 'DIFF'}
+          </button>
+          <button class="dp-filter-btn" onclick="event.stopPropagation();removeSession(${i})"
+                  style="font-size:.5rem;padding:2px 6px;border-color:rgba(255,85,119,.3);color:rgba(255,85,119,.6)">
+            REMOVE
+          </button>
+        </div>
+      </div>`;
+  }).join('') + (diffSelection.length === 2 ? `
+    <button class="cl-btn primary" onclick="diffSessions(${diffSelection[0]},${diffSelection[1]});clearDiffSelection()"
+            style="width:100%;margin-top:8px">⚡ COMPARE SESSIONS</button>` : '');
+
+  // Phase 4: also refresh session overlay panel
+  renderSessionOverlay();
+}
+
+function selectForDiff(i) {
+  if (diffSelection.includes(i)) {
+    diffSelection = diffSelection.filter(x => x !== i);
+  } else {
+    diffSelection.push(i);
+    if (diffSelection.length > 2) diffSelection.shift();
+  }
+  renderSessionList();
+}
+
+function clearDiffSelection() {
+  diffSelection = [];
+  renderSessionList();
+}
+
+function removeSession(i) {
+  if (!confirm(`Remove session "${sessions[i].name}"?`)) return;
+  sessions.splice(i, 1);
+  diffSelection = diffSelection.filter(x => x !== i).map(x => x > i ? x-1 : x);
+  activeSessionsForOverlay = new Set(
+    [...activeSessionsForOverlay].filter(x => x !== i).map(x => x > i ? x-1 : x)
+  );
+  // Rebuild dataStore from remaining sessions
+  dataStore = { wifi: [], ble: [], probe: [], lora: [] };
+  sessions.forEach(s => {
+    const t = s.dataType || 'wifi';
+    if (dataStore[t]) dataStore[t] = dataStore[t].concat(s.records);
+  });
+  switchDataType(currentDataType);  // refresh current view
+  renderSessionList();
+  updateHeader();
+  saveToStorage();
+}
+
+function activateSession(i) {
+  // For now, merge all sessions. Future: isolate sessions
+  applyFilter();
+}
+
+// ── HEADER STATS ──────────────────────────────────────────────────
+function updateHeader() {
+  document.getElementById('hdrRecords').textContent  = allRecords.length.toLocaleString();
+  document.getElementById('hdrOpen').textContent     = allRecords.filter(r=>r.enc==='OPEN').length;
+  document.getElementById('hdrVendors').textContent  = new Set(allRecords.map(r=>r.vendor).filter(Boolean)).size;
+  document.getElementById('hdrVisible').textContent  = filteredRecords.length.toLocaleString();
+}
+
+// ── COLUMN VISIBILITY ─────────────────────────────────────────────
+function initColToggles() {
+  const list = document.getElementById('colToggleList');
+  list.innerHTML = columns.map(col => `
+    <label style="display:flex;align-items:center;gap:6px;cursor:pointer">
+      <input type="checkbox" ${visibleCols.has(col)?'checked':''} 
+             onchange="toggleCol('${col}',this.checked)"
+             style="accent-color:var(--cl-cyan)">
+      ${COL_LABELS[col]||col}
+    </label>`).join('');
+}
+
+function toggleCol(col, visible) {
+  if (visible) visibleCols.add(col);
+  else visibleCols.delete(col);
+  renderGrid();
+}
+
+// ── DRAG & DROP ───────────────────────────────────────────────────
+document.addEventListener('dragover', e => {
+  e.preventDefault();
+  document.getElementById('dropOverlay').classList.add('active');
+  document.getElementById('importZone').classList.add('drag-over');
+});
+
+document.addEventListener('dragleave', e => {
+  if (!e.relatedTarget) {
+    document.getElementById('dropOverlay').classList.remove('active');
+    document.getElementById('importZone').classList.remove('drag-over');
+  }
+});
+
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  document.getElementById('dropOverlay').classList.remove('active');
+  document.getElementById('importZone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) importFile(file);
+});
+
+// ── STORAGE ───────────────────────────────────────────────────────
+function saveToStorage() {
+  try {
+    // Save last 1000 records of each data type
+    const toSave = {
+      wifi:  (dataStore.wifi  || []).slice(0, 1000),
+      ble:   (dataStore.ble   || []).slice(0, 1000),
+      probe: (dataStore.probe || []).slice(0, 1000),
+      lora:  (dataStore.lora  || []).slice(0, 1000),
+    };
+    PM.save('clinician_dataStore', toSave);
+    PM.save('clinician_currentDataType', currentDataType);
+    PM.save('clinician_sessions', sessions.map(s => ({
+      name: s.name,
+      color: s.color,
+      dataType: s.dataType || 'wifi',
+      count: s.records.length,
+    })));
+  } catch(e) {}
+}
+
+function loadFromStorage() {
+  const savedStore = PM.load('clinician_dataStore', null);
+  if (savedStore && typeof savedStore === 'object') {
+    dataStore = {
+      wifi:  savedStore.wifi  || [],
+      ble:   savedStore.ble   || [],
+      probe: savedStore.probe || [],
+      lora:  savedStore.lora  || [],
+    };
+  } else {
+    // Legacy fallback for old saved records
+    const legacy = PM.load('clinician_records', null);
+    if (legacy && legacy.length) {
+      dataStore.wifi = legacy;
+    }
+  }
+  const savedType = PM.load('clinician_currentDataType', 'wifi');
+  switchDataType(savedType);
+  updateDataTypeCounts();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────
+window.addEventListener('load', () => {
+  initColToggles();
+  loadFromStorage();
+  setFilter('all');
+  updateDataTypeCounts();
+});
+</script>
+</body>
+</html>

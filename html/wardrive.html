@@ -5,12 +5,52 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // WARDRIVE</title>
 <link rel="stylesheet" href="lib/leaflet.min.css">
 <link rel="stylesheet" href="pm_shared.css">
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 .wd-layout {
     display: grid;
     grid-template-columns: 320px 1fr 320px;
@@ -139,6 +179,7 @@ canvas { display: block; }
         <div class="pm-live-badge" id="liveBadge" style="opacity:.3">
             <div class="pm-live-dot"></div>LIVE
         </div>
+        <span id="sourceIndicator" style="font-family:Orbitron,monospace;font-size:.52rem;letter-spacing:1.5px;padding:3px 8px;border-radius:2px;background:rgba(0,0,0,.3);border:1px solid var(--panel-border);color:var(--text-dim)">SRC: —</span>
         <span class="save-indicator" id="saveIndicator">✓ SAVED</span>
         <span class="pm-last-update" id="lastUpdate"></span>
     </div>
@@ -190,6 +231,8 @@ canvas { display: block; }
         <div class="wd-controls">
             <button class="wd-btn active" id="btnScan" onclick="toggleScan()">⬤ SCANNING</button>
             <button class="wd-btn" onclick="saveNow()">💾 SAVE</button>
+        <button id="bridgeLogBtn" class="wd-btn" style="border-color:var(--accent3);color:var(--accent3)" onclick="if(bridgeLogOpen)stopBridgeLog();else startBridgeLog();">START HOST LOG</button>
+        <span id="bridgeLogLabel" style="font-family:DM Mono,monospace;font-size:.55rem;color:var(--text-dim);margin-left:8px">Bridge offline - host logging unavailable</span>
             <button class="wd-btn" onclick="clearSession()" class="danger">CLEAR</button>
             <button class="wd-btn" onclick="toggleFollow()" id="btnFollow">📍 FOLLOW GPS</button>
         </div>
@@ -220,9 +263,342 @@ canvas { display: block; }
 </div>
 
 <script src="lib/leaflet.min.js"></script>
-<script src="pm_scraper.js"></script>
+<script src="pm_lib.js"></script>
 <script src="pm_viz.js"></script>
-<script src="pm_transport.js"></script>
+<script>
+// pm_transport.js inlined
+// ═══════════════════════════════════════════════════════════════════════
+// PISCES MOON OS - TRANSPORT ABSTRACTION LAYER
+// Copyright (C) 2026 Eric Becker / Fluid Fortune
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// fluidfortune.com
+//
+// PURPOSE:
+//   Lets one HTML app talk to a T-Beam via EITHER:
+//     - WebSocket (Linux desktop with edge_bridge.py running)
+//     - Web Bluetooth (Android with BLE GATT firmware on T-Beam)
+//   Without the app knowing or caring which transport is in use.
+//
+// USAGE:
+//   const beam = new PMTransport({
+//       onMessage: msg => handleData(msg),
+//       onStatus: s => updateUI(s),
+//   });
+//   await beam.connect();      // auto-detects best transport
+//   beam.send({cmd: "scan"});  // works the same on both transports
+//
+// AUTO-DETECTION ORDER:
+//   1. If running in Trojan Horse APK (window.PiscesAndroid exists)
+//      → prefer Web Bluetooth (no Termux required)
+//   2. If WebSocket is available at ws://127.0.0.1:8080
+//      → use WebSocket (Linux + edge_bridge.py)
+//   3. If neither, prompt user to pick one or fail gracefully
+//
+// MANUAL OVERRIDE:
+//   const beam = new PMTransport({mode: "bluetooth"});  // force BLE
+//   const beam = new PMTransport({mode: "websocket"});  // force WS
+// ═══════════════════════════════════════════════════════════════════════
+
+const PM_BLE_SERVICE_UUID         = "8b5e0001-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_DATA_CHAR_UUID       = "8b5e0002-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_COMMAND_CHAR_UUID    = "8b5e0003-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_STATUS_CHAR_UUID     = "8b5e0004-7c34-4a91-bd5c-1a2e9d6f8c4a";
+
+const PM_WS_DEFAULT_URL = (() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1' : host;
+    return `ws://${bridgeHost}:8080`;
+})();
+
+class PMTransport {
+    /**
+     * @param {Object} opts
+     * @param {Function} opts.onMessage - Called for every data packet from T-Beam
+     * @param {Function} opts.onStatus - Called when connection state changes
+     * @param {string} [opts.mode] - "auto" | "websocket" | "bluetooth"
+     * @param {string} [opts.wsUrl] - Override WebSocket URL
+     */
+    constructor(opts = {}) {
+        this.onMessage = opts.onMessage || (() => {});
+        this.onStatus  = opts.onStatus  || (() => {});
+        this.mode      = opts.mode      || "auto";
+        this.wsUrl     = opts.wsUrl     || PM_WS_DEFAULT_URL;
+
+        // State
+        this.transport = null;
+        this.connected = false;
+        this.activeMode = null;
+        this.ws = null;
+        this.bleDevice = null;
+        this.bleServer = null;
+        this.bleService = null;
+        this.bleDataChar = null;
+        this.bleCommandChar = null;
+    }
+
+    /**
+     * Connect to the T-Beam. Auto-detects transport unless mode was set.
+     * Returns a promise that resolves to {mode: "websocket"|"bluetooth"} on success.
+     */
+    async connect() {
+        let chosenMode = this.mode;
+
+        if (chosenMode === "auto") {
+            chosenMode = await this._autoDetectBestTransport();
+        }
+
+        this._status("connecting", `Trying ${chosenMode}...`);
+
+        try {
+            if (chosenMode === "bluetooth") {
+                await this._connectBluetooth();
+            } else if (chosenMode === "websocket") {
+                try {
+                    await this._connectWebSocket();
+                } catch (wsErr) {
+                    if (navigator.bluetooth) {
+                        chosenMode = "bluetooth";
+                        await this._connectBluetooth();
+                    } else {
+                        throw wsErr;
+                    }
+                }
+            } else {
+                throw new Error(`Unknown transport mode: ${chosenMode}`);
+            }
+
+            this.activeMode = chosenMode;
+            this.connected = true;
+            this._status("connected", `Connected via ${chosenMode}`);
+            return {mode: chosenMode};
+        } catch (e) {
+            this._status("error", e.message);
+            throw e;
+        }
+    }
+
+    /**
+     * Send a command/message to the T-Beam.
+     * @param {Object|string} data - JSON-serializable object or string
+     */
+    async send(data) {
+        if (!this.connected) {
+            throw new Error("Not connected. Call connect() first.");
+        }
+
+        const payload = typeof data === "string" ? data : JSON.stringify(data);
+
+        if (this.activeMode === "websocket") {
+            this.ws.send(payload);
+        } else if (this.activeMode === "bluetooth") {
+            // BLE characteristic writes have a max packet size (~512 bytes)
+            // For larger payloads we'd chunk, but commands should be small.
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(payload);
+            if (bytes.length > 512) {
+                throw new Error("BLE command too large (max 512 bytes)");
+            }
+            await this.bleCommandChar.writeValue(bytes);
+        }
+    }
+
+    /**
+     * Cleanly disconnect.
+     */
+    async disconnect() {
+        this.connected = false;
+        if (this.ws) {
+            try { this.ws.close(); } catch {}
+            this.ws = null;
+        }
+        if (this.bleDevice && this.bleDevice.gatt.connected) {
+            try { this.bleDevice.gatt.disconnect(); } catch {}
+        }
+        this.bleDevice = null;
+        this.activeMode = null;
+        this._status("disconnected", "Disconnected");
+    }
+
+    /**
+     * Returns capabilities of the current connection.
+     * Apps can check what's possible before trying.
+     */
+    capabilities() {
+        return {
+            connected: this.connected,
+            mode: this.activeMode,
+            bandwidth: this.activeMode === "websocket" ? "high" : "low",
+            // BLE realistically handles ~10-50 KB/s; WebSocket much higher
+            maxPacketSize: this.activeMode === "bluetooth" ? 512 : 65536,
+            bidirectional: true,
+        };
+    }
+
+    // ── PRIVATE ───────────────────────────────────────────────────────
+
+    async _autoDetectBestTransport() {
+        // Heuristic: if we're in the Pisces Moon Android APK, prefer BLE.
+        // Otherwise, prefer WebSocket (Linux desktop with edge bridge).
+        const isAndroidAPK = typeof window !== "undefined" &&
+                             window.PiscesAndroid &&
+                             typeof window.PiscesAndroid.bridgeAvailable === "function";
+
+        if (isAndroidAPK) {
+            // Check if Web Bluetooth is available
+            if (navigator.bluetooth) return "bluetooth";
+            // Fall back to WebSocket (Termux bridge running)
+            return "websocket";
+        }
+
+        // Non-APK contexts (Linux desktop / macOS Chrome):
+        // Skip the probe-then-connect dance - it caused a race condition
+        // where the close from the probe interfered with the next open.
+        // Just try to connect directly. If it fails, fall back to BLE.
+        return "websocket";
+    }
+
+    async _probeWebSocket() {
+        return new Promise(resolve => {
+            try {
+                const probe = new WebSocket(this.wsUrl);
+                const timer = setTimeout(() => {
+                    try { probe.close(); } catch {}
+                    resolve(false);
+                }, 1500);
+                probe.onopen = () => {
+                    clearTimeout(timer);
+                    try { probe.close(); } catch {}
+                    resolve(true);
+                };
+                probe.onerror = () => {
+                    clearTimeout(timer);
+                    resolve(false);
+                };
+            } catch {
+                resolve(false);
+            }
+        });
+    }
+
+    async _connectWebSocket() {
+        return new Promise((resolve, reject) => {
+            this.ws = new WebSocket(this.wsUrl);
+
+            // Hard timeout — never hang forever waiting for connect
+            const connectTimeout = setTimeout(() => {
+                try { this.ws.close(); } catch {}
+                reject(new Error(`WebSocket timeout connecting to ${this.wsUrl} - is pm_bridge.py running?`));
+            }, 3000);
+
+            this.ws.onopen = () => {
+                clearTimeout(connectTimeout);
+                resolve();
+            };
+            this.ws.onerror = () => {
+                clearTimeout(connectTimeout);
+                reject(new Error(`WebSocket failed at ${this.wsUrl}`));
+            };
+
+            this.ws.onmessage = ev => {
+                let data;
+                try {
+                    data = JSON.parse(ev.data);
+                } catch {
+                    data = {type: "raw", data: ev.data};
+                }
+                this.onMessage(data);
+            };
+
+            this.ws.onclose = () => {
+                if (this.connected) {
+                    this.connected = false;
+                    this._status("disconnected", "WebSocket closed - retrying...");
+                    // Auto-retry after 2s if we were previously connected
+                    setTimeout(() => {
+                        this._connectWebSocket().then(() => {
+                            this.connected = true;
+                            this._status("connected", "Reconnected");
+                        }).catch(() => {
+                            this._status("error", "Reconnect failed - check pm_bridge.py");
+                        });
+                    }, 2000);
+                }
+            };
+        });
+    }
+
+    async _connectBluetooth() {
+        if (!navigator.bluetooth) {
+            throw new Error("Web Bluetooth not supported in this browser");
+        }
+
+        // Show the system pairing dialog. User picks T-Beam from list.
+        this.bleDevice = await navigator.bluetooth.requestDevice({
+            filters: [
+                {services: [PM_BLE_SERVICE_UUID]},
+                {namePrefix: "PiscesMoon"},
+                {namePrefix: "T-Beam"},
+            ],
+            optionalServices: [PM_BLE_SERVICE_UUID],
+        });
+
+        // Listen for unexpected disconnections
+        this.bleDevice.addEventListener("gattserverdisconnected", () => {
+            if (this.connected) {
+                this.connected = false;
+                this._status("disconnected", "T-Beam disconnected");
+            }
+        });
+
+        // Connect to the GATT server on the T-Beam
+        this.bleServer = await this.bleDevice.gatt.connect();
+        this.bleService = await this.bleServer.getPrimaryService(PM_BLE_SERVICE_UUID);
+
+        // Get the data characteristic (T-Beam → tablet)
+        this.bleDataChar = await this.bleService.getCharacteristic(PM_BLE_DATA_CHAR_UUID);
+        await this.bleDataChar.startNotifications();
+        this.bleDataChar.addEventListener("characteristicvaluechanged", ev => {
+            const decoder = new TextDecoder();
+            const text = decoder.decode(ev.target.value);
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                data = {type: "raw", data: text};
+            }
+            this.onMessage(data);
+        });
+
+        // Get the command characteristic (tablet → T-Beam)
+        this.bleCommandChar = await this.bleService.getCharacteristic(PM_BLE_COMMAND_CHAR_UUID);
+
+        // Optional: status characteristic
+        try {
+            const statusChar = await this.bleService.getCharacteristic(PM_BLE_STATUS_CHAR_UUID);
+            await statusChar.startNotifications();
+            statusChar.addEventListener("characteristicvaluechanged", ev => {
+                const decoder = new TextDecoder();
+                const text = decoder.decode(ev.target.value);
+                this._status("device_status", text);
+            });
+        } catch {
+            // Status char is optional
+        }
+    }
+
+    _status(state, message) {
+        this.onStatus({state, message, mode: this.activeMode, timestamp: Date.now()});
+    }
+}
+
+// ── Convenience global ─────────────────────────────────────────────────
+if (typeof window !== "undefined") {
+    window.PMTransport = PMTransport;
+    window.PM_BLE_SERVICE_UUID = PM_BLE_SERVICE_UUID;
+}
+
+</script>
 <script>
 // ═══════════════════════════════════════════════════════════════════
 // WARDRIVE — Live WiFi intelligence with map, charts, auto-save
@@ -259,11 +635,21 @@ function initViz() {
         horizontal: false,
         colorFn: () => PMViz.C.accent
     });
+    // Default center — overridden immediately by GPS_FIX or browser geolocation
+    const mapDefaultCenter = [34.0617, -118.2380];
     liveMap = new PMViz.LiveMap('wd-map', {
-        center: [34.0617, -118.2380],
+        center: mapDefaultCenter,
         zoom: 14,
         track: true,
     });
+    // Try browser geolocation for immediate centering before GPS fix arrives
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(pos => {
+            if (liveMap && liveMap.map && !gpsLat) {
+                liveMap.map.setView([pos.coords.latitude, pos.coords.longitude], 14);
+            }
+        }, () => {/* denied or unavailable — GPS fix will center it */});
+    }
 }
 
 // ── Transport ────────────────────────────────────────────────────
@@ -276,7 +662,25 @@ function handleStatus(s) {
     const badge = document.getElementById('liveBadge');
     badge.style.opacity = s.state === 'connected' ? '1' : '0.3';
     document.getElementById('lastUpdate').textContent = s.message;
-    if (s.state === 'connected') startAutoSave();
+    if (typeof updateBridgeLogUI === 'function') updateBridgeLogUI();
+}
+
+function updateSourceIndicator(source) {
+    const el = document.getElementById('sourceIndicator');
+    if (!el) return;
+    if (source === 'tdeck') {
+        el.textContent = '📡 T-DECK';
+        el.style.borderColor = 'var(--accent3)';
+        el.style.color = 'var(--accent3)';
+    } else if (source === 'native') {
+        el.textContent = '💻 MAC NATIVE';
+        el.style.borderColor = 'var(--warn)';
+        el.style.color = 'var(--warn)';
+    } else {
+        el.textContent = 'SRC: —';
+        el.style.borderColor = 'var(--panel-border)';
+        el.style.color = 'var(--text-dim)';
+    }
 }
 
 async function connect() {
@@ -286,8 +690,39 @@ async function connect() {
 
 // ── Data handler ─────────────────────────────────────────────────
 function handleData(msg) {
-    if (msg.type === 'WIFI_SCAN_RESULT') handleNetwork(msg);
-    else if (msg.type === 'GPS_FIX')     handleGPS(msg);
+    // Bridge log status events
+    if (msg.type === 'wardrive_log_status') {
+        bridgeLogOpen    = !!msg.open;
+        bridgeLogSession = msg.session_id || null;
+        bridgeLogRows    = msg.rows || 0;
+        updateBridgeLogUI();
+        return;
+    }
+    if (msg.type === 'wardrive_log_error') {
+        alert('Bridge log error: ' + (msg.error || 'unknown'));
+        return;
+    }
+    // Accept bridge events (wardrive type) AND legacy (WIFI_SCAN_RESULT)
+    if (msg.type === 'wardrive' || msg.type === 'WIFI_SCAN_RESULT') {
+        // Show data source in header
+        updateSourceIndicator(msg.source || (msg.bssid && msg.bssid.startsWith('SYN:') ? 'native' : msg.source === 'tdeck' ? 'tdeck' : 'native'));
+        // Normalize field names from bridge format -> wardrive format
+        handleNetwork({
+            bssid:    msg.bssid || msg.mac || '',
+            ssid:     msg.ssid || '',
+            sec:      typeof msg.enc === 'boolean' ? (msg.enc ? 'WPA' : 'OPEN') : (msg.sec || msg.security || 'UNKNOWN'),
+            channel:  msg.ch || msg.channel || 0,
+            rssi:     msg.rssi || -80,
+            vendor:   msg.vendor || '',
+        });
+    } else if (msg.type === 'GPS_FIX' || msg.type === 'gps') {
+        // Normalize lon/lng field
+        if (msg.lng && !msg.lon) msg.lon = msg.lng;
+        if (msg.lat && msg.lon) {
+            updateSourceIndicator('tdeck'); // GPS only ever comes from T-Deck
+            handleGPS(msg);
+        }
+    }
     else if (msg.type === 'WIFI_SCAN_DONE') handleScanDone(msg);
 }
 
@@ -324,11 +759,11 @@ function handleNetwork(n) {
 
     // Map marker
     if (gpsLat && gpsLon) {
-        liveMap.upsert(key, gpsLat, gpsLon, n.rssi, n.ssid || n.bssid, 'wifi');
+        if (liveMap && liveMap.upsert) liveMap.upsert(key, gpsLat, gpsLon, n.rssi, n.ssid || n.bssid, 'wifi');
     }
 
     // Waterfall — push channel data
-    pushWaterfall();
+    if (typeof pushWaterfall === 'function') try { pushWaterfall(); } catch(e) {}
 }
 
 function handleGPS(g) {
@@ -470,39 +905,123 @@ function toggleFollow() {
     document.getElementById('btnFollow').className = 'wd-btn' + (followGPS?' active':'');
 }
 
+function buildWigleCSV(nets) {
+    // WiGLE 1.4 standard format - the same Smelter expects to parse.
+    const header1 = 'WigleWifi-1.4,appRelease=PiscesMoon-WarDrive,model=Bridge,'
+                  + 'release=v0.5,device=PMOS,display=PMOS,board=PMOS,brand=FluidFortune,star=Sol,'
+                  + 'body=Earth,subBody=0';
+    const header2 = 'MAC,SSID,AuthMode,FirstSeen,Channel,RSSI,'
+                  + 'CurrentLatitude,CurrentLongitude,AltitudeMeters,AccuracyMeters,Type';
+    const rows = nets.map(n => {
+        const ts = new Date(n.firstSeen || Date.now()).toISOString().replace('T',' ').slice(0,19);
+        const ssid = (n.ssid || '').replace(/,/g, '_').replace(/\n/g, ' ');
+        return [
+            n.bssid || '',
+            ssid,
+            '[' + (n.security || 'UNKNOWN') + ']',
+            ts,
+            n.channel || 0,
+            n.bestRSSI || n.rssi || -100,
+            (n.lat || 0).toFixed(6),
+            (n.lon || 0).toFixed(6),
+            (n.alt || 0).toFixed(1),
+            5,
+            'WIFI'
+        ].join(',');
+    });
+    return [header1, header2, ...rows].join('\n');
+}
+
+function downloadFile(name, content, mime) {
+    const blob = new Blob([content], { type: mime || 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
+// Bridge-side log state
+let bridgeLogOpen = false;
+let bridgeLogSession = null;
+let bridgeLogRows = 0;
+
 function saveNow() {
     const nets = Array.from(networks.values());
-    if (nets.length === 0) return;
+    if (nets.length === 0) {
+        alert('No networks captured yet. Wait for the bridge to stream data.');
+        return;
+    }
 
-    // Save as WiGLE CSV (Smelter-compatible)
-    const csv = PMViz.Storage.toWigleCSV(nets);
-    PMViz.Storage.save('wardrive', csv, 'csv');
+    // Always download a Mac-side copy
+    const csv = buildWigleCSV(nets);
+    const stamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    downloadFile('wardrive_' + stamp + '.csv', csv, 'text/csv');
+
     savedCount++;
-    document.getElementById('statSaved').textContent = savedCount;
+    const sav = document.getElementById('statSaved');
+    if (sav) sav.textContent = savedCount;
 
-    // Flash save indicator
     const ind = document.getElementById('saveIndicator');
-    ind.classList.add('show');
-    setTimeout(() => ind.classList.remove('show'), 2000);
+    if (ind) {
+        ind.classList.add('show');
+        setTimeout(() => ind.classList.remove('show'), 2000);
+    }
+}
+
+function startBridgeLog() {
+    if (!beam || !beam.connected) {
+        alert('Bridge not connected. Cannot start host-side logging.');
+        return;
+    }
+    beam.send({cmd: 'wardrive_log_open'});
+}
+
+function stopBridgeLog() {
+    if (!beam || !beam.connected) return;
+    beam.send({cmd: 'wardrive_log_close'});
+}
+
+function refreshBridgeLogStatus() {
+    if (!beam || !beam.connected) return;
+    beam.send({cmd: 'wardrive_log_status'});
+}
+
+function updateBridgeLogUI() {
+    const btn = document.getElementById('bridgeLogBtn');
+    const lbl = document.getElementById('bridgeLogLabel');
+    if (!btn || !lbl) return;
+    if (bridgeLogOpen) {
+        btn.textContent = 'STOP HOST LOG';
+        btn.style.borderColor = 'var(--accent4)';
+        btn.style.color = 'var(--accent4)';
+        lbl.textContent = 'LOGGING TO HOST: ' + (bridgeLogSession || '...') + ' (' + bridgeLogRows + ' rows)';
+        lbl.style.color = 'var(--accent3)';
+    } else {
+        btn.textContent = 'START HOST LOG';
+        btn.style.borderColor = 'var(--accent3)';
+        btn.style.color = 'var(--accent3)';
+        lbl.textContent = beam && beam.connected
+            ? 'Bridge ready - click START HOST LOG to write CSV on host'
+            : 'Bridge offline - host logging unavailable';
+        lbl.style.color = 'var(--text-dim)';
+    }
 }
 
 function clearSession() {
     if (!confirm('Clear all session data?')) return;
     networks.clear();
-    liveMap.clear();
+    if (liveMap && liveMap.clear) liveMap.clear();
     updateStats();
     renderList();
     updateCharts();
 }
 
 function startAutoSave() {
-    if (autoSaveId) return;
-    autoSaveId = PMViz.Storage.autoSave(
-        'wardrive',
-        () => PMViz.Storage.toWigleCSV(Array.from(networks.values())),
-        60,
-        'csv'
-    );
+    // Auto-save disabled — data accumulates in memory, save on request only
+    // Use the SAVE NOW button to export WiGLE CSV when you want it
 }
 
 // ── Session timer ────────────────────────────────────────────────

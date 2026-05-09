@@ -7,27 +7,67 @@
   Feeds: SOS Beacon, Mesh Messenger, SSH saved hosts
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // CONTACTS</title>
 <link rel="stylesheet" href="pm_shared.css">
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 .ct-layout{display:grid;grid-template-columns:300px 1fr;height:calc(100vh - 52px);overflow:hidden;}
 .ct-left{border-right:1px solid var(--panel-border);display:flex;flex-direction:column;overflow:hidden;}
 .ct-right{display:flex;flex-direction:column;overflow:hidden;}
 .ct-list{flex:1;overflow-y:auto;}
 .ct-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.4);cursor:pointer;transition:background .15s;display:flex;gap:10px;align-items:center;}
-.ct-item:hover{background:rgba(0,212,255,.04);}
-.ct-item.selected{background:rgba(0,212,255,.08);border-left:2px solid var(--accent);}
+.ct-item:hover{background:rgba(77,217,255,.04);}
+.ct-item.selected{background:rgba(77,217,255,.08);border-left:2px solid var(--accent);}
 .ct-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:Orbitron,monospace;font-size:.75rem;font-weight:700;flex-shrink:0;border:1px solid var(--panel-border);}
 .ct-info{flex:1;min-width:0;}
 .ct-name{font-size:.72rem;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ct-sub{font-size:.56rem;color:var(--text-dim);margin-top:2px;display:flex;gap:8px;}
 .ct-badge{display:inline-block;padding:1px 5px;font-family:Orbitron,monospace;font-size:.42rem;letter-spacing:1px;border-radius:2px;}
-.badge-sar{background:rgba(255,51,102,.15);color:var(--accent4);border:1px solid rgba(255,51,102,.3);}
-.badge-mesh{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid rgba(0,255,136,.25);}
-.badge-ssh{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid rgba(0,212,255,.25);}
-.badge-emerg{background:rgba(244,168,32,.12);color:var(--gold);border:1px solid rgba(244,168,32,.3);}
+.badge-sar{background:rgba(255,85,119,.15);color:var(--accent4);border:1px solid rgba(255,85,119,.3);}
+.badge-mesh{background:rgba(77,255,166,.1);color:var(--accent3);border:1px solid rgba(77,255,166,.25);}
+.badge-ssh{background:rgba(77,217,255,.1);color:var(--accent);border:1px solid rgba(77,217,255,.25);}
+.badge-emerg{background:rgba(255,209,102,.12);color:var(--gold);border:1px solid rgba(255,209,102,.3);}
 .ct-form{padding:16px;flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:10px;}
 .ct-input{background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Share\ Tech\ Mono,monospace;font-size:.68rem;padding:8px 10px;outline:none;width:100%;box-sizing:border-box;}
 .ct-input:focus{border-color:var(--accent);}
@@ -46,11 +86,11 @@
 .tag-row{display:flex;gap:6px;flex-wrap:wrap;}
 .tag-btn{padding:5px 10px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.5rem;cursor:pointer;letter-spacing:1px;transition:all .15s;}
 .tag-btn:hover{border-color:var(--accent);color:var(--accent);}
-.tag-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.1);}
-.tag-btn.sar.active{border-color:var(--accent4);color:var(--accent4);background:rgba(255,51,102,.1);}
-.tag-btn.mesh.active{border-color:var(--accent3);color:var(--accent3);background:rgba(0,255,136,.1);}
-.tag-btn.emerg.active{border-color:var(--gold);color:var(--gold);background:rgba(244,168,32,.1);}
-.tag-btn.ssh.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.1);}
+.tag-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(77,217,255,.1);}
+.tag-btn.sar.active{border-color:var(--accent4);color:var(--accent4);background:rgba(255,85,119,.1);}
+.tag-btn.mesh.active{border-color:var(--accent3);color:var(--accent3);background:rgba(77,255,166,.1);}
+.tag-btn.emerg.active{border-color:var(--gold);color:var(--gold);background:rgba(255,209,102,.1);}
+.tag-btn.ssh.active{border-color:var(--accent);color:var(--accent);background:rgba(77,217,255,.1);}
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-dim);gap:12px;}
 .empty-icon{font-size:3rem;opacity:.3;}
 .empty-text{font-family:Orbitron,monospace;font-size:.6rem;letter-spacing:2px;opacity:.5;}
@@ -61,7 +101,7 @@
 .ct-search:focus{border-color:var(--accent);}
 .filter-row{padding:6px 10px;border-bottom:1px solid var(--panel-border);display:flex;gap:4px;flex-wrap:wrap;}
 .filt-btn{padding:3px 8px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.45rem;cursor:pointer;letter-spacing:1px;}
-.filt-btn.active{background:rgba(0,212,255,.1);border-color:var(--accent);color:var(--accent);}
+.filt-btn.active{background:rgba(77,217,255,.1);border-color:var(--accent);color:var(--accent);}
 .import-export{padding:8px 10px;border-top:1px solid var(--panel-border);display:flex;gap:6px;}
 </style>
 </head><body>
@@ -124,7 +164,7 @@ function load() {
   // Seed with example contacts if empty
   if (!contacts.length) {
     contacts = [
-      { id: uid(), name: 'Clark Beddows', phone: '', callsign: 'KN6CBP', nodeId: 'cb-node-1', email: '', sshHost: '', sshUser: 'root', sshPort: '22', notes: 'The Phantom operator', tags: ['mesh'], color: '#00d4ff', ts: Date.now() },
+      { id: uid(), name: 'Clark Beddows', phone: '', callsign: 'KN6CBP', nodeId: 'cb-node-1', email: '', sshHost: '', sshUser: 'root', sshPort: '22', notes: 'The Phantom operator', tags: ['mesh'], color: '#4dd9ff', ts: Date.now() },
     ];
     save();
   }
@@ -154,7 +194,7 @@ function initials(name) {
   return name.split(' ').map(w => w[0]||'').join('').toUpperCase().substr(0,2) || '?';
 }
 
-const COLORS = ['#00d4ff','#00ff88','#ff3366','#f4a820','#a78bfa','#fb923c'];
+const COLORS = ['#4dd9ff','#4dffa6','#ff5577','#ffd166','#a78bfa','#fb923c'];
 function colorFor(name) {
   let h = 0; for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
   return COLORS[h % COLORS.length];

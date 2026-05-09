@@ -1,0 +1,1300 @@
+<!DOCTYPE html>
+<!--
+  Pisces Moon OS - watchtower.html
+  Copyright (C) 2026 Eric Becker / Fluid Fortune
+  SPDX-License-Identifier: AGPL-3.0-or-later
+  fluidfortune.com
+
+  WATCHTOWER - persistent threat & anomaly detection.
+
+  Continuously monitors BLE/WiFi advertisements from the bridge,
+  fingerprints trackers (Tile/AirTag/SmartTag/Chipolo), watches
+  for persistent strangers across locations, and flags rogue APs
+  / evil twin attacks.
+
+  All observations stored locally in localStorage. Never leaves device.
+  Clark Beddows Protocol.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PISCES MOON // WATCHTOWER</title>
+<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_theme.css">
+<style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
+:root { --watch-cyan:#4dd9ff; --watch-amber:#ffd166; --watch-red:#ff5577; --watch-green:#4dffa6; }
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height:100%; overflow:hidden; }
+body { font-family:'Outfit', sans-serif; font-weight:300; color:var(--text-bright);
+       display:flex; flex-direction:column; }
+
+/* Header */
+.wt-header {
+  flex-shrink:0;
+  padding: 14px 22px 10px;
+  background: linear-gradient(180deg, rgba(0,0,0,.6), rgba(0,0,0,0));
+  border-bottom: 1px solid var(--panel-border);
+  display: flex; align-items: center; gap: 18px;
+}
+.wt-title {
+  font-family:'Orbitron',sans-serif; font-weight:600; font-size:1.1rem;
+  letter-spacing: 5px;
+  background: linear-gradient(135deg, var(--text-bright), var(--watch-amber));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.wt-status {
+  margin-left:auto; display:flex; gap:10px; align-items:center;
+  font-family:'DM Mono',monospace; font-size:.55rem; letter-spacing:1.5px;
+}
+.wt-pill {
+  padding: 5px 11px;
+  background: rgba(77,217,255,.05);
+  border: 1px solid rgba(77,217,255,.2);
+  border-top-color: rgba(77,217,255,.4);
+  border-radius: 4px;
+  color: var(--text);
+  display: flex; gap:7px; align-items:center;
+}
+.dot {
+  width:6px; height:6px; border-radius:50%;
+  background: var(--watch-green);
+  box-shadow: 0 0 8px var(--watch-green);
+  animation: pulse 2s ease-in-out infinite;
+}
+.dot.warn { background: var(--watch-amber); box-shadow: 0 0 8px var(--watch-amber); }
+.dot.alert { background: var(--watch-red); box-shadow: 0 0 12px var(--watch-red); }
+.dot.off { background: var(--text-dim); box-shadow: none; animation: none; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:.45; } }
+
+/* Threat banner */
+.threat-banner {
+  flex-shrink: 0;
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  background: linear-gradient(90deg, rgba(255,85,119,.18), rgba(255,85,119,.04));
+  border-bottom: 1px solid rgba(255,85,119,.3);
+  transition: max-height .25s ease;
+}
+.threat-banner.show { max-height: 200px; padding: 10px 22px; }
+.threat-banner-title {
+  font-family:'Orbitron',sans-serif; font-weight:600; font-size:.65rem;
+  letter-spacing: 3px; color: var(--watch-red); margin-bottom: 6px;
+  text-shadow: 0 0 12px var(--watch-red);
+}
+.threat-row {
+  font-family:'DM Mono',monospace; font-size:.6rem;
+  color: #ffb3c4; padding: 3px 0;
+}
+.threat-row .meta { color: var(--text-mid); margin-right: 10px; }
+
+/* Main layout */
+.wt-main {
+  flex:1; min-height:0;
+  display:grid;
+  grid-template-columns: 280px 1fr 320px;
+  gap: 0;
+}
+
+/* Left: filter pills */
+.wt-side {
+  border-right: 1px solid var(--panel-border);
+  padding: 16px 18px;
+  overflow-y: auto;
+  background: rgba(0,0,0,.2);
+}
+.side-section { margin-bottom: 22px; }
+.side-h {
+  font-family:'Outfit',sans-serif; font-weight:400; font-size:.5rem;
+  letter-spacing:3px; color: var(--text-dim);
+  text-transform: uppercase; margin-bottom: 8px;
+}
+.side-stat {
+  display:flex; justify-content:space-between; padding: 6px 0;
+  font-family:'DM Mono',monospace; font-size:.62rem;
+  border-bottom: 1px dashed rgba(122,184,212,.1);
+}
+.side-stat .label { color: var(--text-dim); }
+.side-stat .val   { color: var(--text-bright); font-weight:500; }
+.side-stat .val.alert { color: var(--watch-red); text-shadow:0 0 8px var(--watch-red); }
+.side-stat .val.warn  { color: var(--watch-amber); }
+.side-stat .val.ok    { color: var(--watch-green); }
+
+.filter-btn {
+  display:block; width:100%;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  color: var(--text-mid);
+  font-family: 'Outfit', sans-serif; font-weight:400;
+  font-size: .58rem; letter-spacing: 2.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  margin-bottom: 5px;
+  text-align: left;
+  transition: all .15s;
+}
+.filter-btn:hover { color: var(--watch-cyan); border-color: rgba(77,217,255,.3); }
+.filter-btn.active {
+  background: rgba(77,217,255,.08);
+  color: var(--watch-cyan);
+  border-color: var(--watch-cyan);
+  box-shadow: 0 0 14px rgba(77,217,255,.18);
+}
+
+/* Center: device list */
+.wt-list {
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+.list-toolbar {
+  flex-shrink: 0;
+  padding: 10px 18px;
+  border-bottom: 1px solid var(--panel-border);
+  display: flex; gap:10px; align-items: center;
+}
+.list-toolbar input {
+  flex:1; padding: 7px 11px;
+  background: rgba(0,0,0,.4);
+  border: 1px solid var(--panel-border);
+  border-radius: 4px;
+  color: var(--text-bright);
+  font-family: 'DM Mono', monospace; font-size: .65rem;
+  outline: none;
+}
+.list-toolbar input:focus { border-color: var(--watch-cyan); }
+.list-toolbar button {
+  padding: 7px 12px; background: rgba(77,217,255,.05);
+  border: 1px solid rgba(77,217,255,.3); color: var(--watch-cyan);
+  font-family:'Outfit',sans-serif; font-size:.55rem; letter-spacing: 2px;
+  text-transform: uppercase; cursor: pointer; border-radius: 4px;
+}
+.list-toolbar button:hover { background: rgba(77,217,255,.15); }
+
+.list-table {
+  flex: 1; overflow-y: auto;
+  padding: 6px 0;
+}
+
+.dev-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 80px 70px 80px 50px;
+  gap: 10px;
+  padding: 8px 18px;
+  align-items: center;
+  border-bottom: 1px solid rgba(31,64,96,.5);
+  cursor: pointer;
+  transition: background .12s;
+}
+.dev-row:hover { background: rgba(77,217,255,.05); }
+.dev-row.selected { background: rgba(255,209,102,.08); border-left: 2px solid var(--watch-amber); }
+.dev-row.threat-alert  { background: linear-gradient(90deg,rgba(255,85,119,.12),transparent 50%); }
+.dev-row.threat-watch  { background: linear-gradient(90deg,rgba(255,209,102,.08),transparent 50%); }
+.dev-row.threat-known  { opacity: .7; }
+
+.dev-icon { font-size: 1rem; text-align: center; }
+.dev-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dev-name {
+  font-family: 'Orbitron', sans-serif; font-weight: 500; font-size: .68rem;
+  color: var(--text-bright); letter-spacing: .5px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dev-meta {
+  font-family: 'DM Mono', monospace; font-size: .5rem; color: var(--text-mid);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.dev-vendor {
+  font-family: 'Outfit', sans-serif; font-weight:400; font-size:.55rem;
+  color: var(--text); letter-spacing: 1px;
+}
+.dev-rssi {
+  font-family: 'Orbitron', sans-serif; font-weight:500; font-size:.6rem;
+  text-align: right;
+}
+.dev-tier {
+  font-family: 'Outfit',sans-serif; font-weight:500;
+  font-size: .5rem; letter-spacing: 2px;
+  text-align: center;
+  padding: 3px 6px; border-radius: 3px;
+  text-transform: uppercase;
+}
+.tier-info  { color: var(--watch-green); border:1px solid rgba(77,255,166,.3); }
+.tier-watch { color: var(--watch-amber); border:1px solid rgba(255,209,102,.4); background:rgba(255,209,102,.06); }
+.tier-alert { color: var(--watch-red); border:1px solid rgba(255,85,119,.5);
+              background:rgba(255,85,119,.1); text-shadow:0 0 6px var(--watch-red); }
+.tier-known { color: var(--text-mid); border:1px solid var(--panel-border); }
+
+.dev-count {
+  font-family: 'DM Mono', monospace; font-size:.55rem;
+  color: var(--text-mid); text-align: right;
+}
+
+/* Right: detail panel */
+.wt-detail {
+  border-left: 1px solid var(--panel-border);
+  padding: 18px;
+  overflow-y: auto;
+  background: rgba(0,0,0,.2);
+}
+.detail-title {
+  font-family: 'Orbitron', sans-serif; font-weight:600;
+  font-size: .85rem; letter-spacing: 1.5px;
+  color: var(--text-bright); margin-bottom: 4px;
+  word-break: break-word;
+}
+.detail-id {
+  font-family: 'DM Mono', monospace; font-size: .55rem;
+  color: var(--text-mid); margin-bottom: 14px; word-break: break-all;
+}
+.detail-block {
+  background: linear-gradient(155deg, rgba(8,18,28,.6), rgba(0,0,0,.4));
+  border: 1px solid var(--panel-border);
+  border-top: 1px solid rgba(255,255,255,.1);
+  border-radius: 5px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+.detail-block .h {
+  font-family: 'Outfit', sans-serif; font-size:.5rem; letter-spacing:2.5px;
+  color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase;
+}
+.detail-row {
+  display: flex; justify-content: space-between;
+  font-family: 'DM Mono', monospace; font-size:.6rem;
+  padding: 3px 0; gap: 10px;
+}
+.detail-row .k { color: var(--text-mid); }
+.detail-row .v { color: var(--text-bright); text-align: right; word-break: break-all; }
+.detail-actions { display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap; }
+.detail-actions button {
+  flex:1; min-width: 80px;
+  padding: 7px 9px;
+  background: rgba(77,217,255,.06);
+  border: 1px solid rgba(77,217,255,.3);
+  border-radius: 4px;
+  color: var(--watch-cyan);
+  font-family: 'Outfit', sans-serif; font-size:.52rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  cursor: pointer; transition: all .15s;
+}
+.detail-actions button:hover {
+  background: rgba(77,217,255,.18);
+  box-shadow: 0 0 10px rgba(77,217,255,.2);
+}
+.detail-actions button.danger {
+  background: rgba(255,85,119,.06);
+  border-color: rgba(255,85,119,.3);
+  color: var(--watch-red);
+}
+.detail-actions button.danger:hover {
+  background: rgba(255,85,119,.18);
+  box-shadow: 0 0 10px rgba(255,85,119,.3);
+}
+.detail-actions button.success {
+  background: rgba(77,255,166,.06);
+  border-color: rgba(77,255,166,.3);
+  color: var(--watch-green);
+}
+.detail-actions button.success:hover {
+  background: rgba(77,255,166,.18);
+}
+
+.empty-detail {
+  padding: 60px 20px; text-align:center;
+  color: var(--text-dim);
+  font-family: 'DM Mono', monospace; font-size:.65rem;
+  letter-spacing: 2px;
+}
+
+/* Spark trace for RSSI history */
+.rssi-trace {
+  height: 36px; width: 100%;
+  display: flex; align-items: flex-end; gap: 1px;
+  padding: 4px 0;
+}
+.rssi-bar {
+  flex: 1; min-width: 1px;
+  background: linear-gradient(180deg, var(--watch-cyan), rgba(77,217,255,.2));
+  border-radius: 1px;
+}
+
+/* Scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: var(--bg2); }
+::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--watch-cyan); }
+
+@media (max-width: 900px) {
+  .wt-main { grid-template-columns: 1fr; }
+  .wt-side, .wt-detail { display: none; }
+  .wt-side.show, .wt-detail.show { display: block; position: fixed; inset: 60px 0 0 0; z-index: 50; background: var(--bg); }
+}
+</style>
+</head>
+<body>
+
+<header class="wt-header">
+  <div class="wt-title">⛯ WATCHTOWER</div>
+  <div class="wt-status">
+    <div class="wt-pill">
+      <div class="dot" id="bridgeDot"></div>
+      <span id="bridgeLabel">CONNECTING</span>
+    </div>
+    <div class="wt-pill">
+      <span id="watchUptime">--:--:--</span>
+    </div>
+  </div>
+</header>
+
+<div class="threat-banner" id="threatBanner">
+  <div class="threat-banner-title" id="threatTitle">⚠ THREATS DETECTED</div>
+  <div id="threatList"></div>
+</div>
+
+<div class="wt-main">
+  <!-- Left sidebar -->
+  <aside class="wt-side">
+    <div class="side-section">
+      <div class="side-h">SESSION</div>
+      <div class="side-stat"><span class="label">Devices seen</span><span class="val" id="statTotal">0</span></div>
+      <div class="side-stat"><span class="label">Currently broadcasting</span><span class="val" id="statLive">0</span></div>
+      <div class="side-stat"><span class="label">Known/trusted</span><span class="val ok" id="statKnown">0</span></div>
+      <div class="side-stat"><span class="label">Watching</span><span class="val warn" id="statWatch">0</span></div>
+      <div class="side-stat"><span class="label">Alerts</span><span class="val alert" id="statAlert">0</span></div>
+    </div>
+
+    <div class="side-section">
+      <div class="side-h">FILTER</div>
+      <button class="filter-btn active" onclick="setFilter('all',this)">ALL DEVICES</button>
+      <button class="filter-btn" onclick="setFilter('alert',this)">⚠ ALERTS</button>
+      <button class="filter-btn" onclick="setFilter('watch',this)">⊙ WATCHING</button>
+      <button class="filter-btn" onclick="setFilter('tracker',this)">🏷 TRACKERS</button>
+      <button class="filter-btn" onclick="setFilter('iot',this)">⚡ ESP / IOT</button>
+      <button class="filter-btn" onclick="setFilter('known',this)">★ KNOWN</button>
+      <button class="filter-btn" onclick="setFilter('unknown',this)">? UNKNOWN</button>
+      <button class="filter-btn" onclick="setFilter('live',this)">● LIVE NOW</button>
+    </div>
+
+    <div class="side-section">
+      <div class="side-h">DETECTORS</div>
+      <div class="side-stat"><span class="label">Tracker scan</span><span class="val ok">ACTIVE</span></div>
+      <div class="side-stat"><span class="label">Persistence watch</span><span class="val ok">ACTIVE</span></div>
+      <div class="side-stat"><span class="label">Rogue AP</span><span class="val ok">ACTIVE</span></div>
+      <div class="side-stat"><span class="label">Deauth flood</span><span class="val ok">ACTIVE</span></div>
+    </div>
+
+    <div class="side-section">
+      <div class="side-h">DATA</div>
+      <button class="filter-btn" onclick="exportData()">⤓ EXPORT JSON</button>
+      <button class="filter-btn" onclick="clearKnown()">UNMARK ALL KNOWN</button>
+      <button class="filter-btn" onclick="resetSession()" style="border-color:rgba(255,85,119,.3);color:var(--watch-red)">CLEAR SESSION</button>
+    </div>
+  </aside>
+
+  <!-- Center list -->
+  <main class="wt-list">
+    <div class="list-toolbar">
+      <input type="text" id="searchBox" placeholder="Search by name, vendor, MAC...">
+      <button onclick="forceScan()">SCAN</button>
+    </div>
+    <div class="list-table" id="deviceList">
+      <div class="empty-detail">WAITING FOR BRIDGE...</div>
+    </div>
+  </main>
+
+  <!-- Right detail panel -->
+  <aside class="wt-detail" id="detailPanel">
+    <div class="empty-detail">SELECT A DEVICE TO SEE DETAILS</div>
+  </aside>
+</div>
+
+<!-- Inline pm_transport.js for standalone operation -->
+<script>
+// ═══════════════════════════════════════════════════════════════════════
+// PISCES MOON OS - TRANSPORT ABSTRACTION LAYER
+// Copyright (C) 2026 Eric Becker / Fluid Fortune
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// fluidfortune.com
+//
+// PURPOSE:
+//   Lets one HTML app talk to a T-Beam via EITHER:
+//     - WebSocket (Linux desktop with edge_bridge.py running)
+//     - Web Bluetooth (Android with BLE GATT firmware on T-Beam)
+//   Without the app knowing or caring which transport is in use.
+//
+// USAGE:
+//   const beam = new PMTransport({
+//       onMessage: msg => handleData(msg),
+//       onStatus: s => updateUI(s),
+//   });
+//   await beam.connect();      // auto-detects best transport
+//   beam.send({cmd: "scan"});  // works the same on both transports
+//
+// AUTO-DETECTION ORDER:
+//   1. If running in Trojan Horse APK (window.PiscesAndroid exists)
+//      → prefer Web Bluetooth (no Termux required)
+//   2. If WebSocket is available at ws://127.0.0.1:8080
+//      → use WebSocket (Linux + edge_bridge.py)
+//   3. If neither, prompt user to pick one or fail gracefully
+//
+// MANUAL OVERRIDE:
+//   const beam = new PMTransport({mode: "bluetooth"});  // force BLE
+//   const beam = new PMTransport({mode: "websocket"});  // force WS
+// ═══════════════════════════════════════════════════════════════════════
+
+const PM_BLE_SERVICE_UUID         = "8b5e0001-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_DATA_CHAR_UUID       = "8b5e0002-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_COMMAND_CHAR_UUID    = "8b5e0003-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_STATUS_CHAR_UUID     = "8b5e0004-7c34-4a91-bd5c-1a2e9d6f8c4a";
+
+const PM_WS_DEFAULT_URL = (() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1' : host;
+    return `ws://${bridgeHost}:8080`;
+})();
+
+class PMTransport {
+    /**
+     * @param {Object} opts
+     * @param {Function} opts.onMessage - Called for every data packet from T-Beam
+     * @param {Function} opts.onStatus - Called when connection state changes
+     * @param {string} [opts.mode] - "auto" | "websocket" | "bluetooth"
+     * @param {string} [opts.wsUrl] - Override WebSocket URL
+     */
+    constructor(opts = {}) {
+        this.onMessage = opts.onMessage || (() => {});
+        this.onStatus  = opts.onStatus  || (() => {});
+        this.mode      = opts.mode      || "auto";
+        this.wsUrl     = opts.wsUrl     || PM_WS_DEFAULT_URL;
+
+        // State
+        this.transport = null;
+        this.connected = false;
+        this.activeMode = null;
+        this.ws = null;
+        this.bleDevice = null;
+        this.bleServer = null;
+        this.bleService = null;
+        this.bleDataChar = null;
+        this.bleCommandChar = null;
+    }
+
+    /**
+     * Connect to the T-Beam. Auto-detects transport unless mode was set.
+     * Returns a promise that resolves to {mode: "websocket"|"bluetooth"} on success.
+     */
+    async connect() {
+        let chosenMode = this.mode;
+
+        if (chosenMode === "auto") {
+            chosenMode = await this._autoDetectBestTransport();
+        }
+
+        this._status("connecting", `Trying ${chosenMode}...`);
+
+        try {
+            if (chosenMode === "bluetooth") {
+                await this._connectBluetooth();
+            } else if (chosenMode === "websocket") {
+                await this._connectWebSocket();
+            } else {
+                throw new Error(`Unknown transport mode: ${chosenMode}`);
+            }
+
+            this.activeMode = chosenMode;
+            this.connected = true;
+            this._status("connected", `Connected via ${chosenMode}`);
+            return {mode: chosenMode};
+        } catch (e) {
+            this._status("error", e.message);
+            throw e;
+        }
+    }
+
+    /**
+     * Send a command/message to the T-Beam.
+     * @param {Object|string} data - JSON-serializable object or string
+     */
+    async send(data) {
+        if (!this.connected) {
+            throw new Error("Not connected. Call connect() first.");
+        }
+
+        const payload = typeof data === "string" ? data : JSON.stringify(data);
+
+        if (this.activeMode === "websocket") {
+            this.ws.send(payload);
+        } else if (this.activeMode === "bluetooth") {
+            // BLE characteristic writes have a max packet size (~512 bytes)
+            // For larger payloads we'd chunk, but commands should be small.
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(payload);
+            if (bytes.length > 512) {
+                throw new Error("BLE command too large (max 512 bytes)");
+            }
+            await this.bleCommandChar.writeValue(bytes);
+        }
+    }
+
+    /**
+     * Cleanly disconnect.
+     */
+    async disconnect() {
+        this.connected = false;
+        if (this.ws) {
+            try { this.ws.close(); } catch {}
+            this.ws = null;
+        }
+        if (this.bleDevice && this.bleDevice.gatt.connected) {
+            try { this.bleDevice.gatt.disconnect(); } catch {}
+        }
+        this.bleDevice = null;
+        this.activeMode = null;
+        this._status("disconnected", "Disconnected");
+    }
+
+    /**
+     * Returns capabilities of the current connection.
+     * Apps can check what's possible before trying.
+     */
+    capabilities() {
+        return {
+            connected: this.connected,
+            mode: this.activeMode,
+            bandwidth: this.activeMode === "websocket" ? "high" : "low",
+            // BLE realistically handles ~10-50 KB/s; WebSocket much higher
+            maxPacketSize: this.activeMode === "bluetooth" ? 512 : 65536,
+            bidirectional: true,
+        };
+    }
+
+    // ── PRIVATE ───────────────────────────────────────────────────────
+
+    async _autoDetectBestTransport() {
+        // Heuristic: if we're in the Pisces Moon Android APK, prefer BLE.
+        // Otherwise, prefer WebSocket (Linux desktop with edge bridge).
+        const isAndroidAPK = typeof window !== "undefined" &&
+                             window.PiscesAndroid &&
+                             typeof window.PiscesAndroid.bridgeAvailable === "function";
+
+        if (isAndroidAPK) {
+            // Check if Web Bluetooth is available
+            if (navigator.bluetooth) return "bluetooth";
+            // Fall back to WebSocket (Termux bridge running)
+            return "websocket";
+        }
+
+        // Non-APK contexts (Linux desktop Chromium):
+        // Try WebSocket first since edge_bridge.py is the Linux pattern
+        const wsAvailable = await this._probeWebSocket();
+        if (wsAvailable) return "websocket";
+
+        // Fall back to Bluetooth if available
+        if (navigator.bluetooth) return "bluetooth";
+
+        throw new Error("No transport available. Start edge_bridge.py or pair via Bluetooth.");
+    }
+
+    async _probeWebSocket() {
+        return new Promise(resolve => {
+            try {
+                const probe = new WebSocket(this.wsUrl);
+                const timer = setTimeout(() => {
+                    try { probe.close(); } catch {}
+                    resolve(false);
+                }, 1500);
+                probe.onopen = () => {
+                    clearTimeout(timer);
+                    try { probe.close(); } catch {}
+                    resolve(true);
+                };
+                probe.onerror = () => {
+                    clearTimeout(timer);
+                    resolve(false);
+                };
+            } catch {
+                resolve(false);
+            }
+        });
+    }
+
+    async _connectWebSocket() {
+        return new Promise((resolve, reject) => {
+            this.ws = new WebSocket(this.wsUrl);
+
+            this.ws.onopen = () => resolve();
+            this.ws.onerror = () => reject(new Error(`WebSocket failed at ${this.wsUrl}`));
+
+            this.ws.onmessage = ev => {
+                let data;
+                try {
+                    data = JSON.parse(ev.data);
+                } catch {
+                    data = {type: "raw", data: ev.data};
+                }
+                this.onMessage(data);
+            };
+
+            this.ws.onclose = () => {
+                if (this.connected) {
+                    this.connected = false;
+                    this._status("disconnected", "WebSocket closed");
+                }
+            };
+        });
+    }
+
+    async _connectBluetooth() {
+        if (!navigator.bluetooth) {
+            throw new Error("Web Bluetooth not supported in this browser");
+        }
+
+        // Show the system pairing dialog. User picks T-Beam from list.
+        this.bleDevice = await navigator.bluetooth.requestDevice({
+            filters: [
+                {services: [PM_BLE_SERVICE_UUID]},
+                {namePrefix: "PiscesMoon"},
+                {namePrefix: "T-Beam"},
+            ],
+            optionalServices: [PM_BLE_SERVICE_UUID],
+        });
+
+        // Listen for unexpected disconnections
+        this.bleDevice.addEventListener("gattserverdisconnected", () => {
+            if (this.connected) {
+                this.connected = false;
+                this._status("disconnected", "T-Beam disconnected");
+            }
+        });
+
+        // Connect to the GATT server on the T-Beam
+        this.bleServer = await this.bleDevice.gatt.connect();
+        this.bleService = await this.bleServer.getPrimaryService(PM_BLE_SERVICE_UUID);
+
+        // Get the data characteristic (T-Beam → tablet)
+        this.bleDataChar = await this.bleService.getCharacteristic(PM_BLE_DATA_CHAR_UUID);
+        await this.bleDataChar.startNotifications();
+        this.bleDataChar.addEventListener("characteristicvaluechanged", ev => {
+            const decoder = new TextDecoder();
+            const text = decoder.decode(ev.target.value);
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                data = {type: "raw", data: text};
+            }
+            this.onMessage(data);
+        });
+
+        // Get the command characteristic (tablet → T-Beam)
+        this.bleCommandChar = await this.bleService.getCharacteristic(PM_BLE_COMMAND_CHAR_UUID);
+
+        // Optional: status characteristic
+        try {
+            const statusChar = await this.bleService.getCharacteristic(PM_BLE_STATUS_CHAR_UUID);
+            await statusChar.startNotifications();
+            statusChar.addEventListener("characteristicvaluechanged", ev => {
+                const decoder = new TextDecoder();
+                const text = decoder.decode(ev.target.value);
+                this._status("device_status", text);
+            });
+        } catch {
+            // Status char is optional
+        }
+    }
+
+    _status(state, message) {
+        this.onStatus({state, message, mode: this.activeMode, timestamp: Date.now()});
+    }
+}
+
+// ── Convenience global ─────────────────────────────────────────────────
+if (typeof window !== "undefined") {
+    window.PMTransport = PMTransport;
+    window.PM_BLE_SERVICE_UUID = PM_BLE_SERVICE_UUID;
+}
+
+</script>
+<script>
+// ─────────────────────────────────────────────────────────────────
+// WATCHTOWER - Threat & anomaly detection
+// ─────────────────────────────────────────────────────────────────
+
+// ── Tracker fingerprints ────────────────────────────────────────
+// Key signatures for known consumer trackers. We use vendor matches
+// and BLE service UUIDs / manufacturer data when available.
+const TRACKER_FINGERPRINTS = [
+  {
+    id: 'apple_findmy',
+    label: 'Apple Find My',
+    vendor: ['apple'],
+    // Apple Find My broadcasts service 0xFD6F or manufacturer data starting with 0x12
+    // and 0x00 in the 3rd byte indicates "owner not nearby" (potentially separated tracker)
+    risk: 'high',
+  },
+  {
+    id: 'tile',
+    label: 'Tile',
+    name_match: /tile|t[a-f0-9]{6,}/i,
+    vendor: ['tile'],
+    risk: 'high',
+  },
+  {
+    id: 'samsung_smarttag',
+    label: 'Samsung SmartTag',
+    name_match: /smarttag|galaxy smarttag/i,
+    vendor: ['samsung'],
+    risk: 'high',
+  },
+  {
+    id: 'chipolo',
+    label: 'Chipolo',
+    name_match: /chipolo/i,
+    risk: 'high',
+  },
+  {
+    id: 'pebblebee',
+    label: 'Pebblebee',
+    name_match: /pebblebee/i,
+    risk: 'medium',
+  },
+];
+
+const STORAGE_KEY = 'pm_watchtower_devices';
+const KNOWN_KEY   = 'pm_watchtower_known';
+
+// ── State ───────────────────────────────────────────────────────
+let devices    = {};                  // device_id -> record
+let knownIds   = new Set();           // user-marked known devices
+let currentFilter = 'all';
+let searchTerm = '';
+let selectedId = null;
+let beam       = null;
+let sessionStart = Date.now();
+let aps        = {};                  // bssid -> {ssid, vendor} for rogue detection
+
+// ── Persistence ─────────────────────────────────────────────────
+function loadState() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) devices = JSON.parse(saved);
+    const known = localStorage.getItem(KNOWN_KEY);
+    if (known) knownIds = new Set(JSON.parse(known));
+  } catch (e) { console.warn('Load failed:', e); }
+}
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(devices));
+    localStorage.setItem(KNOWN_KEY, JSON.stringify([...knownIds]));
+  } catch (e) {}
+}
+
+// ── Device record management ────────────────────────────────────
+function recordDevice(msg) {
+  const id = msg.mac || msg.bssid;
+  if (!id) return null;
+  const now = Date.now();
+
+  let dev = devices[id];
+  if (!dev) {
+    dev = devices[id] = {
+      id, type: msg.type, mac: id,
+      name: msg.name || msg.ssid || '',
+      vendor: msg.vendor || '',
+      first_seen: now,
+      last_seen: now,
+      seen_count: 0,
+      rssi_samples: [],
+      tracker_kind: null,
+    };
+  }
+
+  dev.last_seen = now;
+  dev.seen_count++;
+  dev.rssi_samples.push({ t: now, rssi: msg.rssi || -100 });
+  if (dev.rssi_samples.length > 60) dev.rssi_samples.shift();
+  if (msg.name && !dev.name) dev.name = msg.name;
+  if (msg.ssid && !dev.name) dev.name = msg.ssid;
+  if (msg.vendor && !dev.vendor) dev.vendor = msg.vendor;
+
+  // Detection
+  classifyDevice(dev);
+
+  return dev;
+}
+
+// ── Classification (the core of the threat detection) ──────────
+function classifyDevice(dev) {
+  // 1. Known/trusted - user-marked overrides everything
+  if (knownIds.has(dev.id)) {
+    dev.tier = 'known';
+    return;
+  }
+
+  // 2. Tracker fingerprint match
+  for (const fp of TRACKER_FINGERPRINTS) {
+    let match = false;
+    if (fp.vendor && fp.vendor.some(v => (dev.vendor || '').toLowerCase().includes(v))) {
+      // For Apple specifically - only flag if device is named in a tracker pattern
+      // OR has been observed for a long persistence window (suggesting separated AirTag)
+      if (fp.id === 'apple_findmy') {
+        // Don't auto-flag every Apple device. Only flag if very persistent
+        // and unnamed. Real implementation needs Continuity protocol decoding.
+        const persistence = computePersistence(dev);
+        if (!dev.name && persistence > 0.7) {
+          dev.tier = 'alert';
+          dev.tracker_kind = fp.label + ' (suspected)';
+          return;
+        }
+        continue;
+      }
+      match = true;
+    }
+    if (fp.name_match && fp.name_match.test(dev.name)) {
+      match = true;
+    }
+    if (match) {
+      dev.tier = fp.risk === 'high' ? 'alert' : 'watch';
+      dev.tracker_kind = fp.label;
+      return;
+    }
+  }
+
+  // 3. ESP / IoT / DIY hardware detection
+  const v = (dev.vendor || '').toLowerCase();
+  if (v.includes('espressif')) {
+    dev.iot_class = 'ESP32/ESP8266';
+    dev.tier = 'watch';
+    dev.tracker_kind = dev.tracker_kind || 'ESP-class device (DIY/IoT)';
+    return;
+  }
+  if (v.includes('raspberry')) {
+    dev.iot_class = 'Raspberry Pi';
+    dev.tier = 'watch';
+    dev.tracker_kind = dev.tracker_kind || 'Raspberry Pi (DIY/SBC)';
+    return;
+  }
+
+  // 4. Persistence detection - device that's been around too long
+  const persistence = computePersistence(dev);
+  if (persistence > 0.85 && dev.seen_count > 50) {
+    dev.tier = 'watch';
+    dev.tracker_kind = 'High persistence';
+    return;
+  }
+
+  // 5. Rogue AP for WiFi: same SSID from multiple BSSIDs
+  if (dev.type === 'wardrive' && dev.name) {
+    const sameSSID = Object.values(devices).filter(d =>
+      d.type === 'wardrive' && d.name === dev.name && d.id !== dev.id
+    );
+    if (sameSSID.length > 0) {
+      // Check if they look legitimately related (e.g. same vendor = same router family)
+      const sameVendor = sameSSID.every(d => d.vendor === dev.vendor);
+      if (!sameVendor) {
+        dev.tier = 'alert';
+        dev.tracker_kind = 'Possible evil twin (' + (sameSSID.length+1) + ' BSSIDs broadcasting "' + dev.name + '")';
+        return;
+      }
+    }
+  }
+
+  dev.tier = 'info';
+  dev.tracker_kind = null;
+}
+
+// Persistence score: 0-1, how much of the session has this device been seen?
+function computePersistence(dev) {
+  const sessionDuration = Date.now() - sessionStart;
+  if (sessionDuration < 60000) return 0; // need at least 1 min of data
+  const observedDuration = dev.last_seen - dev.first_seen;
+  return Math.min(1, observedDuration / sessionDuration);
+}
+
+// ── Bridge transport ────────────────────────────────────────────
+function initBridge() {
+  if (typeof PMTransport === 'undefined') {
+    setBridgeStatus('off', 'TRANSPORT N/A');
+    return;
+  }
+  beam = new PMTransport({
+    wsUrl: (() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1' : host;
+    return `ws://${bridgeHost}:8080`;
+})(),
+    onMessage: handleBridgeMessage,
+    onStatus: handleBridgeStatus,
+  });
+  beam.connect().catch(() => {
+    setBridgeStatus('off', 'BRIDGE OFFLINE');
+    // Retry every 10s
+    setTimeout(initBridge, 10000);
+  });
+}
+
+function handleBridgeStatus(s) {
+  if (s.state === 'connected') {
+    setBridgeStatus('on', 'WATCHING');
+    // Start the air scan
+    setTimeout(() => {
+      beam.send({ cmd: 'scan_air' });
+      beam.send({ cmd: 'scan_start' });
+    }, 500);
+    // Auto-rescan every 30s to keep data fresh
+    if (!window._wtScanInterval) {
+      window._wtScanInterval = setInterval(() => {
+        if (beam && beam.connected) {
+          beam.send({ cmd: 'scan_air' });
+          beam.send({ cmd: 'scan_start' });
+        }
+      }, 30000);
+    }
+  } else if (s.state === 'connecting') {
+    setBridgeStatus('warn', 'CONNECTING');
+  } else {
+    setBridgeStatus('off', 'BRIDGE OFFLINE');
+  }
+}
+
+function handleBridgeMessage(msg) {
+  const t = msg.type;
+  if (t === 'wardrive' || t === 'ble' || t === 'arp') {
+    recordDevice(msg);
+    rerender();
+  }
+}
+
+function setBridgeStatus(state, label) {
+  const dot = document.getElementById('bridgeDot');
+  const lbl = document.getElementById('bridgeLabel');
+  if (!dot || !lbl) return;
+  dot.className = 'dot' + (state === 'off' ? ' off' : state === 'warn' ? ' warn' : '');
+  lbl.textContent = label;
+}
+
+// ── Rendering ───────────────────────────────────────────────────
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  rerender();
+}
+
+function rerender() {
+  // Apply filters
+  const all = Object.values(devices);
+  const liveCutoff = Date.now() - 60000;
+
+  let filtered = all.filter(d => {
+    if (currentFilter === 'alert')   return d.tier === 'alert';
+    if (currentFilter === 'watch')   return d.tier === 'watch';
+    if (currentFilter === 'tracker') return d.tracker_kind != null;
+    if (currentFilter === 'iot')     return d.iot_class != null;
+    if (currentFilter === 'known')   return d.tier === 'known';
+    if (currentFilter === 'unknown') return d.tier !== 'known';
+    if (currentFilter === 'live')    return d.last_seen > liveCutoff;
+    return true;
+  });
+
+  if (searchTerm) {
+    const q = searchTerm.toLowerCase();
+    filtered = filtered.filter(d =>
+      (d.name || '').toLowerCase().includes(q) ||
+      (d.vendor || '').toLowerCase().includes(q) ||
+      d.id.toLowerCase().includes(q)
+    );
+  }
+
+  // Sort: alerts first, then watch, then by RSSI/recency
+  filtered.sort((a, b) => {
+    const tierWeight = { alert: 0, watch: 1, info: 2, known: 3 };
+    const aw = tierWeight[a.tier] ?? 4;
+    const bw = tierWeight[b.tier] ?? 4;
+    if (aw !== bw) return aw - bw;
+    return b.last_seen - a.last_seen;
+  });
+
+  const list = document.getElementById('deviceList');
+  if (!filtered.length) {
+    list.innerHTML = '<div class="empty-detail">' +
+      (all.length ? 'NO MATCHES' : 'WAITING FOR BRIDGE DATA...') + '</div>';
+  } else {
+    list.innerHTML = filtered.map(d => renderRow(d)).join('');
+  }
+
+  // Update stats
+  document.getElementById('statTotal').textContent = all.length;
+  document.getElementById('statLive').textContent  = all.filter(d => d.last_seen > liveCutoff).length;
+  document.getElementById('statKnown').textContent = all.filter(d => d.tier === 'known').length;
+  document.getElementById('statWatch').textContent = all.filter(d => d.tier === 'watch').length;
+  document.getElementById('statAlert').textContent = all.filter(d => d.tier === 'alert').length;
+
+  // Threat banner
+  const alerts = all.filter(d => d.tier === 'alert');
+  const banner = document.getElementById('threatBanner');
+  const list2  = document.getElementById('threatList');
+  if (alerts.length > 0) {
+    banner.classList.add('show');
+    document.getElementById('threatTitle').textContent =
+      '⚠ ' + alerts.length + ' THREAT' + (alerts.length > 1 ? 'S' : '') + ' DETECTED';
+    list2.innerHTML = alerts.slice(0, 5).map(d =>
+      '<div class="threat-row">' +
+        '<span class="meta">[' + (d.tracker_kind || 'UNKNOWN') + ']</span>' +
+        esc(d.name || '(unnamed)') + ' &middot; ' +
+        esc(d.vendor || '?') + ' &middot; ' +
+        d.id.substring(0, 17) +
+      '</div>'
+    ).join('');
+  } else {
+    banner.classList.remove('show');
+  }
+
+  // Re-render selected detail if needed
+  if (selectedId && devices[selectedId]) {
+    renderDetail(devices[selectedId]);
+  }
+}
+
+function renderRow(d) {
+  const isLive   = d.last_seen > Date.now() - 60000;
+  const lastRssi = d.rssi_samples.length ? d.rssi_samples[d.rssi_samples.length-1].rssi : -100;
+  const rssiCol  = lastRssi > -55 ? 'var(--watch-green)' :
+                   lastRssi > -75 ? 'var(--watch-amber)' : 'var(--watch-red)';
+
+  const icon = d.tier === 'alert' ? '⚠' :
+               d.tracker_kind ? '🏷' :
+               d.tier === 'known' ? '★' :
+               (d.vendor || '').toLowerCase().includes('apple')   ? '🍎' :
+               (d.vendor || '').toLowerCase().includes('samsung') ? '📱' :
+               (d.vendor || '').toLowerCase().includes('google')  ? '📱' :
+               (d.vendor || '').toLowerCase().includes('microsoft') ? '🪟' :
+               (d.vendor || '').toLowerCase().includes('espressif')  ? '⚡' :
+               (d.vendor || '').toLowerCase().includes('raspberry')  ? '🍓' :
+               (d.type === 'wardrive') ? '📶' : '📡';
+
+  const tierBadge = '<span class="dev-tier tier-' + d.tier + '">' + d.tier + '</span>';
+  const cls = 'dev-row threat-' + d.tier + (selectedId === d.id ? ' selected' : '');
+
+  return '<div class="' + cls + '" onclick="selectDevice(\'' + d.id.replace(/'/g,'') + '\')">' +
+    '<div class="dev-icon">' + icon + '</div>' +
+    '<div class="dev-main">' +
+      '<div class="dev-name">' + esc(d.name || '(unnamed ' + d.type + ')') + '</div>' +
+      '<div class="dev-meta">' + d.id.substring(0, 22) + (d.tracker_kind ? ' &middot; ' + d.tracker_kind : '') + '</div>' +
+    '</div>' +
+    '<div class="dev-vendor">' + esc(d.vendor || '?') + '</div>' +
+    '<div class="dev-rssi" style="color:' + rssiCol + (isLive ? ';text-shadow:0 0 8px '+rssiCol : '') + '">' + lastRssi + ' dBm</div>' +
+    tierBadge +
+    '<div class="dev-count">' + d.seen_count + 'x</div>' +
+    '</div>';
+}
+
+function selectDevice(id) {
+  selectedId = id;
+  rerender();
+}
+
+function renderDetail(d) {
+  const panel = document.getElementById('detailPanel');
+  const since = formatDuration(Date.now() - d.first_seen);
+  const since_last = formatDuration(Date.now() - d.last_seen);
+  const persistence = (computePersistence(d) * 100).toFixed(0);
+  const lastRssi = d.rssi_samples.length ? d.rssi_samples[d.rssi_samples.length-1].rssi : -100;
+  const isKnown = knownIds.has(d.id);
+
+  // RSSI sparkline
+  const samples = d.rssi_samples.slice(-30);
+  const sparkBars = samples.map(s => {
+    const pct = Math.max(5, Math.min(100, ((s.rssi + 100) / 70) * 100));
+    return '<div class="rssi-bar" style="height:' + pct + '%"></div>';
+  }).join('');
+
+  panel.innerHTML =
+    '<div class="detail-title">' + esc(d.name || '(unnamed)') + '</div>' +
+    '<div class="detail-id">' + d.id + '</div>' +
+
+    '<div class="detail-block">' +
+      '<div class="h">CLASSIFICATION</div>' +
+      '<div class="detail-row"><span class="k">Tier</span><span class="v">' + d.tier.toUpperCase() + '</span></div>' +
+      (d.tracker_kind ?
+        '<div class="detail-row"><span class="k">Threat</span><span class="v" style="color:var(--watch-red)">' + esc(d.tracker_kind) + '</span></div>' : '') +
+      '<div class="detail-row"><span class="k">Type</span><span class="v">' + d.type.toUpperCase() + '</span></div>' +
+      '<div class="detail-row"><span class="k">Vendor</span><span class="v">' + esc(d.vendor || 'Unknown') + '</span></div>' +
+    '</div>' +
+
+    '<div class="detail-block">' +
+      '<div class="h">OBSERVATIONS</div>' +
+      '<div class="detail-row"><span class="k">Times seen</span><span class="v">' + d.seen_count + '</span></div>' +
+      '<div class="detail-row"><span class="k">First seen</span><span class="v">' + since + ' ago</span></div>' +
+      '<div class="detail-row"><span class="k">Last seen</span><span class="v">' + since_last + ' ago</span></div>' +
+      '<div class="detail-row"><span class="k">Persistence</span><span class="v">' + persistence + '%</span></div>' +
+      '<div class="detail-row"><span class="k">Current RSSI</span><span class="v">' + lastRssi + ' dBm</span></div>' +
+    '</div>' +
+
+    '<div class="detail-block">' +
+      '<div class="h">SIGNAL HISTORY</div>' +
+      '<div class="rssi-trace">' + sparkBars + '</div>' +
+    '</div>' +
+
+    '<div class="detail-actions">' +
+      (isKnown
+        ? '<button class="success" onclick="unmarkKnown(\'' + d.id.replace(/'/g,'') + '\')">★ KNOWN</button>'
+        : '<button class="success" onclick="markKnown(\'' + d.id.replace(/'/g,'') + '\')">MARK KNOWN</button>') +
+      '<button class="danger" onclick="markThreat(\'' + d.id.replace(/'/g,'') + '\')">FLAG THREAT</button>' +
+      '<button onclick="clearDevice(\'' + d.id.replace(/'/g,'') + '\')">FORGET</button>' +
+    '</div>';
+}
+
+// ── User actions ────────────────────────────────────────────────
+function markKnown(id) {
+  knownIds.add(id);
+  if (devices[id]) classifyDevice(devices[id]);
+  saveState();
+  rerender();
+}
+function unmarkKnown(id) {
+  knownIds.delete(id);
+  if (devices[id]) classifyDevice(devices[id]);
+  saveState();
+  rerender();
+}
+function markThreat(id) {
+  if (devices[id]) {
+    devices[id].tier = 'alert';
+    devices[id].tracker_kind = devices[id].tracker_kind || 'User-flagged';
+    saveState();
+    rerender();
+  }
+}
+function clearDevice(id) {
+  delete devices[id];
+  knownIds.delete(id);
+  if (selectedId === id) selectedId = null;
+  saveState();
+  rerender();
+}
+function clearKnown() {
+  if (!confirm('Unmark all known devices? This will reclassify them.')) return;
+  knownIds.clear();
+  Object.values(devices).forEach(classifyDevice);
+  saveState();
+  rerender();
+}
+function resetSession() {
+  if (!confirm('Clear all observations? This cannot be undone.')) return;
+  devices = {};
+  knownIds.clear();
+  selectedId = null;
+  sessionStart = Date.now();
+  saveState();
+  rerender();
+}
+function exportData() {
+  const blob = new Blob(
+    [JSON.stringify({ exported_at: new Date().toISOString(), devices, known: [...knownIds] }, null, 2)],
+    { type: 'application/json' }
+  );
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'watchtower_' + Date.now() + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function forceScan() {
+  if (beam && beam.connected) {
+    beam.send({ cmd: 'scan_air' });
+    beam.send({ cmd: 'scan_start' });
+  }
+}
+
+// ── Helpers ─────────────────────────────────────────────────────
+function esc(s) {
+  if (s == null) return '';
+  return String(s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+function formatDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  if (s < 60) return s + 's';
+  if (s < 3600) return Math.floor(s/60) + 'm ' + (s%60) + 's';
+  return Math.floor(s/3600) + 'h ' + Math.floor((s%3600)/60) + 'm';
+}
+
+// ── Search & uptime ─────────────────────────────────────────────
+document.getElementById('searchBox').addEventListener('input', (e) => {
+  searchTerm = e.target.value;
+  rerender();
+});
+
+setInterval(() => {
+  const ms = Date.now() - sessionStart;
+  const s = Math.floor(ms / 1000);
+  const hh = Math.floor(s / 3600);
+  const mm = Math.floor((s % 3600) / 60);
+  const ss = s % 60;
+  document.getElementById('watchUptime').textContent =
+    String(hh).padStart(2,'0') + ':' + String(mm).padStart(2,'0') + ':' + String(ss).padStart(2,'0');
+}, 1000);
+
+// Recompute classifications periodically (catch persistence threshold crossings)
+setInterval(() => {
+  Object.values(devices).forEach(classifyDevice);
+  saveState();
+  rerender();
+}, 30000);
+
+// ── Boot ────────────────────────────────────────────────────────
+loadState();
+sessionStart = Date.now();
+rerender();
+initBridge();
+</script>
+</body>
+</html>

@@ -35,7 +35,17 @@ const PM_BLE_DATA_CHAR_UUID       = "8b5e0002-7c34-4a91-bd5c-1a2e9d6f8c4a";
 const PM_BLE_COMMAND_CHAR_UUID    = "8b5e0003-7c34-4a91-bd5c-1a2e9d6f8c4a";
 const PM_BLE_STATUS_CHAR_UUID     = "8b5e0004-7c34-4a91-bd5c-1a2e9d6f8c4a";
 
-const PM_WS_DEFAULT_URL = "ws://127.0.0.1:8080";
+// Auto-detect bridge host — works on any device on the network.
+// If served from file:// or localhost, use 127.0.0.1.
+// If served from another host (Android tablet, ChromeOS, Q508, etc.),
+// use whatever host served the page — that's where pm_bridge.py is running.
+const PM_WS_DEFAULT_URL = (() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1'
+        : host;
+    return `ws://${bridgeHost}:8080`;
+})();
 
 class PMTransport {
     /**

@@ -5,18 +5,58 @@
   SPDX-License-Identifier: AGPL-3.0-or-later
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // WIFI</title>
 <link rel="stylesheet" href="pm_shared.css">
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 .wifi-layout{display:grid;grid-template-columns:320px 1fr 280px;height:calc(100vh - 52px);overflow:hidden}
 .wifi-left{border-right:1px solid var(--panel-border);overflow-y:auto}
 .wifi-right{border-left:1px solid var(--panel-border);overflow-y:auto}
 .wifi-center{overflow-y:auto;padding:14px}
 .net-item{padding:12px;border-bottom:1px solid rgba(28,46,58,.4);cursor:pointer;transition:background .15s;display:flex;align-items:center;gap:10px}
-.net-item:hover{background:rgba(0,212,255,.04)}
-.net-item.selected{background:rgba(0,212,255,.08);border-left:2px solid var(--accent)}
+.net-item:hover{background:rgba(77,217,255,.04)}
+.net-item.selected{background:rgba(77,217,255,.08);border-left:2px solid var(--accent)}
 .net-item.connected{border-left:3px solid var(--accent3)}
 .net-signal{display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0}
 .signal-bars{display:flex;align-items:flex-end;gap:2px;height:20px}
@@ -83,10 +123,322 @@
         </div>
     </div>
 </div>
-<script src="pm_scraper.js"></script>
+<script src="pm_lib.js"></script>
 <script src="pm_viz.js"></script>
 <script src="pm_utils.js"></script>
-<script src="pm_transport.js"></script>
+<script>
+// pm_transport.js inlined
+// ═══════════════════════════════════════════════════════════════════════
+// PISCES MOON OS - TRANSPORT ABSTRACTION LAYER
+// Copyright (C) 2026 Eric Becker / Fluid Fortune
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// fluidfortune.com
+//
+// PURPOSE:
+//   Lets one HTML app talk to a T-Beam via EITHER:
+//     - WebSocket (Linux desktop with edge_bridge.py running)
+//     - Web Bluetooth (Android with BLE GATT firmware on T-Beam)
+//   Without the app knowing or caring which transport is in use.
+//
+// USAGE:
+//   const beam = new PMTransport({
+//       onMessage: msg => handleData(msg),
+//       onStatus: s => updateUI(s),
+//   });
+//   await beam.connect();      // auto-detects best transport
+//   beam.send({cmd: "scan"});  // works the same on both transports
+//
+// AUTO-DETECTION ORDER:
+//   1. If running in Trojan Horse APK (window.PiscesAndroid exists)
+//      → prefer Web Bluetooth (no Termux required)
+//   2. If WebSocket is available at ws://127.0.0.1:8080
+//      → use WebSocket (Linux + edge_bridge.py)
+//   3. If neither, prompt user to pick one or fail gracefully
+//
+// MANUAL OVERRIDE:
+//   const beam = new PMTransport({mode: "bluetooth"});  // force BLE
+//   const beam = new PMTransport({mode: "websocket"});  // force WS
+// ═══════════════════════════════════════════════════════════════════════
+
+const PM_BLE_SERVICE_UUID         = "8b5e0001-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_DATA_CHAR_UUID       = "8b5e0002-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_COMMAND_CHAR_UUID    = "8b5e0003-7c34-4a91-bd5c-1a2e9d6f8c4a";
+const PM_BLE_STATUS_CHAR_UUID     = "8b5e0004-7c34-4a91-bd5c-1a2e9d6f8c4a";
+
+const PM_WS_DEFAULT_URL = (() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1' : host;
+    return `ws://${bridgeHost}:8080`;
+})();
+
+class PMTransport {
+    /**
+     * @param {Object} opts
+     * @param {Function} opts.onMessage - Called for every data packet from T-Beam
+     * @param {Function} opts.onStatus - Called when connection state changes
+     * @param {string} [opts.mode] - "auto" | "websocket" | "bluetooth"
+     * @param {string} [opts.wsUrl] - Override WebSocket URL
+     */
+    constructor(opts = {}) {
+        this.onMessage = opts.onMessage || (() => {});
+        this.onStatus  = opts.onStatus  || (() => {});
+        this.mode      = opts.mode      || "auto";
+        this.wsUrl     = opts.wsUrl     || PM_WS_DEFAULT_URL;
+
+        // State
+        this.transport = null;
+        this.connected = false;
+        this.activeMode = null;
+        this.ws = null;
+        this.bleDevice = null;
+        this.bleServer = null;
+        this.bleService = null;
+        this.bleDataChar = null;
+        this.bleCommandChar = null;
+    }
+
+    /**
+     * Connect to the T-Beam. Auto-detects transport unless mode was set.
+     * Returns a promise that resolves to {mode: "websocket"|"bluetooth"} on success.
+     */
+    async connect() {
+        let chosenMode = this.mode;
+
+        if (chosenMode === "auto") {
+            chosenMode = await this._autoDetectBestTransport();
+        }
+
+        this._status("connecting", `Trying ${chosenMode}...`);
+
+        try {
+            if (chosenMode === "bluetooth") {
+                await this._connectBluetooth();
+            } else if (chosenMode === "websocket") {
+                try {
+                    await this._connectWebSocket();
+                } catch (wsErr) {
+                    if (navigator.bluetooth) {
+                        chosenMode = "bluetooth";
+                        await this._connectBluetooth();
+                    } else {
+                        throw wsErr;
+                    }
+                }
+            } else {
+                throw new Error(`Unknown transport mode: ${chosenMode}`);
+            }
+
+            this.activeMode = chosenMode;
+            this.connected = true;
+            this._status("connected", `Connected via ${chosenMode}`);
+            return {mode: chosenMode};
+        } catch (e) {
+            this._status("error", e.message);
+            throw e;
+        }
+    }
+
+    /**
+     * Send a command/message to the T-Beam.
+     * @param {Object|string} data - JSON-serializable object or string
+     */
+    async send(data) {
+        if (!this.connected) {
+            throw new Error("Not connected. Call connect() first.");
+        }
+
+        const payload = typeof data === "string" ? data : JSON.stringify(data);
+
+        if (this.activeMode === "websocket") {
+            this.ws.send(payload);
+        } else if (this.activeMode === "bluetooth") {
+            // BLE characteristic writes have a max packet size (~512 bytes)
+            // For larger payloads we'd chunk, but commands should be small.
+            const encoder = new TextEncoder();
+            const bytes = encoder.encode(payload);
+            if (bytes.length > 512) {
+                throw new Error("BLE command too large (max 512 bytes)");
+            }
+            await this.bleCommandChar.writeValue(bytes);
+        }
+    }
+
+    /**
+     * Cleanly disconnect.
+     */
+    async disconnect() {
+        this.connected = false;
+        if (this.ws) {
+            try { this.ws.close(); } catch {}
+            this.ws = null;
+        }
+        if (this.bleDevice && this.bleDevice.gatt.connected) {
+            try { this.bleDevice.gatt.disconnect(); } catch {}
+        }
+        this.bleDevice = null;
+        this.activeMode = null;
+        this._status("disconnected", "Disconnected");
+    }
+
+    /**
+     * Returns capabilities of the current connection.
+     * Apps can check what's possible before trying.
+     */
+    capabilities() {
+        return {
+            connected: this.connected,
+            mode: this.activeMode,
+            bandwidth: this.activeMode === "websocket" ? "high" : "low",
+            // BLE realistically handles ~10-50 KB/s; WebSocket much higher
+            maxPacketSize: this.activeMode === "bluetooth" ? 512 : 65536,
+            bidirectional: true,
+        };
+    }
+
+    // ── PRIVATE ───────────────────────────────────────────────────────
+
+    async _autoDetectBestTransport() {
+        // Heuristic: if we're in the Pisces Moon Android APK, prefer BLE.
+        // Otherwise, prefer WebSocket (Linux desktop with edge bridge).
+        const isAndroidAPK = typeof window !== "undefined" &&
+                             window.PiscesAndroid &&
+                             typeof window.PiscesAndroid.bridgeAvailable === "function";
+
+        if (isAndroidAPK) {
+            // Check if Web Bluetooth is available
+            if (navigator.bluetooth) return "bluetooth";
+            // Fall back to WebSocket (Termux bridge running)
+            return "websocket";
+        }
+
+        // Non-APK contexts (Linux desktop / macOS Chrome):
+        // Skip the probe-then-connect dance - it caused a race condition
+        // where the close from the probe interfered with the next open.
+        // Just try to connect directly. If it fails, fall back to BLE.
+        return "websocket";
+    }
+
+    async _probeWebSocket() {
+        return new Promise(resolve => {
+            try {
+                const probe = new WebSocket(this.wsUrl);
+                const timer = setTimeout(() => {
+                    try { probe.close(); } catch {}
+                    resolve(false);
+                }, 1500);
+                probe.onopen = () => {
+                    clearTimeout(timer);
+                    try { probe.close(); } catch {}
+                    resolve(true);
+                };
+                probe.onerror = () => {
+                    clearTimeout(timer);
+                    resolve(false);
+                };
+            } catch {
+                resolve(false);
+            }
+        });
+    }
+
+    async _connectWebSocket() {
+        return new Promise((resolve, reject) => {
+            this.ws = new WebSocket(this.wsUrl);
+
+            this.ws.onopen = () => resolve();
+            this.ws.onerror = () => reject(new Error(`WebSocket failed at ${this.wsUrl}`));
+
+            this.ws.onmessage = ev => {
+                let data;
+                try {
+                    data = JSON.parse(ev.data);
+                } catch {
+                    data = {type: "raw", data: ev.data};
+                }
+                this.onMessage(data);
+            };
+
+            this.ws.onclose = () => {
+                if (this.connected) {
+                    this.connected = false;
+                    this._status("disconnected", "WebSocket closed");
+                }
+            };
+        });
+    }
+
+    async _connectBluetooth() {
+        if (!navigator.bluetooth) {
+            throw new Error("Web Bluetooth not supported in this browser");
+        }
+
+        // Show the system pairing dialog. User picks T-Beam from list.
+        this.bleDevice = await navigator.bluetooth.requestDevice({
+            filters: [
+                {services: [PM_BLE_SERVICE_UUID]},
+                {namePrefix: "PiscesMoon"},
+                {namePrefix: "T-Beam"},
+            ],
+            optionalServices: [PM_BLE_SERVICE_UUID],
+        });
+
+        // Listen for unexpected disconnections
+        this.bleDevice.addEventListener("gattserverdisconnected", () => {
+            if (this.connected) {
+                this.connected = false;
+                this._status("disconnected", "T-Beam disconnected");
+            }
+        });
+
+        // Connect to the GATT server on the T-Beam
+        this.bleServer = await this.bleDevice.gatt.connect();
+        this.bleService = await this.bleServer.getPrimaryService(PM_BLE_SERVICE_UUID);
+
+        // Get the data characteristic (T-Beam → tablet)
+        this.bleDataChar = await this.bleService.getCharacteristic(PM_BLE_DATA_CHAR_UUID);
+        await this.bleDataChar.startNotifications();
+        this.bleDataChar.addEventListener("characteristicvaluechanged", ev => {
+            const decoder = new TextDecoder();
+            const text = decoder.decode(ev.target.value);
+            let data;
+            try {
+                data = JSON.parse(text);
+            } catch {
+                data = {type: "raw", data: text};
+            }
+            this.onMessage(data);
+        });
+
+        // Get the command characteristic (tablet → T-Beam)
+        this.bleCommandChar = await this.bleService.getCharacteristic(PM_BLE_COMMAND_CHAR_UUID);
+
+        // Optional: status characteristic
+        try {
+            const statusChar = await this.bleService.getCharacteristic(PM_BLE_STATUS_CHAR_UUID);
+            await statusChar.startNotifications();
+            statusChar.addEventListener("characteristicvaluechanged", ev => {
+                const decoder = new TextDecoder();
+                const text = decoder.decode(ev.target.value);
+                this._status("device_status", text);
+            });
+        } catch {
+            // Status char is optional
+        }
+    }
+
+    _status(state, message) {
+        this.onStatus({state, message, mode: this.activeMode, timestamp: Date.now()});
+    }
+}
+
+// ── Convenience global ─────────────────────────────────────────────────
+if (typeof window !== "undefined") {
+    window.PMTransport = PMTransport;
+    window.PM_BLE_SERVICE_UUID = PM_BLE_SERVICE_UUID;
+}
+
+</script>
 <script>
 const networks=new Map();
 let selectedNet=null, connectedNet=null;
@@ -110,8 +462,19 @@ const beam=new PMTransport({
 });
 
 function handleData(msg){
-    if(msg.type==="WIFI_SCAN_RESULT") addNetwork(msg);
-    else if(msg.type==="WIFI_SCAN_DONE") onScanDone(msg);
+    // Accept bridge format ('wardrive') AND legacy ('WIFI_SCAN_RESULT')
+    if(msg.type==="WIFI_SCAN_RESULT" || msg.type==="wardrive") {
+        // Normalize bridge → app fields
+        const normalized = {
+            bssid:    msg.bssid || msg.mac,
+            ssid:     msg.ssid,
+            sec:      typeof msg.enc === 'boolean' ? (msg.enc ? 'WPA' : 'OPEN') : (msg.sec || msg.security),
+            channel:  msg.ch || msg.channel,
+            rssi:     msg.rssi,
+        };
+        addNetwork(normalized);
+    }
+    else if(msg.type==="WIFI_SCAN_DONE" || msg.type==="scan_complete") onScanDone(msg);
     else if(msg.type==="WIFI_CONNECTED") onConnected(msg);
     else if(msg.type==="WIFI_DISCONNECTED") onDisconnected();
     else if(msg.type==="WIFI_STATUS") updateStatus(msg);

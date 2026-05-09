@@ -16,10 +16,50 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PISCES MOON // GEMINI</title>
 <style>
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--gold:#f4a820;--warn:#ffcc00;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,0.3);--glow2:0 0 20px rgba(244,168,32,0.3)}
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#4dd9ff;--accent2:#ff6b00;--accent3:#4dffa6;--accent4:#ff5577;--gold:#ffd166;--warn:#ffcc00;--text:#c8e6f5;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(77,217,255,0.3);--glow2:0 0 20px rgba(255,209,102,0.3)}
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
 body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;display:flex;flex-direction:column}
@@ -32,7 +72,7 @@ header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
 .controls{background:var(--bg2);border-bottom:1px solid var(--panel-border);padding:6px 18px;display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
 .model-btn{padding:4px 12px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.6rem;cursor:pointer;letter-spacing:1px;transition:all 0.2s}
-.model-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.06)}
+.model-btn.active{border-color:var(--accent);color:var(--accent);background:rgba(77,217,255,0.06)}
 .model-btn:hover{border-color:var(--text);color:var(--text)}
 .sep{width:1px;height:18px;background:var(--panel-border)}
 .cbtn{padding:4px 11px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.58rem;cursor:pointer;letter-spacing:1px;transition:all 0.2s;text-transform:uppercase}
@@ -48,10 +88,10 @@ header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding
 .msg-role{font-size:0.54rem;color:var(--text-dim);letter-spacing:2px;margin-bottom:3px;font-family:'Rajdhani',sans-serif;font-weight:600}
 .msg.user .msg-role{color:#3a6840}
 .msg-bubble{padding:10px 14px;line-height:1.75;font-size:0.75rem;white-space:pre-wrap;word-break:break-word}
-.msg.user .msg-bubble{background:rgba(0,212,255,0.07);border:1px solid rgba(0,212,255,0.2);color:var(--text-bright)}
+.msg.user .msg-bubble{background:rgba(77,217,255,0.07);border:1px solid rgba(77,217,255,0.2);color:var(--text-bright)}
 .msg.assistant .msg-bubble,.msg.model .msg-bubble{background:var(--panel);border:1px solid var(--panel-border);color:var(--text)}
-.msg.system .msg-bubble{background:rgba(0,212,255,0.04);border:1px solid rgba(0,212,255,0.12);color:var(--text-dim);font-size:0.65rem;text-align:center}
-.msg.error .msg-bubble{background:rgba(255,51,102,0.07);border:1px solid rgba(255,51,102,0.25);color:var(--accent4)}
+.msg.system .msg-bubble{background:rgba(77,217,255,0.04);border:1px solid rgba(77,217,255,0.12);color:var(--text-dim);font-size:0.65rem;text-align:center}
+.msg.error .msg-bubble{background:rgba(255,85,119,0.07);border:1px solid rgba(255,85,119,0.25);color:var(--accent4)}
 .msg-time{font-size:0.54rem;color:var(--text-dim);margin-top:3px}
 .msg-bubble code{background:var(--bg3);border:1px solid var(--panel-border);padding:1px 5px;font-size:0.7rem;color:var(--accent)}
 .msg-bubble pre{background:var(--bg3);border:1px solid var(--panel-border);padding:10px;margin:8px 0;overflow-x:auto;border-left:2px solid var(--accent3)}
@@ -63,11 +103,11 @@ header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding
 .welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;gap:20px;padding:40px;text-align:center}
 .wlogo{font-family:'Orbitron',monospace;font-size:2.2rem;font-weight:900;color:var(--gold);text-shadow:var(--glow2);letter-spacing:6px}
 .wsub{font-size:0.7rem;color:var(--text-dim);line-height:1.8;max-width:480px}
-.nokey{background:rgba(255,51,102,0.06);border:1px solid rgba(255,51,102,0.2);padding:12px 18px;font-size:0.65rem;color:var(--text-dim);line-height:1.7;max-width:460px}
+.nokey{background:rgba(255,85,119,0.06);border:1px solid rgba(255,85,119,0.2);padding:12px 18px;font-size:0.65rem;color:var(--text-dim);line-height:1.7;max-width:460px}
 .nokey strong{color:var(--accent4)}
 .suggestions{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:600px}
 .sug{padding:7px 13px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.62rem;cursor:pointer;transition:all 0.2s;text-align:left}
-.sug:hover{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,0.04)}
+.sug:hover{border-color:var(--accent);color:var(--accent);background:rgba(77,217,255,0.04)}
 .input-area{flex-shrink:0;background:var(--bg2);border-top:1px solid var(--panel-border);padding:12px 18px;display:flex;gap:10px;align-items:flex-end}
 textarea{flex:1;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:'Share Tech Mono',monospace;font-size:0.75rem;padding:9px 12px;resize:none;outline:none;min-height:42px;max-height:150px;line-height:1.6}
 textarea:focus{border-color:var(--accent)}
@@ -82,7 +122,7 @@ textarea::placeholder{color:var(--text-dim)}
 .ovtitle{font-family:'Orbitron',monospace;font-size:0.68rem;color:var(--accent);letter-spacing:3px}
 .ovbody{overflow-y:auto;flex:1;padding:12px}
 .si{padding:10px 14px;border:1px solid var(--panel-border);margin-bottom:8px;display:flex;justify-content:space-between;align-items:flex-start}
-.si:hover{border-color:var(--accent);background:rgba(0,212,255,0.03);cursor:pointer}
+.si:hover{border-color:var(--accent);background:rgba(77,217,255,0.03);cursor:pointer}
 .st{font-size:0.7rem;color:var(--text-bright);margin-bottom:3px}
 .sm{font-size:0.58rem;color:var(--text-dim)}
 .sdel{padding:3px 8px;background:transparent;border:1px solid var(--panel-border);color:var(--text-dim);font-family:'Share Tech Mono',monospace;font-size:0.56rem;cursor:pointer;flex-shrink:0;margin-left:8px}

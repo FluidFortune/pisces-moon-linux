@@ -10,15 +10,55 @@
   Trauma Psychology, Communications.
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // SURVIVAL v3</title>
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 :root{
   --bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;
-  --panel-border:#1a3a50;--accent:#00d4ff;--accent3:#00ff88;
-  --accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;
-  --text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;
+  --panel-border:#1a3a50;--accent:#4dd9ff;--accent3:#4dffa6;
+  --accent4:#ff5577;--warn:#ffcc00;--gold:#ffd166;
+  --text:#c8e6f5;--text-bright:#c8e8f5;--text-dim:#2a5870;
 }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;height:100vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -29,8 +69,8 @@ header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding
 .nav{background:var(--bg2);border-right:1px solid var(--panel-border);overflow-y:auto;display:flex;flex-direction:column;}
 .nav-section{padding:6px 10px 3px;font-family:'Orbitron',monospace;font-size:.48rem;letter-spacing:3px;color:var(--text-dim);background:var(--bg);border-bottom:1px solid var(--panel-border);position:sticky;top:0;z-index:2;}
 .nav-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.3);cursor:pointer;transition:background .15s;display:flex;gap:8px;align-items:center;position:relative;}
-.nav-item:hover{background:rgba(0,255,136,.04);}
-.nav-item.active{background:rgba(0,255,136,.1);border-left:3px solid var(--accent3);}
+.nav-item:hover{background:rgba(77,255,166,.04);}
+.nav-item.active{background:rgba(77,255,166,.1);border-left:3px solid var(--accent3);}
 .nav-icon{font-size:1.1rem;flex-shrink:0;}
 .nav-label{font-size:.68rem;color:var(--text-bright);}
 .nav-sub{font-size:.52rem;color:var(--text-dim);margin-top:1px;}
@@ -50,9 +90,9 @@ header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding
 .step-n{font-family:'Orbitron',monospace;font-size:1rem;color:var(--accent3);font-weight:900;min-width:20px;flex-shrink:0;}
 .step-body{font-size:.7rem;color:var(--text-bright);line-height:1.75;}
 .step-sub{font-size:.6rem;color:var(--text-dim);margin-top:3px;line-height:1.6;}
-.tip{background:rgba(0,255,136,.06);border:1px solid var(--accent3);padding:10px;margin:8px 0;font-size:.67rem;color:var(--text);line-height:1.7;}
+.tip{background:rgba(77,255,166,.06);border:1px solid var(--accent3);padding:10px;margin:8px 0;font-size:.67rem;color:var(--text);line-height:1.7;}
 .warn{background:rgba(255,204,0,.06);border:1px solid var(--warn);padding:10px;margin:8px 0;font-size:.67rem;color:var(--warn);line-height:1.7;}
-.danger{background:rgba(255,51,102,.06);border:1px solid var(--accent4);padding:10px;margin:8px 0;font-size:.67rem;color:var(--accent4);line-height:1.7;}
+.danger{background:rgba(255,85,119,.06);border:1px solid var(--accent4);padding:10px;margin:8px 0;font-size:.67rem;color:var(--accent4);line-height:1.7;}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0;}
 .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:10px 0;}
 .card{background:var(--bg2);border:1px solid var(--panel-border);padding:10px;text-align:center;}

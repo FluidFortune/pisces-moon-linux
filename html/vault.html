@@ -9,11 +9,51 @@
   Data never leaves the device.
 -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // VAULT</title>
 <link rel="stylesheet" href="pm_shared.css">
 <style>
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
 /* ── Lock screen ── */
 .lock-screen{position:fixed;inset:0;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px;z-index:100;}
 .lock-icon{font-size:4rem;filter:drop-shadow(0 0 20px var(--accent));}
@@ -24,8 +64,8 @@
 .pin-dot.filled{background:var(--accent);border-color:var(--accent);box-shadow:0 0 8px var(--accent);}
 .pin-pad{display:grid;grid-template-columns:repeat(3,72px);gap:10px;}
 .pin-key{width:72px;height:56px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-bright);font-family:Orbitron,monospace;font-size:1rem;cursor:pointer;transition:all .15s;}
-.pin-key:hover{background:rgba(0,212,255,.1);border-color:var(--accent);}
-.pin-key:active{background:rgba(0,212,255,.2);}
+.pin-key:hover{background:rgba(77,217,255,.1);border-color:var(--accent);}
+.pin-key:active{background:rgba(77,217,255,.2);}
 .pin-key.del{color:var(--accent4);}
 .pin-key.ok{color:var(--accent3);border-color:var(--accent3);}
 .lock-error{color:var(--accent4);font-size:.65rem;font-family:Share\ Tech\ Mono,monospace;min-height:1.2em;letter-spacing:1px;}
@@ -36,8 +76,8 @@
 .vault-right{display:flex;flex-direction:column;overflow:hidden;}
 .vault-list{flex:1;overflow-y:auto;}
 .vault-item{padding:10px 12px;border-bottom:1px solid rgba(28,46,58,.4);cursor:pointer;display:flex;gap:10px;align-items:center;transition:background .15s;}
-.vault-item:hover{background:rgba(0,212,255,.04);}
-.vault-item.selected{background:rgba(0,212,255,.08);border-left:2px solid var(--accent);}
+.vault-item:hover{background:rgba(77,217,255,.04);}
+.vault-item.selected{background:rgba(77,217,255,.08);border-left:2px solid var(--accent);}
 .vault-icon{font-size:1.3rem;flex-shrink:0;}
 .vault-info{flex:1;min-width:0;}
 .vault-item-name{font-size:.72rem;color:var(--text-bright);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -65,7 +105,7 @@
 .v-actions{margin-top:16px;display:flex;gap:8px;flex-wrap:wrap;}
 .cat-selector{display:flex;gap:5px;flex-wrap:wrap;}
 .cat-sel-btn{padding:4px 9px;background:var(--bg3);border:1px solid var(--panel-border);color:var(--text-dim);font-family:Orbitron,monospace;font-size:.46rem;cursor:pointer;letter-spacing:1px;}
-.cat-sel-btn.active{background:rgba(0,212,255,.12);border-color:var(--accent);color:var(--accent);}
+.cat-sel-btn.active{background:rgba(77,217,255,.12);border-color:var(--accent);color:var(--accent);}
 .v-count{font-size:.58rem;color:var(--text-dim);padding:6px 10px;border-bottom:1px solid var(--panel-border);}
 </style>
 </head><body>
@@ -220,9 +260,9 @@ function uid() { return 'v_' + Date.now().toString(36) + Math.random().toString(
 
 // ── Lock screen ───────────────────────────────────────────────────
 const CATS = {
-  wifi:   { icon:'📶', label:'WiFi',    color:'#00d4ff' },
-  api:    { icon:'🔑', label:'API Key', color:'#f4a820' },
-  ssh:    { icon:'💻', label:'SSH',     color:'#00ff88' },
+  wifi:   { icon:'📶', label:'WiFi',    color:'#4dd9ff' },
+  api:    { icon:'🔑', label:'API Key', color:'#ffd166' },
+  ssh:    { icon:'💻', label:'SSH',     color:'#4dffa6' },
   web:    { icon:'🌐', label:'Web',     color:'#a78bfa' },
   crypto: { icon:'₿',  label:'Crypto',  color:'#fb923c' },
   note:   { icon:'📝', label:'Note',    color:'#94a3b8' },

@@ -1,0 +1,262 @@
+/*
+ * Pisces Moon OS — pm_shared.css
+ * Shared layout primitives for all apps.
+ * Copyright (C) 2026 Eric Becker / Fluid Fortune
+ * SPDX-License-Identifier: AGPL-3.0-or-later
+ *
+ * This file provides the three-column layout pattern and common
+ * component classes used across the app suite. It extends pm_theme.css.
+ * Load order: pm_fonts.css → pm_theme.css → pm_shared.css
+ */
+
+/* ── Three-column app layout ─────────────────────────────── */
+.layout {
+  display: grid;
+  grid-template-columns: 280px 1fr 300px;
+  height: calc(100vh - 52px);
+  overflow: hidden;
+}
+
+.left-col {
+  border-right: 1px solid var(--panel-border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.center-col {
+  position: relative;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.right-col {
+  border-left: 1px solid var(--panel-border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Common header ───────────────────────────────────────── */
+.pm-header {
+  height: 52px;
+  background: var(--panel-bg);
+  border-bottom: 1px solid var(--panel-border);
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.pm-logo {
+  font-family: 'Orbitron', monospace;
+  font-size: .75rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: var(--accent);
+}
+
+.pm-hdr-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.pm-live-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: 'Orbitron', monospace;
+  font-size: .5rem;
+  letter-spacing: 2px;
+  color: var(--accent3);
+  transition: opacity .3s;
+}
+
+.pm-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent3);
+  box-shadow: 0 0 6px var(--accent3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .3; }
+}
+
+.pm-last-update {
+  font-size: .55rem;
+  color: var(--text-dim);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── Section headers ─────────────────────────────────────── */
+.pm-sh {
+  font-family: 'Orbitron', monospace;
+  font-size: .5rem;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  padding: 10px 14px 6px;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.pm-sh-sub {
+  color: var(--accent);
+  margin-left: 6px;
+}
+
+/* ── Common buttons ──────────────────────────────────────── */
+.pm-btn {
+  padding: 5px 12px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: .6rem;
+  letter-spacing: 1px;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-mid);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all .15s;
+}
+
+.pm-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: rgba(77,217,255,.06);
+}
+
+.pm-btn-cy  { border-color: var(--accent);  color: var(--accent);  }
+.pm-btn-gr  { border-color: var(--accent3); color: var(--accent3); }
+.pm-btn-rd  { border-color: var(--accent4); color: var(--accent4); }
+.pm-btn-gd  { border-color: var(--gold);    color: var(--gold);    }
+
+/* ── Filter pills ────────────────────────────────────────── */
+.pm-pills {
+  display: flex;
+  gap: 4px;
+  padding: 8px 14px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--panel-border);
+}
+
+.pm-pill {
+  padding: 3px 10px;
+  font-size: .55rem;
+  letter-spacing: 1px;
+  background: transparent;
+  border: 1px solid var(--panel-border);
+  color: var(--text-dim);
+  cursor: pointer;
+  border-radius: 12px;
+  transition: all .1s;
+  user-select: none;
+}
+
+.pm-pill:hover { border-color: var(--accent); color: var(--text); }
+.pm-pill.active {
+  background: rgba(77,217,255,.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Item list rows ──────────────────────────────────────── */
+.pm-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid rgba(31,64,96,.4);
+  cursor: pointer;
+  transition: background .08s;
+}
+
+.pm-item:hover { background: rgba(77,217,255,.04); }
+.pm-item.selected { background: rgba(77,217,255,.08); }
+
+.pm-item-title {
+  font-size: .7rem;
+  color: var(--text-bright);
+  margin-bottom: 3px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.pm-item-meta {
+  font-size: .55rem;
+  color: var(--text-dim);
+}
+
+/* ── Loading/thinking state ──────────────────────────────── */
+.pm-thinking {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 12px 14px;
+}
+
+.pm-thinking span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: thinking .8s infinite;
+}
+
+.pm-thinking span:nth-child(2) { animation-delay: .15s; }
+.pm-thinking span:nth-child(3) { animation-delay: .3s; }
+
+@keyframes thinking {
+  0%, 80%, 100% { opacity: .2; transform: scale(.8); }
+  40% { opacity: 1; transform: scale(1); }
+}
+
+/* ── Error state ─────────────────────────────────────────── */
+.pm-error {
+  padding: 14px;
+  background: rgba(255,85,119,.06);
+  border: 1px solid rgba(255,85,119,.2);
+  border-radius: var(--radius-sm);
+  margin: 10px;
+  font-size: .62rem;
+  color: var(--accent4);
+}
+
+/* ── Badge ───────────────────────────────────────────────── */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-size: .55rem;
+  letter-spacing: 1px;
+  border: 1px solid currentColor;
+}
+
+.be { color: var(--accent3); background: rgba(77,255,166,.08); }
+.bm { color: var(--gold);    background: rgba(255,209,102,.08); }
+.bh { color: var(--accent4); background: rgba(255,85,119,.08); }
+
+/* ── Canvas wrap ─────────────────────────────────────────── */
+.center-canvas-wrap {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+#center-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+/* ── Scrollbar ───────────────────────────────────────────── */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--panel-border); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-dim); }

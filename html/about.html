@@ -14,10 +14,50 @@
 -->
 <!-- PISCES MOON OS // ABOUT -->
 <html lang="en"><head><meta charset="UTF-8">
-<link rel="stylesheet" href="pm_fonts.css"><meta name="viewport" content="width=device-width,initial-scale=1.0">
+<link rel="stylesheet" href="pm_fonts.css"><link rel="stylesheet" href="pm_theme.css"><meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>PISCES MOON // ABOUT</title>
 <style>
-:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#00d4ff;--accent2:#ff6b00;--accent3:#00ff88;--accent4:#ff3366;--warn:#ffcc00;--gold:#f4a820;--text:#7ab8d4;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(0,212,255,.3);--glow-gold:0 0 20px rgba(244,168,32,.4);}
+/* PM_PALETTE_INJECTED_v1 */
+:root {
+  /* Pisces Moon OS — Canonical cyberpunk palette
+     Self-contained — does NOT depend on pm_theme.css being loaded.
+     If pm_theme.css IS loaded, these match its values. */
+
+  /* Backgrounds */
+  --bg:           #060d14;
+  --bg2:          #0a1520;
+  --bg3:          #0f1e2c;
+  --panel:        rgba(15,30,44,.65);
+  --panel-bg:     #0d1820;
+  --panel-border: #1f4060;
+
+  /* Cyberpunk semantic palette */
+  --accent:       #4dd9ff;   /* primary cyan */
+  --accent2:      #ffa040;   /* warm orange */
+  --accent3:      #4dffa6;   /* fresh green */
+  --accent4:      #ff5577;   /* lifted red */
+  --warn:         #ffe066;   /* bright yellow */
+  --gold:         #ffd166;   /* luminous gold */
+  --purple:       #c89eff;   /* lifted purple */
+
+  /* Text hierarchy — cyberpunk reading colors */
+  --text:         #4dd9ff;   /* default body — cyan */
+  --text-bright:  #ffffff;   /* primary headings — white */
+  --text-mid:     #8db8d0;   /* secondary */
+  --text-dim:     #5a8aa4;   /* tertiary */
+
+  /* Glows (no box-shadow effects, just for any text-shadow consumers) */
+  --glow:         0 0 20px rgba(77,217,255,.4);
+  --glow-gold:    0 0 20px rgba(255,209,102,.5);
+  --glow-green:   0 0 20px rgba(77,255,166,.4);
+  --glow-red:     0 0 20px rgba(255,85,119,.4);
+
+  /* Sizing */
+  --radius:       6px;
+  --radius-sm:    4px;
+}
+
+:root{--bg:#050a0e;--bg2:#080f14;--bg3:#0c1620;--panel:#0a1520;--panel-border:#1a3a50;--accent:#4dd9ff;--accent2:#ff6b00;--accent3:#4dffa6;--accent4:#ff5577;--warn:#ffcc00;--gold:#ffd166;--text:#c8e6f5;--text-bright:#c8e8f5;--text-dim:#2a5870;--glow:0 0 20px rgba(77,217,255,.3);--glow-gold:0 0 20px rgba(255,209,102,.4);}
 *{margin:0;padding:0;box-sizing:border-box;}
 body{background:var(--bg);color:var(--text);font-family:'Share Tech Mono',monospace;min-height:100vh;}
 body::before{content:'';position:fixed;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.12) 2px,rgba(0,0,0,.12) 4px);pointer-events:none;z-index:999;}
@@ -51,11 +91,11 @@ header{background:var(--bg2);border-bottom:2px solid var(--panel-border);padding
 .cr-key{color:var(--text-dim);}
 .cr-val{color:var(--text-bright);}
 .badge{display:inline-block;padding:2px 7px;font-size:.57rem;border-radius:2px;margin-right:4px;}
-.bc{background:rgba(0,212,255,.1);color:var(--accent);border:1px solid var(--accent);}
-.bg{background:rgba(0,255,136,.1);color:var(--accent3);border:1px solid var(--accent3);}
+.bc{background:rgba(77,217,255,.1);color:var(--accent);border:1px solid var(--accent);}
+.bg{background:rgba(77,255,166,.1);color:var(--accent3);border:1px solid var(--accent3);}
 .bo{background:rgba(255,107,0,.1);color:var(--accent2);border:1px solid var(--accent2);}
-.br{background:rgba(255,51,102,.1);color:var(--accent4);border:1px solid var(--accent4);}
-.bgo{background:rgba(244,168,32,.1);color:var(--gold);border:1px solid var(--gold);}
+.br{background:rgba(255,85,119,.1);color:var(--accent4);border:1px solid var(--accent4);}
+.bgo{background:rgba(255,209,102,.1);color:var(--gold);border:1px solid var(--gold);}
 footer{text-align:center;padding:24px;font-size:.6rem;color:var(--text-dim);border-top:1px solid var(--panel-border);letter-spacing:3px;margin-top:20px;}
 ::-webkit-scrollbar{width:4px;} ::-webkit-scrollbar-track{background:var(--bg3);} ::-webkit-scrollbar-thumb{background:var(--panel-border);}
 </style></head><body>
@@ -67,28 +107,26 @@ footer{text-align:center;padding:24px;font-size:.6rem;color:var(--text-dim);bord
   <div class="hero">
     <div class="hero-logo">PISCES <span>MOON</span></div>
     <div class="hero-sub">FIELD INTELLIGENCE PLATFORM</div>
-    <div class="hero-ver">OS v0.3 — DEBIAN 13 BUILD</div>
+    <div class="hero-ver">OS v0.5 — CROSS-PLATFORM</div>
     <div class="hero-desc">
-      A custom intelligence and field operations platform built on Debian 13 + XFCE 4.18, running on a Fujitsu Stylistic Q508 ruggedized tablet. Three-tier ecosystem connecting edge sensors, local compute, and cloud AI for wireless analysis, navigation, communications, and situational awareness.
+      A local-first field intelligence platform. Three-tier ecosystem connecting edge sensors, local compute, and cloud AI for wireless analysis, navigation, communications, and situational awareness. Runs on any device — Linux, macOS, Android, Windows.
     </div>
   </div>
 
   <div class="panel">
     <div class="ph" style="color:var(--accent)">HARDWARE SPECIFICATIONS</div>
     <div class="pb">
-      <div class="spec-grid">
-        <div class="spec-item"><span class="sk">DEVICE</span><span class="sv">Fujitsu Stylistic Q508</span></div>
-        <div class="spec-item"><span class="sk">CPU</span><span class="sv">Intel Atom x5-Z8550 (4C/4T @ 2.4GHz)</span></div>
-        <div class="spec-item"><span class="sk">RAM</span><span class="sv">4 GB LPDDR3</span></div>
-        <div class="spec-item"><span class="sk">STORAGE</span><span class="sv">64 GB eMMC</span></div>
-        <div class="spec-item"><span class="sk">DISPLAY</span><span class="sv">10.1" 1280×800 IPS Touchscreen</span></div>
-        <div class="spec-item"><span class="sk">OS</span><span class="sv">Debian GNU/Linux 13 (Trixie)</span></div>
-        <div class="spec-item"><span class="sk">DESKTOP</span><span class="sv">XFCE 4.18 + Custom PM Theme</span></div>
-        <div class="spec-item"><span class="sk">PYTHON</span><span class="sv">3.13.5 + Pygame 2.6.1</span></div>
-        <div class="spec-item"><span class="sk">WIFI</span><span class="sv">Intel Wireless-AC 7265</span></div>
-        <div class="spec-item"><span class="sk">BT</span><span class="sv">Bluetooth 4.0</span></div>
-        <div class="spec-item"><span class="sk">GPS</span><span class="sv">Via T-Deck edge bridge</span></div>
-        <div class="spec-item"><span class="sk">LORA</span><span class="sv">SX1262 via T-Deck</span></div>
+      <div class="spec-grid" id="specGrid">
+        <div class="spec-item"><span class="sk">DEVICE</span><span class="sv" id="specDevice">Detecting...</span></div>
+        <div class="spec-item"><span class="sk">CPU</span><span class="sv" id="specCPU">Detecting...</span></div>
+        <div class="spec-item"><span class="sk">RAM</span><span class="sv" id="specRAM">Detecting...</span></div>
+        <div class="spec-item"><span class="sk">DISPLAY</span><span class="sv" id="specDisplay">Detecting...</span></div>
+        <div class="spec-item"><span class="sk">PLATFORM</span><span class="sv" id="specOS">Detecting...</span></div>
+        <div class="spec-item"><span class="sk">BROWSER</span><span class="sv" id="specBrowser">Detecting...</span></div>
+        <div class="spec-item"><span class="sk">NETWORK</span><span class="sv" id="specNetwork">Detecting...</span></div>
+        <div class="spec-item"><span class="sk">BRIDGE</span><span class="sv" id="specBridge">Checking...</span></div>
+        <div class="spec-item"><span class="sk">GPS</span><span class="sv" id="specGPS">Via T-Deck edge bridge</span></div>
+        <div class="spec-item"><span class="sk">LORA</span><span class="sv" id="specLora">SX1262 via T-Deck</span></div>
       </div>
     </div>
   </div>
@@ -98,11 +136,11 @@ footer{text-align:center;padding:24px;font-size:.6rem;color:var(--text-dim);bord
     <div class="pb">
       <div class="tier-card">
         <div class="tc-title" style="color:var(--accent)">// TIER 1 — EDGE SENSOR (T-DECK)</div>
-        <div class="tc-body">LilyGO T-Deck Plus · ESP32-S3 · LoRa SX1262 · GPS NEO-6M · WiFi wardrive · BLE scanner · Keyboard + display. Runs wardrive.cpp, GPS tracking, BLE radar, LoRa mesh. Connects via USB serial → edge_bridge.py → WebSocket localhost:5006.</div>
+        <div class="tc-body">LilyGO T-Deck Plus · ESP32-S3 · LoRa SX1262 · GPS NEO-6M · WiFi wardrive · BLE scanner · Keyboard + display. Runs wardrive.cpp, GPS tracking, BLE radar, LoRa mesh. Connects via USB serial → pm_bridge.py → WebSocket ws://127.0.0.1:8080.</div>
       </div>
       <div class="tier-card t2">
         <div class="tc-title" style="color:var(--gold)">// TIER 2 — LOCAL COMPUTE (Q508 / Pi 400)</div>
-        <div class="tc-body">This device. 37 Pygame apps + full HTML app suite. Wardrive analysis, mapping, AI inference, file management, signal processing. Runs everything offline-capable. Edge bridge relays T-Deck data to HTML apps via WebSocket.</div>
+        <div class="tc-body">This device. Full HTML app suite (77 apps). Wardrive analysis, mapping, AI inference, field reference, signal intelligence. Runs everything offline-capable. pm_bridge.py relays T-Deck data to HTML apps via WebSocket on ws://127.0.0.1:8080.</div>
       </div>
       <div class="tier-card t3">
         <div class="tc-title" style="color:var(--accent2)">// TIER 3 — CLOUD AI (GEMINI)</div>
@@ -170,4 +208,175 @@ footer{text-align:center;padding:24px;font-size:.6rem;color:var(--text-dim);bord
 function fmtUp(s){const h=Math.floor(s/3600),m=Math.floor((s%3600)/60);return h+'h '+m+'m';}
 document.getElementById('uptime').textContent='Uptime: '+fmtUp(Math.floor(performance.now()/1000));
 setInterval(()=>{document.getElementById('uptime').textContent='Uptime: '+fmtUp(Math.floor(performance.now()/1000));},60000);
-</script></body></html>
+</script><script>
+(function detectHardware() {
+    const ua  = navigator.userAgent;
+    const nav = navigator;
+
+    // ── Device / OS detection ──────────────────────────────────
+    let device  = 'Unknown Device';
+    let os      = 'Unknown OS';
+    let browser = 'Unknown Browser';
+
+    if (/Mac OS X/.test(ua) || /Macintosh/.test(ua)) {
+        if (/iPhone/.test(ua))      { device = 'iPhone';  os = 'iOS'; }
+        else if (/iPad/.test(ua))   { device = 'iPad';    os = 'iPadOS'; }
+        else {
+            // Apple froze Safari's UA at "Mac OS X 10_15_7" since 2020.
+            // Reliable Apple Silicon detection via WebGL GPU renderer.
+            let isSilicon = false;
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (gl) {
+                    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+                    if (ext) {
+                        const renderer = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL) || '';
+                        // Apple Silicon GPUs: "Apple M1", "Apple M2", "Apple M3", "Apple A18", etc.
+                        // Intel Macs: "Intel(R) Iris", "Intel(R) UHD", "AMD Radeon"
+                        if (/Apple M\d|Apple A\d|Apple GPU/.test(renderer)) {
+                            isSilicon = true;
+                        }
+                        // Stash the renderer string for the device label
+                        window._gpuRenderer = renderer;
+                    }
+                }
+            } catch(e) {}
+            const renderer = window._gpuRenderer || '';
+            // Pull chip name from renderer if we got one
+            const chipMatch = renderer.match(/Apple (M\d+(?:\s+\w+)?|A\d+(?:\s+Pro|\s+Max|\s+Ultra)?)/);
+            const chip = chipMatch ? chipMatch[1] : '';
+            device = isSilicon
+                ? (chip ? 'MacBook (Apple ' + chip + ')' : 'MacBook (Apple Silicon)')
+                : 'MacBook (Intel)';
+            os = 'macOS (browser hides version)';
+        }
+    } else if (/Android/.test(ua)) {
+        const m = ua.match(/Android ([\d.]+)/);
+        os     = 'Android ' + (m ? m[1] : '');
+        device = /Tablet|Tab/.test(ua) ? 'Android Tablet' : 'Android Phone';
+    } else if (/Linux/.test(ua)) {
+        os = 'Linux';
+        device = 'Linux Device';
+        if (/Debian/.test(ua) || /Trixie/.test(ua)) os = 'Debian GNU/Linux 13';
+    } else if (/Windows/.test(ua)) {
+        const m = ua.match(/Windows NT ([\d.]+)/);
+        const winVer = {10:'10', '6.3':'8.1', '6.2':'8', '6.1':'7'};
+        os = 'Windows ' + (winVer[m?m[1]:''] || (m?m[1]:''));
+        device = 'Windows PC';
+    }
+
+    // Browser
+    if (/Edg\//.test(ua))         browser = 'Microsoft Edge ' + (ua.match(/Edg\/([\d.]+)/)||[])[1];
+    else if (/Chrome\//.test(ua)) browser = 'Chrome ' + (ua.match(/Chrome\/([\d.]+)/)||[])[1];
+    else if (/Firefox\//.test(ua))browser = 'Firefox ' + (ua.match(/Firefox\/([\d.]+)/)||[])[1];
+    else if (/Safari\//.test(ua)) browser = 'Safari ' + (ua.match(/Version\/([\d.]+)/)||[])[1];
+
+    // CPU cores + RAM
+    const cores = nav.hardwareConcurrency || '?';
+    const ram   = nav.deviceMemory ? nav.deviceMemory + ' GB (est.)' : 'Not exposed';
+    const cpu   = cores + ' logical cores' + (nav.deviceMemory ? ' / ~' + nav.deviceMemory + 'GB RAM' : '');
+
+    // Display
+    const w     = screen.width, h = screen.height;
+    const dpr   = window.devicePixelRatio || 1;
+    const disp  = w + 'x' + h + ' @ ' + dpr + 'x DPR (' + Math.round(w*dpr) + 'x' + Math.round(h*dpr) + ' physical)';
+
+    // Network
+    const conn  = nav.connection || nav.mozConnection || nav.webkitConnection;
+    let netInfo = 'Unknown';
+    if (conn) {
+        const parts = [conn.type||'', conn.effectiveType||'', conn.downlink?conn.downlink+'Mbps':''].filter(Boolean);
+        netInfo = parts.join(' / ') || 'Connected';
+    } else if (nav.onLine) {
+        netInfo = 'Online (details not exposed)';
+    }
+
+    // Set values
+    document.getElementById('specDevice').textContent  = device;
+    document.getElementById('specCPU').textContent     = cpu;
+    document.getElementById('specRAM').textContent     = ram;
+    document.getElementById('specDisplay').textContent = disp;
+    document.getElementById('specOS').textContent      = os;
+    document.getElementById('specBrowser').textContent = browser;
+    document.getElementById('specNetwork').textContent = netInfo;
+
+    // Bridge status via WebSocket probe
+    try {
+        const ws = new WebSocket((() => {
+    const host = window.location.hostname;
+    const bridgeHost = (!host || host === 'localhost' || host === '127.0.0.1')
+        ? '127.0.0.1' : host;
+    return `ws://${bridgeHost}:8080`;
+})());
+        const t  = setTimeout(() => {
+            try { ws.close(); } catch {}
+            document.getElementById('specBridge').textContent = 'Offline';
+            document.getElementById('specBridge').style.color = 'var(--accent4)';
+        }, 2000);
+        ws.onopen = () => {
+            clearTimeout(t);
+            // Request bridge status + detailed host info
+            ws.send(JSON.stringify({cmd:'ping'}));
+            ws.send(JSON.stringify({cmd:'host_info'}));
+            let gotPing = false, gotHost = false;
+
+            ws.onmessage = (e) => {
+                try {
+                    const msg = JSON.parse(e.data);
+                    if (!gotPing && (msg.type === 'pong' || msg.bridge_mode || msg.mode)) {
+                        gotPing = true;
+                        const mode = msg.mode || msg.bridge_mode || 'native';
+                        const plat = msg.platform || msg.data?.chip || '';
+                        document.getElementById('specBridge').textContent =
+                            'Online / ' + mode.toUpperCase() + (plat ? ' / ' + plat : '');
+                        document.getElementById('specBridge').style.color = 'var(--accent3)';
+                    }
+                    if (!gotHost && msg.type === 'host_info') {
+                        gotHost = true;
+                        // Override the OS field with the bridge-reported version
+                        let osLabel = '';
+                        if (msg.system === 'Darwin') {
+                            const ver  = msg.mac_version || msg.release || '';
+                            const name = msg.mac_name    || '';
+                            osLabel = 'macOS ' + (name ? name + ' ' : '') + ver;
+                        } else if (msg.system === 'Linux') {
+                            osLabel = msg.linux_pretty || ('Linux ' + msg.release);
+                        } else if (msg.system === 'Windows') {
+                            osLabel = 'Windows ' + msg.release;
+                        } else {
+                            osLabel = (msg.system || '') + ' ' + (msg.release || '');
+                        }
+                        document.getElementById('specOS').textContent = osLabel.trim();
+
+                        // Update CPU label with real processor info if available
+                        if (msg.machine) {
+                            const cur = document.getElementById('specCPU').textContent;
+                            document.getElementById('specCPU').textContent =
+                                cur + ' / ' + msg.machine;
+                        }
+                    }
+                    if (gotPing && gotHost) {
+                        try { ws.close(); } catch {}
+                    }
+                } catch {}
+            };
+        };
+        ws.onerror = () => {
+            clearTimeout(t);
+            const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
+            const el = document.getElementById('specBridge');
+            if (isSafari) {
+                el.textContent = 'Use Chrome (Safari blocks ws:// from file://)';
+                el.style.color = 'var(--gold)';
+            } else {
+                el.textContent = 'Offline - run pm_bridge.py';
+                el.style.color = 'var(--accent4)';
+            }
+        };
+    } catch(e) {
+        document.getElementById('specBridge').textContent = 'N/A';
+    }
+})();
+</script>
+</body></html>
